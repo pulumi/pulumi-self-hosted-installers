@@ -1,0 +1,34 @@
+# This is the DEV version.
+# The overrides the build context so that it uses the local sources
+# to build an image rather than the published image.
+
+version: "3.0"
+
+networks:
+  pulumi-ee:
+    # Setting external to true will prevent docker-compose from creating the
+    # network if it doesn't exist already.
+    external: true
+
+  # The pulumi-services network is used to put all the Pulumi services (i.e. api and console)
+  # in the same network to enable communication between them using their container names.
+  pulumi-services:
+
+services:
+
+  api:
+    ports:
+      - 8080:8080
+    image: "pulumi/service:scratch"
+    build:
+      context: ${GOPATH}/src/github.com/pulumi/pulumi-service/
+      dockerfile: ./cmd/service/Dockerfile
+
+  console:
+    ports:
+      - 3000:3000
+    image: "pulumi/console:scratch"
+    build:
+      context: ${GOPATH}/src/github.com/pulumi/pulumi-service/cmd/console2
+      args:
+        - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
