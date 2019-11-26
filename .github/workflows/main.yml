@@ -12,6 +12,7 @@ jobs:
     - name: Run a multi-line script
       run: |
         echo Removing override files
+        rm *.override.yml
         rm -r **/*.override.yml
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
