@@ -10,6 +10,17 @@
 
 set -e
 
+# Any args passed to this script will be passed to the docker-compose command
+# at the end of this script.
+#
+# Run `docker-compose --help` to see which args can be passed.
+DOCKER_COMPOSE_ARGS=$@
+
+if [ -z "${PULUMI_LICENSE_KEY:-}" ]; then
+    echo "Please set PULUMI_LICENSE_KEY. If you don't have a license key, please contact sales@pulumi.com."
+    exit 1
+fi
+
 # PULUMI_DATA_PATH is a stable filesystem path where Pulumi will store the 
 # checkpoint objects.
 if [ -z "${PULUMI_DATA_PATH:-}" ]; then
@@ -46,10 +57,18 @@ fi
 
 export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_NAME}:${PULUMI_LOCAL_DATABASE_PORT}"
 
-trap "docker-compose -f $COMPOSE_FILE stop" SIGINT SIGTERM ERR EXIT
+docker_compose_stop() {
+    if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
+        docker-compose stop
+    else
+        docker-compose ${DOCKER_COMPOSE_ARGS} stop
+    fi
+}
 
-if [ $# -eq 0 ]; then
-    exec docker-compose up --build
+trap docker_compose_stop SIGINT SIGTERM ERR EXIT
+
+if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
+    docker-compose up --build
 else
-    exec docker-compose "$@" up --build
+    docker-compose ${DOCKER_COMPOSE_ARGS} up --build
 fi
