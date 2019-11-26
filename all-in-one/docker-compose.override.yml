@@ -19,7 +19,7 @@ services:
       - 8080:8080
     image: "pulumi/service:scratch"
     build:
-      context: ${GOPATH}/src/github.com/pulumi/pulumi-service/
+      context: ../../
       dockerfile: ./cmd/service/Dockerfile
 
   console:
@@ -27,12 +27,12 @@ services:
       - 3000:3000
     image: "pulumi/console:scratch"
     build:
-      context: ${GOPATH}/src/github.com/pulumi/pulumi-service/cmd/console2
+      context: ../../cmd/console2
       args:
         - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
 
   migration:
     image: "pulumi/migrations:scratch"
     build:
-      context: ${GOPATH}/src/github.com/pulumi/pulumi-service/
+      context: ../../
       dockerfile: ./migrations/Dockerfile
