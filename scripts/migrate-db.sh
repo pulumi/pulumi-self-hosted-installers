@@ -13,13 +13,10 @@ echo "Running migrations"
 # When this script is run inside the `pulumi/migrations` container,
 # this tool is pre-installed as part of creating the container image.
 which migratecli >/dev/null || {
-    echo "migratecli tool not found in the PATH. Will install it now..."
-    # Install the migrate tool. Use `go build -o` so we can name the binary
-    # `migratecli` instead of the much less useful `cli`.
-    go get -u -d github.com/mattes/migrate/cli github.com/go-sql-driver/mysql
+    echo "Building 'migratecli' from source."
+    GO111MODULE=off go get -u -d github.com/golang-migrate/migrate/cmd/migrate github.com/go-sql-driver/mysql
     INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
-    go build -tags mysql -o "${INSTALL_DEST}/migratecli" github.com/mattes/migrate/cli
-    echo "Successfully installed migratecli"
+    GO111MODULE=off go build -tags mysql -o "${INSTALL_DEST}/migratecli" github.com/golang-migrate/migrate/cmd/migrate
 
     # Ensure the version we built is on the PATH for the rest of this script
     export PATH="${INSTALL_DEST}:${PATH}"
