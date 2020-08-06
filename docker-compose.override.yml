@@ -28,8 +28,8 @@ services:
       API_TLS_CERTIFICATE: "${CONSOLE_TLS_CERTIFICATE}"
       API_TLS_PRIVATE_KEY: "${CONSOLE_TLS_PRIVATE_KEY}"
       API_MIN_TLS_VERSION: "1.2"
-      PULUMI_API_DOMAIN: "https://localhost:8443"
-      PULUMI_CONSOLE_DOMAIN: "https://localhost:3443"
+      PULUMI_API_DOMAIN: "localhost:8080"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3000"
       HOMEPAGE_DOMAIN: "https://localhost:3443"
     healthcheck:
       test: ["CMD", "curl", "-f", "https://localhost:8443/api/status"]
@@ -45,8 +45,10 @@ services:
     environment:
       PULUMI_API: "https://localhost:8443"
       PULUMI_API_INTERNAL_ENDPOINT: "https://pulumi-api:8443"
-      CONSOLE_DOMAIN: "https://localhost:3443"
-      HOMEPAGE_DOMAIN: "https://localhost:3443"
+      PULUMI_CONSOLE_DOMAIN: "https://localhost:3443"
+      PULUMI_HOMEPAGE_DOMAIN: "https://localhost:3443"
       CONSOLE_TLS_CERTIFICATE: "${CONSOLE_TLS_CERTIFICATE}"
       CONSOLE_TLS_PRIVATE_KEY: "${CONSOLE_TLS_PRIVATE_KEY}"
-      
+      GITLAB_OAUTH_ID: "${GITLAB_OAUTH_ID}"
+      GITLAB_OAUTH_SECRET: "${GITLAB_OAUTH_SECRET}"
+      ALLOW_INSECURE_INTERNAL_TRAFFIC: "true"
