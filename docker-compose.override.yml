@@ -30,6 +30,7 @@ services:
       API_MIN_TLS_VERSION: "1.2"
       PULUMI_API_DOMAIN: "https://localhost:8443"
       PULUMI_CONSOLE_DOMAIN: "https://localhost:3443"
+      HOMEPAGE_DOMAIN: "https://localhost:3443"
     healthcheck:
       test: ["CMD", "curl", "-f", "https://localhost:8443/api/status"]
   console:
