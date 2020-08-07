@@ -1,6 +1,11 @@
 #!/bin/bash
 
 # Bring the DB instance up-to-date with all current migrations.
+# Migrations will be executed as the password-less pulumi_service DB user unless
+# MIGRATE_AS_SUPERUSER is set to true then PULUMI_LOCAL_DB_SUPERUSER and PULUMI_LOCAL_DB_PASSWORD
+# are used as the credentials. PULUMI_LOCAL_DB_SUPERUSER and PULUMI_LOCAL_DB_PASSWORD, by default,
+# are set to the MYSQL_ROOT_USER and MYSQL_ROOT_PASSWORD values before this script is called.
+#
 # Set MIGRATE_AS_SUPERUSER to run migrations that require higher privileges,
 # e.g. creating users.
 
@@ -36,7 +41,14 @@ if [ -z "${PULUMI_LOCAL_DATABASE_ENDPOINT:-}" ]; then
     PULUMI_LOCAL_DATABASE_ENDPOINT=localhost:3306
 fi
 
-DB_CONNECTION_STRING="mysql://${DB_USER}:${DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/pulumi"
+# URL encode the connection string since it might contain special chars.
+# See https://github.com/golang-migrate/migrate#database-urls
+URL_ENCODED_DB_PASSWORD=$(python3 -c "import sys, urllib.parse as ul; \
+    print (ul.quote_plus(sys.argv[1]))" "${DB_PASSWORD}")
+
+echo "${URL_ENCODED_DB_PASSWORD}"
+
+DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/pulumi"
 
 if [ -z "${MIGRATIONS_DIR:-}" ]; then
     MIGRATIONS_DIR=migrations
