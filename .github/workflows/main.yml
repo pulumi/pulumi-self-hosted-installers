@@ -1,6 +1,10 @@
-name: CI
+on:
+  push:
+    # Sequence of patterns matched against refs/tags.
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0.
 
-on: [push]
+name: Create Release
 
 jobs:
   build:
@@ -9,11 +13,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Run a multi-line script
+    - name: Create release asset
       run: |
         echo Removing override files
         rm *.override.yml
         rm -r **/*.override.yml
+        zip pulumi-ee **/*
+
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -21,3 +27,27 @@ jobs:
         name: pulumi-ee
         # Directory containing files to upload
         path: .
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`.
+        # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./pulumi-ee.zip
+        asset_name: pulumi-ee.zip
+        asset_content_type: application/zip

@@ -30,7 +30,7 @@ if [ -z "${MYSQL_CONT:-}" ]; then
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p 3306:3306 --rm -d \
         --network pulumi-ee \
-        -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+        -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e MYSQL_DATABASE=pulumi \
         -v /tmp/pulumi-db/data:/var/lib/mysql \
         mysql:5.6)
