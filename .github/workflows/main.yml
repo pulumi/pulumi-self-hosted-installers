@@ -18,7 +18,6 @@ jobs:
         echo Removing override files
         rm *.override.yml
         rm -r **/*.override.yml
-        zip pulumi-ee **/*
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
@@ -38,6 +37,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: pulumi-ee
 
     - name: Upload Release Asset
       id: upload-release-asset
