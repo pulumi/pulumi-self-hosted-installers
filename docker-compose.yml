@@ -37,7 +37,6 @@ services:
       GITHUB_OAUTH_SECRET:
       GITLAB_OAUTH_ID:
       GITLAB_OAUTH_SECRET:
-      STRIPE_API_KEY:
     networks:
       pulumi-ee:
       pulumi-services:
@@ -88,7 +87,6 @@ services:
       # must be set in the `api` service above.
       RECAPTCHA_SITE_KEY:
       ALLOW_INSECURE_INTERNAL_TRAFFIC:
-
     depends_on:
       - api
     restart: unless-stopped
