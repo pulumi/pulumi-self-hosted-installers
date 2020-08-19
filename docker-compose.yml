@@ -85,7 +85,7 @@ services:
       # Allow traffic communicating over the PULUMI_API_INTERNAL_ENDPOINT to
       # connect insecurely without TLS verification. This may be applicable when
       # using self signed certs for example.
-      ALLOW_INSECURE_INTERNAL_TRAFFIC: "false"
+      ALLOW_INVALID_CERTS: "false"
     depends_on:
       - api
     restart: unless-stopped
