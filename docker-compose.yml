@@ -21,8 +21,8 @@ services:
       # Used for SAML SSO. Endpoint must be reachable by clients either
       # locally on your company network or internet-routable.
       # If you do not have SAML SSO setup, then this setting is not used.
-      PULUMI_API_DOMAIN:
-      PULUMI_CONSOLE_DOMAIN:
+      PULUMI_API_DOMAIN: "localhost:8080"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3000"
       PULUMI_DATABASE_ENDPOINT: "${PULUMI_DATABASE_ENDPOINT}"
       PULUMI_LOCAL_OBJECTS: "$PULUMI_DATA_PATH/checkpoints"
       PULUMI_POLICY_PACK_LOCAL_OBJECTS: "$PULUMI_DATA_PATH/policy_packs"
@@ -33,10 +33,6 @@ services:
       # The site (RECAPTCHA_SITE_KEY) key counterpart for this 
       # must be set in the `console` service below.
       RECAPTCHA_SECRET_KEY:
-      GITHUB_OAUTH_ID:
-      GITHUB_OAUTH_SECRET:
-      GITLAB_OAUTH_ID:
-      GITLAB_OAUTH_SECRET:
     networks:
       pulumi-ee:
       pulumi-services:
@@ -73,8 +69,8 @@ services:
       # container-to-container communication.
       # If this env var is removed, then it defaults to the value of PULUMI_API.
       PULUMI_API_INTERNAL_ENDPOINT: "http://pulumi-api:8080"
-      PULUMI_CONSOLE_DOMAIN: "https://localhost:3443"
-      PULUMI_HOMEPAGE_DOMAIN: "https://localhost:3443"
+      PULUMI_CONSOLE_DOMAIN: "http://localhost:3000"
+      PULUMI_HOMEPAGE_DOMAIN: "http://localhost:3000"
       # OAuth configuration for social identities
       GITHUB_OAUTH_ID:
       GITHUB_OAUTH_SECRET:
@@ -86,7 +82,10 @@ services:
       # The secret (RECAPTCHA_SECRET_KEY) key counterpart for this
       # must be set in the `api` service above.
       RECAPTCHA_SITE_KEY:
-      ALLOW_INSECURE_INTERNAL_TRAFFIC:
+      # Allow traffic communicating over the PULUMI_API_INTERNAL_ENDPOINT to
+      # connect insecurely without TLS verification. This may be applicable when
+      # using self signed certs for example.
+      ALLOW_INSECURE_INTERNAL_TRAFFIC: "false"
     depends_on:
       - api
     restart: unless-stopped
