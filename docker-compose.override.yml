@@ -28,8 +28,8 @@ services:
       API_TLS_CERTIFICATE: "${CONSOLE_TLS_CERTIFICATE}"
       API_TLS_PRIVATE_KEY: "${CONSOLE_TLS_PRIVATE_KEY}"
       API_MIN_TLS_VERSION: "1.2"
-      PULUMI_API_DOMAIN: "localhost:8080"
-      PULUMI_CONSOLE_DOMAIN: "localhost:3000"
+      PULUMI_API_DOMAIN: "localhost:8443"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3443"
       HOMEPAGE_DOMAIN: "https://localhost:3443"
     healthcheck:
       test: ["CMD", "curl", "-f", "https://localhost:8443/api/status"]
