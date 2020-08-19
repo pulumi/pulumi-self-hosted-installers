@@ -25,8 +25,8 @@ services:
       context: ../
       dockerfile: ./cmd/service/Dockerfile
     environment:
-      API_TLS_CERTIFICATE: "${CONSOLE_TLS_CERTIFICATE}"
-      API_TLS_PRIVATE_KEY: "${CONSOLE_TLS_PRIVATE_KEY}"
+      API_TLS_CERTIFICATE: "${API_TLS_CERTIFICATE}"
+      API_TLS_PRIVATE_KEY: "${API_TLS_PRIVATE_KEY}"
       API_MIN_TLS_VERSION: "1.2"
       PULUMI_API_DOMAIN: "localhost:8443"
       PULUMI_CONSOLE_DOMAIN: "localhost:3443"
@@ -45,8 +45,8 @@ services:
     environment:
       PULUMI_API: "https://localhost:8443"
       PULUMI_API_INTERNAL_ENDPOINT: "https://pulumi-api:8443"
-      PULUMI_CONSOLE_DOMAIN: "https://localhost:3443"
-      PULUMI_HOMEPAGE_DOMAIN: "https://localhost:3443"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3443"
+      PULUMI_HOMEPAGE_DOMAIN: "localhost:3443"
       CONSOLE_TLS_CERTIFICATE: "${CONSOLE_TLS_CERTIFICATE}"
       CONSOLE_TLS_PRIVATE_KEY: "${CONSOLE_TLS_PRIVATE_KEY}"
       GITLAB_OAUTH_ID: "${GITLAB_OAUTH_ID}"
