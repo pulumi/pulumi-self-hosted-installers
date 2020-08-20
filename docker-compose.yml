@@ -69,8 +69,8 @@ services:
       # container-to-container communication.
       # If this env var is removed, then it defaults to the value of PULUMI_API.
       PULUMI_API_INTERNAL_ENDPOINT: "http://pulumi-api:8080"
-      CONSOLE_DOMAIN: "http://localhost:3000"
-      HOMEPAGE_DOMAIN: "http://localhost:3000"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3000"
+      PULUMI_HOMEPAGE_DOMAIN: "localhost:3000"
       # OAuth configuration for social identities
       GITHUB_OAUTH_ID:
       GITHUB_OAUTH_SECRET:
@@ -82,6 +82,10 @@ services:
       # The secret (RECAPTCHA_SECRET_KEY) key counterpart for this
       # must be set in the `api` service above.
       RECAPTCHA_SITE_KEY:
+      # Allow traffic communicating over the PULUMI_API_INTERNAL_ENDPOINT to
+      # connect insecurely without TLS verification. This may be applicable when
+      # using self signed certs for example.
+      ALLOW_INVALID_CERTS: "false"
     depends_on:
       - api
     restart: unless-stopped
