@@ -69,8 +69,8 @@ services:
       # container-to-container communication.
       # If this env var is removed, then it defaults to the value of PULUMI_API.
       PULUMI_API_INTERNAL_ENDPOINT: "http://pulumi-api:8080"
-      PULUMI_CONSOLE_DOMAIN: "http://localhost:3000"
-      PULUMI_HOMEPAGE_DOMAIN: "http://localhost:3000"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3000"
+      PULUMI_HOMEPAGE_DOMAIN: "localhost:3000"
       # OAuth configuration for social identities
       GITHUB_OAUTH_ID:
       GITHUB_OAUTH_SECRET:
