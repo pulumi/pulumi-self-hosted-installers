@@ -41,12 +41,25 @@ if [ -z "${PULUMI_LOCAL_DATABASE_ENDPOINT:-}" ]; then
     PULUMI_LOCAL_DATABASE_ENDPOINT=localhost:3306
 fi
 
+DB_QUERY_STRING=
+# Check to see if we should connect to the database using TLS. We do this by checking to see if the DATABASE_CA_CERTIFICATE
+# environment variable is set. If it is we assume the user would like to connect via TLS using the provided CA certificate.
+# This environment variable needs to be set to the value of the certificate and not a filepath. This was done this way in
+# order to be consistent with the way the database certificates are passed into the API service container, i.e. the value
+# of the cert not the file path. As now this relies on a fork of the golang-migrate tool - github.com/pulumi/golang-migrate
+# that we made to put in a fix to enable this functionality. We will attempt to get the fix merged to the upstream repo in
+# the future.
+if [ ! -z "${DATABASE_CA_CERTIFICATE:-}" ]; then
+    echo "${DATABASE_CA_CERTIFICATE}" > cacert.pem
+    DB_QUERY_STRING="?tls=custom&x-tls-ca=cacert.pem"
+fi
+
 # URL encode the connection string since it might contain special chars.
 # See https://github.com/golang-migrate/migrate#database-urls
 URL_ENCODED_DB_PASSWORD=$(python3 -c "import sys, urllib.parse as ul; \
     print (ul.quote_plus(sys.argv[1]))" "${DB_PASSWORD}")
 
-DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/pulumi"
+DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/pulumi${DB_QUERY_STRING}"
 
 if [ -z "${MIGRATIONS_DIR:-}" ]; then
     MIGRATIONS_DIR=migrations
