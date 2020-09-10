@@ -45,9 +45,7 @@ DB_QUERY_STRING=
 # Check to see if we should connect to the database using TLS.
 if [ ! -z "${DATABASE_CA_CERTIFICATE:-}" ]; then
     echo "${DATABASE_CA_CERTIFICATE}" > cacert.pem
-    URL_ENCODED_CA_FILE_PATH=$(python3 -c "import sys, urllib.parse as ul; \
-    print (ul.quote_plus(sys.argv[1]))" "./cacert.pem")
-    DB_QUERY_STRING="?tls=custom&x-tls-ca=${URL_ENCODED_CA_FILE_PATH}"
+    DB_QUERY_STRING="?tls=custom&x-tls-ca=cacert.pem"
 fi
 
 # URL encode the connection string since it might contain special chars.
