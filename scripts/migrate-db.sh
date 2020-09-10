@@ -42,7 +42,13 @@ if [ -z "${PULUMI_LOCAL_DATABASE_ENDPOINT:-}" ]; then
 fi
 
 DB_QUERY_STRING=
-# Check to see if we should connect to the database using TLS.
+# Check to see if we should connect to the database using TLS. We do this by checking to see if the DATABASE_CA_CERTIFICATE
+# environment variable is set. If it is we assume the user would like to connect via tls using the provided CA certificate.
+# This environment variable needs to be set to the value of the certificate and not a filepath. This was done this way in
+# order to be consistent with the way the database certificates are passed into the aAPI service container, i.e. the value
+# of the cert not the file path. As now this relies on a fork of the golang-migrate tool - github.com/pulumi/golang-migrate
+# that we made to put in a fix to enable this functionality. We will attempt to get the fix merged to the upstream repo in
+# the future.
 if [ ! -z "${DATABASE_CA_CERTIFICATE:-}" ]; then
     echo "${DATABASE_CA_CERTIFICATE}" > cacert.pem
     DB_QUERY_STRING="?tls=custom&x-tls-ca=cacert.pem"
