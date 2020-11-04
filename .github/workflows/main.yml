@@ -13,9 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Create release asset
+    - name: Remove override files
       run: |
-        echo Removing override files
         rm *.override.yml
         rm -r **/*.override.yml
 
@@ -38,11 +37,8 @@ jobs:
         draft: false
         prerelease: false
 
-    - uses: actions/download-artifact@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        name: pulumi-ee
+    - name:
+      run: zip pulumi-ee.zip **/*.*
 
     - name: Upload Release Asset
       id: upload-release-asset
@@ -50,7 +46,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`.
+        # This pulls from the CREATE RELEASE step above, referencing its ID to get its outputs object, which include a `upload_url`.
         # See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./pulumi-ee.zip
