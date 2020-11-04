@@ -19,9 +19,13 @@ echo "Running migrations"
 # this tool is pre-installed as part of creating the container image.
 which migratecli >/dev/null || {
     echo "Building 'migratecli' from source."
-    GO111MODULE=off go get -u -d github.com/golang-migrate/migrate/cmd/migrate github.com/go-sql-driver/mysql
+    CLONE_DIR="${GOPATH}/src/github.com/pulumi/golang-migrate"
+    git clone git@github.com:pulumi/golang-migrate.git "${CLONE_DIR}"
+    pushd "${CLONE_DIR}"
+    # https://github.com/golang-migrate/migrate/blob/master/CONTRIBUTING.md
     INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
-    GO111MODULE=off go build -tags mysql -o "${INSTALL_DEST}/migratecli" github.com/golang-migrate/migrate/cmd/migrate
+    DATABASE=mysql CLI_BUILD_OUTPUT=${INSTALL_DEST}/migratecli make build-cli
+    popd
 
     # Ensure the version we built is on the PATH for the rest of this script
     export PATH="${INSTALL_DEST}:${PATH}"
