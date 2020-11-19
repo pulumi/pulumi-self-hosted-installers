@@ -38,7 +38,7 @@ jobs:
         prerelease: false
 
     - name:
-      run: zip pulumi-ee.zip **/*.*
+      run: zip pulumi-ee.zip README.md *.env *.yml all-in-one/**/* scripts/**/*
 
     - name: Upload Release Asset
       id: upload-release-asset
