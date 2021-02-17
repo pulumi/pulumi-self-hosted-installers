@@ -14,7 +14,7 @@ fi
 # If RUN_MIGRATIONS_EXTERNALLY is set to true, that means the user is providing their own DB.
 # We will run the migrations against provided instance by connecting to it externally.
 # Connecting to a DB that the user is providing themselves requires the MYSQL_ROOT_PASSWORD.
-if [ -z "${RUN_MIGRATIONS_EXTERNALLY:-}" ]; then
+if [ ! -z "${RUN_MIGRATIONS_EXTERNALLY:-}" ]; then
     if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
         PULUMI_DATABASE_PING_ENDPOINT=pulumi-db
     fi
