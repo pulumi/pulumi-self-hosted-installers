@@ -3,6 +3,10 @@
 # This script update a DB instance running inside a
 # container by running the DB migrations against it.
 
+# Set PULUMI_DATABASE_PING_ENDPOINT to be the hostname of the DB instance you wish to migrate.
+# If not provided, the default value depends on a non-empty value of the
+# RUN_MIGRATIONS_EXTERNALLY var.
+
 set -e
 
 echo "Waiting for MySQL to come alive ..."
@@ -11,17 +15,22 @@ if [ -z "${MYSQL_ROOT_USERNAME:-}" ]; then
     MYSQL_ROOT_USERNAME=root
 fi
 
-# If RUN_MIGRATIONS_EXTERNALLY is set to true, that means the user is providing their own DB.
-# We will run the migrations against provided instance by connecting to it externally.
-# Connecting to a DB that the user is providing themselves requires the MYSQL_ROOT_PASSWORD.
-if [ ! -z "${RUN_MIGRATIONS_EXTERNALLY:-}" ]; then
-    if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
+# If PULUMI_DATABASE_PING_ENDPOINT is not defined, then the "default" ping endpoint value
+# is determined using the RUN_MIGRATIONS_EXTERNALLY var.
+if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
+    # If RUN_MIGRATIONS_EXTERNALLY is not set then it means this script is running in a container
+    # inside the same network as the DB.
+    if [ -z "${RUN_MIGRATIONS_EXTERNALLY:-}" ]; then
         PULUMI_DATABASE_PING_ENDPOINT=pulumi-db
+    else
+        # Otherwise, the default is that the script is run on the same host as the DB that is
+        # accessible on the local loopback address.
+        PULUMI_DATABASE_PING_ENDPOINT="0.0.0.0"
     fi
-    while ! mysqladmin ping -h ${PULUMI_DATABASE_PING_ENDPOINT} --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
-else
-    while ! mysqladmin ping -h 0.0.0.0 --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
 fi
+
+while ! mysqladmin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
+
 echo "MySQL is running!"
 
 if [ -z "${PULUMI_DATABASE_ENDPOINT:-}" ]; then
