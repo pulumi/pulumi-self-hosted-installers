@@ -16,7 +16,7 @@ jobs:
           rm -r **/*.override.yml
 
       - name:
-        run: zip -r pulumi-ee.zip *
+        run: zip pulumi-ee.zip README.md *.env *.yml ./all-in-one/**/*.* ./scripts/**/*.*
 
 #      - name: Login to Docker Hub
 #        uses: docker/login-action@v1
