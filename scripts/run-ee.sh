@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is the main entrypoint to running the containers required for the Pulumi platform.
+# This script is the main starting point for the quickstart solutions for self-hosted Pulumi Service.
 # By default, this script will use the docker-compose.yml file (and an override file, if present) in the root
 # directory of pulumi-ee.
 #
@@ -16,6 +16,9 @@ set -e
 # Run `docker-compose --help` to see which args can be passed.
 DOCKER_COMPOSE_ARGS=$@
 
+DEFAULT_DATA_PATH_BASE="${HOME}"
+DEFAULT_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-ee/data"
+
 if [ -z "${PULUMI_LICENSE_KEY:-}" ]; then
     echo "Please set PULUMI_LICENSE_KEY. If you don't have a license key, please contact sales@pulumi.com."
     exit 1
@@ -24,12 +27,17 @@ fi
 # PULUMI_DATA_PATH is a stable filesystem path where Pulumi will store the 
 # checkpoint objects.
 if [ -z "${PULUMI_DATA_PATH:-}" ]; then
-    export PULUMI_DATA_PATH=/tmp/pulumi-ee/data
     echo "PULUMI_DATA_PATH was not set. Defaulting to ${PULUMI_DATA_PATH}"
+    test -w "${DEFAULT_DATA_PATH_BASE}" || {
+        echo "Tried to use the default path for the data dir but you lack write permissions to ${DEFAULT_DATA_PATH_BASE}"
+        echo ""
+        exit 1
+    }
+    export PULUMI_DATA_PATH="${DEFAULT_DATA_PATH}"
 fi
 
 if [ ! -d "$PULUMI_DATA_PATH" ]; then
-    mkdir -p ${PULUMI_DATA_PATH}
+    mkdir -p "${PULUMI_DATA_PATH}"
 fi
 
 export PULUMI_LOCAL_KEYS=${PULUMI_DATA_PATH}/localkeys

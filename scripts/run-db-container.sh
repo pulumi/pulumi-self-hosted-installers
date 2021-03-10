@@ -6,6 +6,12 @@
 
 set -e
 
+DEFAULT_MYSQL_DATA_PATH=/tmp/pulumi-db/data
+
+if [ -z "${MYSQL_DATA_PATH:-}" ]; then
+    echo "MYSQL_DATA_PATH not set. Using the default volume mount path ${DEFAULT_MYSQL_DATA_PATH}."
+fi
+
 exists=$(docker network inspect pulumi-ee)
 
 if [ ${#exists[@]} -eq 0 ]; then
@@ -32,7 +38,7 @@ if [ -z "${MYSQL_CONT:-}" ]; then
         --network pulumi-ee \
         -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e MYSQL_DATABASE=pulumi \
-        -v /tmp/pulumi-db/data:/var/lib/mysql \
+        -v "${MYSQL_DATA_PATH}":/var/lib/mysql \
         mysql:5.6)
 fi
 
