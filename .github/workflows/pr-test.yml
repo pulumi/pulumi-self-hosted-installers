@@ -34,10 +34,9 @@ jobs:
           echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
           ./scripts/run-ee.sh -f ./all-in-one/docker-compose.yml > "${SERVICE_LOG}" 2>&1 &
 
-      - name: Verify if services started
+      - name: Wait for services to start
         timeout-minutes: 30
         run: |
-          echo_header "Wait for Services to Start"
           printf "API Service "
           until $(curl --output /dev/null --silent https://localhost:8080/api/status); do
               printf '.'
@@ -56,6 +55,6 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         if: ${{ always() }}
         with:
-          name: service-log.log
+          name: service-log
           path: ${{ env.SERVICE_LOG }}
 
