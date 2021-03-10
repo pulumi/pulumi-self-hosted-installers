@@ -8,7 +8,7 @@ set -e
 
 # The volume mounted can be any stable/persistent file system.
 DEFAULT_DATA_PATH_BASE="${HOME}"
-DEFAULT_MYSQL_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-db/data"
+DEFAULT_MYSQL_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-standalone-db/data"
 
 if [ -z "${MYSQL_DATA_PATH:-}" ]; then
     echo "MYSQL_DATA_PATH not set. Using the default volume mount path ${DEFAULT_MYSQL_DATA_PATH}."
