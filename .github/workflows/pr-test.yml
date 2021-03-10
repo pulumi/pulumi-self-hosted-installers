@@ -35,7 +35,7 @@ jobs:
           ./scripts/run-ee.sh -f ./all-in-one/docker-compose.yml > "${SERVICE_LOG}" 2>&1 &
 
       - name: Wait for services to start
-        timeout-minutes: 2
+        timeout-minutes: 5
         run: |
           printf "API Service "
           until $(curl --output /dev/null --silent https://localhost:8080/api/status); do
