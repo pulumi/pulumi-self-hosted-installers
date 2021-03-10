@@ -7,7 +7,7 @@ on:
 name: Create Release
 
 jobs:
-  build:
+  release:
 
     runs-on: ubuntu-latest
 
