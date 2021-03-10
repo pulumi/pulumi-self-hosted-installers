@@ -6,10 +6,18 @@
 
 set -e
 
-DEFAULT_MYSQL_DATA_PATH=/tmp/pulumi-db/data
+# The volume mounted can be any stable/persistent file system.
+DEFAULT_DATA_PATH_BASE="${HOME}"
+DEFAULT_MYSQL_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-db/data"
 
 if [ -z "${MYSQL_DATA_PATH:-}" ]; then
     echo "MYSQL_DATA_PATH not set. Using the default volume mount path ${DEFAULT_MYSQL_DATA_PATH}."
+    test -w "${DEFAULT_DATA_PATH_BASE}" || {
+        echo "Tried to use the default path for the data dir but you lack write permissions to ${DEFAULT_DATA_PATH_BASE}"
+        echo ""
+        exit 1
+    }
+    export MYSQL_DATA_PATH="${DEFAULT_MYSQL_DATA_PATH}"
 fi
 
 exists=$(docker network inspect pulumi-ee)
@@ -30,9 +38,6 @@ MYSQL_CONT=$(docker ps --filter "name=pulumi-db" --format "{{.ID}}")
 
 if [ -z "${MYSQL_CONT:-}" ]; then
     # Boot up a MySQL 5.6 database.
-    # Note that this container is started with a volume option (-v) set to
-    # /tmp/pulumi-db/data.
-    # The volume mounted can be any stable/persistent file system.
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p 3306:3306 --rm -d \
         --network pulumi-ee \
