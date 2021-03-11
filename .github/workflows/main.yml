@@ -7,7 +7,7 @@ on:
 name: Create Release
 
 jobs:
-  build:
+  release:
 
     runs-on: ubuntu-latest
 
@@ -37,8 +37,8 @@ jobs:
         draft: false
         prerelease: false
 
-    - name:
-      run: zip pulumi-ee.zip README.md *.env *.yml all-in-one/**/* scripts/**/*
+    - name: Create release asset zip file
+      run: zip -r pulumi-ee.zip README.md *.env *.yml ./all-in-one ./scripts
 
     - name: Upload Release Asset
       id: upload-release-asset
