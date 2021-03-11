@@ -13,7 +13,7 @@ DEFAULT_MYSQL_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-standalone-db/data"
 if [ -z "${MYSQL_DATA_PATH:-}" ]; then
     echo "MYSQL_DATA_PATH not set. Using the default volume mount path ${DEFAULT_MYSQL_DATA_PATH}."
     test -w "${DEFAULT_DATA_PATH_BASE}" || {
-        echo "Tried to use the default path for the data dir but you lack write permissions to ${DEFAULT_DATA_PATH_BASE}"
+        echo "Error: Tried to use the default path for the data dir but you lack write permissions to ${DEFAULT_DATA_PATH_BASE}"
         echo ""
         exit 1
     }

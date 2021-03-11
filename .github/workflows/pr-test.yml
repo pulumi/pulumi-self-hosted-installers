@@ -26,9 +26,21 @@ jobs:
 
       - name: Run all-in-one
         env:
+          # When regenerating the license, create a restricted license.
+          # That is, create a license that has a max unit of just 1 unless
+          # otherwise required.
           PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
         run: |
+          # NOTE: If the service or console emit secrets
+          # we would accidentally reveal that in plaintext when the logs
+          # are uploaded as a build artifact later in this workflow.
+          # Right now the service and the console use default configuration
+          # in this setup. So they don't have any secrets aside from the license
+          # key, which is not emitted by the service.
+          #
+          # Create a temp file for logs.
           SERVICE_LOG=$(mktemp)
+
           # Make the SERVICE_LOG available to later steps in the workflow.
           # Access it as ${{ env.SERVICE_LOG }}
           echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
