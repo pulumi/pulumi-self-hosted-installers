@@ -28,6 +28,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: pulumi/pulumi-service
+          token: ${{ secrets.PULUMI_BOT_GH_REPO_PAT }}
           path: .
 
       - name: Checkout pulumi/pulumi-ee
