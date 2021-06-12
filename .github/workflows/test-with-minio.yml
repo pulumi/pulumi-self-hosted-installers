@@ -47,6 +47,9 @@ jobs:
               --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
           bitnami/minio:latest
 
+          # TEMPORARY!! Wait until Minio starts up fully.
+          sleep 60s
+
           echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
 
       - name: Download Minio client
