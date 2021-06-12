@@ -10,6 +10,7 @@ jobs:
     env:
       TEST_UI_E2E_USERNAME: "fake-user"
       TEST_UI_E2E_PASSWORD: "this is a fake password"
+      AWS_REGION: "us-west-2"
       MINIO_ACCESS_KEY: "minio-access-key"
       MINIO_SECRET_KEY: "minio-secret-key"
       MINIO_HOST: "minio:9000"
@@ -39,10 +40,8 @@ jobs:
 
       - name: Run Minio
         run: |
-          docker network create pulumi-ee
           docker run -d --rm --name minio \
               --publish 9000:9000 \
-              --network pulumi-ee \
               --volume ${HOME}/minio-persistence:/data \
               --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
               --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
