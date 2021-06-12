@@ -78,5 +78,7 @@ trap docker_compose_stop SIGINT SIGTERM ERR EXIT
 if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
     docker-compose up --build
 else
+    # Don't add quotes around the variable below. We might pass multiple args and the quotes
+    # will make multiple args look like a single arg.
     docker-compose ${DOCKER_COMPOSE_ARGS} up --build
 fi

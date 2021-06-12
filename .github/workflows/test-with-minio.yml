@@ -14,6 +14,7 @@ jobs:
       MINIO_SECRET_KEY: "minio-secret-key"
       MINIO_HOST: "minio:9000"
       MINIO_BUCKET_NAME: "pulumi-checkpoints"
+      MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
 
     steps:
       - uses: actions/setup-go@v2
@@ -36,41 +37,43 @@ jobs:
         with:
           path: ./pulumi-ee
 
-      - run: |
-          pwd
-          ls -a
+      - name: Run Minio
+        run: |
+          docker run -d --rm --name minio \
+              --publish 9000:9000 \
+              --network pulumi-ee \
+              --volume ${HOME}/minio-persistence:/data \
+              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
+              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
+          bitnami/minio:latest
 
-#      - name: Run Minio
-#        run: |
-#          docker run -d --rm --name minio \
-#              --publish 9000:9000 \
-#              --network pulumi-ee \
-#              --volume ${HOME}/minio-persistence:/data \
-#              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
-#              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
-#          bitnami/minio:latest
-#
-#      - name: Download Minio client
-#        run: |
-#          # https://docs.min.io/docs/minio-client-quickstart-guide.html
-#          wget https://dl.min.io/client/mc/release/linux-amd64/mc
-#          chmod +x mc
-#
-#          # Create a new alias called minio for our Minio container.
-#          ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
-#
-#          # Create the bucket using the minio alias.
-#          ./mc mb "minio/${MINIO_BUCKET_NAME}"
-#
-#      - uses: ./pulumi-ee/.github/actions/run-self-hosted
-#        timeout-minutes: 5
-#
-#      - name: Run integration tests
-#        run: go test ./pulumi-ee/tests/.. -v
-#
-#      - name: Upload service log as artifact
-#        uses: actions/upload-artifact@v1.0.0
-#        if: ${{ always() }}
-#        with:
-#          name: service-log
-#          path: ${{ env.SERVICE_LOG }}
+      - name: Download Minio client
+        run: |
+          # https://docs.min.io/docs/minio-client-quickstart-guide.html
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+
+          # Create a new alias called minio for our Minio container.
+          ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
+
+          # Create the bucket using the minio alias.
+          ./mc mb "minio/${MINIO_BUCKET_NAME}"
+          ./mc mb "minio/${MINIO_PP_BUCKET_NAME}"
+
+      - uses: ./pulumi-ee/.github/actions/run-self-hosted
+        timeout-minutes: 5
+        with:
+          compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.yml'
+        env:
+          PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
+          PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
+
+      - name: Run integration tests
+        run: go test ./pulumi-ee/tests/.. -v
+
+      - name: Upload service log as artifact
+        uses: actions/upload-artifact@v1.0.0
+        if: ${{ always() }}
+        with:
+          name: service-log
+          path: ${{ env.SERVICE_LOG }}

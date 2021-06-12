@@ -29,7 +29,9 @@ runs:
         # Make the SERVICE_LOG available to later steps in the workflow.
         # Access it as ${{ env.SERVICE_LOG }}
         echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
-        ../../../scripts/run-ee.sh "${INPUT_COMPOSE_ARGS}" > "${SERVICE_LOG}" 2>&1 &
+        # Do not add quotes around $INPUT_COMPOSE_ARGS as it interferes with the args being
+        # spread out.
+        ../../../scripts/run-ee.sh ${INPUT_COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
 
     - name: Wait for services to start
       shell: bash
