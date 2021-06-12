@@ -39,6 +39,7 @@ jobs:
 
       - name: Run Minio
         run: |
+          docker network create pulumi-ee
           docker run -d --rm --name minio \
               --publish 9000:9000 \
               --network pulumi-ee \
