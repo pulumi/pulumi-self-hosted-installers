@@ -25,6 +25,10 @@ runs:
         # Access it as ${{ env.SERVICE_LOG }}
         echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
 
+        # Don't use the override files since they need the service repo
+        # source to work with.
+        rm -r **/*.override.yml
+
         # Do not add quotes around $INPUT_COMPOSE_ARGS as it interferes with the args being
         # spread out.
         ./scripts/run-ee.sh ${INPUT_COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
