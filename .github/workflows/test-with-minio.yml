@@ -18,8 +18,8 @@ jobs:
       # That is, create a license that has a max unit of just 1 unless
       # otherwise required.
       PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
-      PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
-      PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
+      PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
+      PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
 
     steps:
       - uses: actions/setup-go@v2
