@@ -17,6 +17,17 @@ jobs:
       MINIO_BUCKET_NAME: "pulumi-checkpoints"
       MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
 
+    services:
+      minio:
+        image: bitnami/minio
+        volumes:
+          - ${{ env.RUNNER_TEMP }}:/data
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ACCESS_KEY: ${{ env.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ env.MINIO_SECRET_KEY }}
+
     steps:
       - uses: actions/setup-go@v2
         with:
@@ -40,16 +51,16 @@ jobs:
 
       - name: Run Minio
         run: |
-          mkdir -p "${RUNNER_TEMP}/minio-persistence"
-          docker run -d --name minio \
-              --publish 9000:9000 \
-              --volume ${RUNNER_TEMP}/minio-persistence:/data \
-              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
-              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
-          bitnami/minio:latest
-
-          # Wait until Minio starts up fully.
-          sleep 5s
+#          mkdir -p "${RUNNER_TEMP}/minio-persistence"
+#          docker run -d --name minio \
+#              --publish 9000:9000 \
+#              --volume ${RUNNER_TEMP}/minio-persistence:/data \
+#              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
+#              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
+#          bitnami/minio:latest
+#
+#          # Wait until Minio starts up fully.
+#          sleep 5s
 
           docker logs minio
 
