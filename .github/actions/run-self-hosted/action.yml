@@ -10,11 +10,6 @@ runs:
   steps:
     - name: Run all-in-one
       shell: bash
-      env:
-        # When regenerating the license, create a restricted license.
-        # That is, create a license that has a max unit of just 1 unless
-        # otherwise required.
-        PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
       run: |
         # NOTE: If the service or console emit secrets
         # we would accidentally reveal that in plaintext when the logs
