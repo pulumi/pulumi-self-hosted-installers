@@ -17,6 +17,7 @@ jobs:
       run: |
         rm *.override.yml
         rm -r **/*.override.yml
+        rm -r **/*.edge.yml
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
