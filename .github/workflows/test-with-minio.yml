@@ -75,8 +75,8 @@ jobs:
           # That is, create a license that has a max unit of just 1 unless
           # otherwise required.
           PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.MINIO_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ env.MINIO_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.MINIO_SECRET_KEY }}
           PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
           PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
