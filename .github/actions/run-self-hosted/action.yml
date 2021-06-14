@@ -11,6 +11,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Remove override files
+      shell: bash
+      run: |
+        rm *.override.yml
+        rm -r **/*.override.yml
+
     - name: Run all-in-one
       shell: bash
       run: |
@@ -27,10 +33,6 @@ runs:
         # Make the SERVICE_LOG available to later steps in the workflow.
         # Access it as ${{ env.SERVICE_LOG }}
         echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
-
-        # Don't use the override files since they need the service repo
-        # source to work with.
-        rm -r **/*.override.yml
 
         # Do not add quotes around $COMPOSE_ARGS as it interferes with the args being
         # spread out.
