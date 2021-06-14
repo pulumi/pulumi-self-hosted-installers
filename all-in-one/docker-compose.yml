@@ -46,9 +46,15 @@ services:
       # Policy pack object storage (configure one)
       PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:
       PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:
-      # AWS
+      # AWS env vars
       AWS_REGION:
-      # Azure
+      AWS_PROFILE:
+      AWS_ACCESS_KEY_ID:
+      AWS_SECRET_ACCESS_KEY:
+      # Add any other AWS env vars you may need to provide to this container
+      # here.
+      #
+      # Azure env vars
       AZURE_CLIENT_ID:
       AZURE_STORAGE_ACCOUNT:
       AZURE_STORAGE_KEY:
