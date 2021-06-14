@@ -24,17 +24,8 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Check out pulumi/pulumi-service
-        uses: actions/checkout@v2
-        with:
-          repository: pulumi/pulumi-service
-          token: ${{ secrets.PULUMI_BOT_GH_REPO_PAT }}
-          path: .
-
       - name: Checkout pulumi/pulumi-ee
         uses: actions/checkout@v2
-        with:
-          path: ./pulumi-ee
 
       - name: Run Minio
         run: |
