@@ -42,7 +42,7 @@ jobs:
         run: |
           docker run -d --name minio \
               --publish 9000:9000 \
-              --volume /tmp/minio-persistence:/data \
+              --volume ${RUNNER_TEMP}/minio-persistence:/data \
               --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
               --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
           bitnami/minio:latest
@@ -57,7 +57,7 @@ jobs:
       - name: Download Minio client
         run: |
           # https://docs.min.io/docs/minio-client-quickstart-guide.html
-          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
 
           # Create a new alias called minio for our Minio container.
