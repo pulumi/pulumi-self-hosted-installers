@@ -8,8 +8,6 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      TEST_UI_E2E_USERNAME: "fake-user"
-      TEST_UI_E2E_PASSWORD: "this is a fake password"
       AWS_REGION: "us-west-2"
       MINIO_ACCESS_KEY: "minio-access-key"
       MINIO_SECRET_KEY: "minio-secret-key"
