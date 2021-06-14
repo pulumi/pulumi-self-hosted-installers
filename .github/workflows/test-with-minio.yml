@@ -63,7 +63,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - uses: ./pulumi-ee/.github/actions/run-self-hosted
+      - uses: .github/actions/run-self-hosted
         timeout-minutes: 10
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
@@ -76,7 +76,7 @@ jobs:
           PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
       - name: Run integration tests
-        run: go test ./pulumi-ee/tests/.. -v
+        run: go test ./tests/.. -v
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0
