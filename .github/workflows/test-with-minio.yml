@@ -51,19 +51,7 @@ jobs:
 
       - name: Run Minio
         run: |
-#          mkdir -p "${RUNNER_TEMP}/minio-persistence"
-#          docker run -d --name minio \
-#              --publish 9000:9000 \
-#              --volume ${RUNNER_TEMP}/minio-persistence:/data \
-#              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
-#              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
-#          bitnami/minio:latest
-#
-#          # Wait until Minio starts up fully.
-#          sleep 5s
-
           docker logs minio
-
           echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
 
       - name: Download Minio client
