@@ -42,13 +42,15 @@ jobs:
         run: |
           docker run -d --rm --name minio \
               --publish 9000:9000 \
-              --volume ${HOME}/minio-persistence:/data \
+              --volume /tmp/minio-persistence:/data \
               --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
               --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
           bitnami/minio:latest
 
-          # TEMPORARY!! Wait until Minio starts up fully.
-          sleep 60s
+          # Wait until Minio starts up fully.
+          sleep 5s
+
+          docker logs minio
 
           echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
 
