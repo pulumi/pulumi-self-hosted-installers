@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: "us-west-2"
+      # The fake access keys used to configure the Minio container.
+      # We will use these keys as the AWS access keys so that the
+      # Pulumi service can connect to the Minio storage service.
       MINIO_ACCESS_KEY: "minio-access-key"
       MINIO_SECRET_KEY: "minio-secret-key"
       MINIO_HOST: "minio:9000"
@@ -26,6 +29,12 @@ jobs:
 
       - name: Checkout pulumi/pulumi-ee
         uses: actions/checkout@v2
+
+      - name: Login to Docker Hub as pulumi-bot
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Run Minio
         run: |
@@ -57,14 +66,8 @@ jobs:
           ./mc mb "minio/${MINIO_BUCKET_NAME}"
           ./mc mb "minio/${MINIO_PP_BUCKET_NAME}"
 
-      - name: Login to Docker Hub as pulumi-bot
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
       - uses: ./.github/actions/run-self-hosted
-        timeout-minutes: 10
+        timeout-minutes: 2
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
         env:
@@ -72,6 +75,8 @@ jobs:
           # That is, create a license that has a max unit of just 1 unless
           # otherwise required.
           PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.MINIO_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
           PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
