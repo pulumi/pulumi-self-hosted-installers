@@ -1,5 +1,8 @@
 name: 'Run Self-Hosted Pulumi Service'
 description: 'Runs the all-in-one version of the quickstart solution.'
+# Note: Inputs need to be explicitly mapped into the environment
+# of each step where it is needed.
+# https://github.com/actions/runner/issues/665
 inputs:
   compose-args:
     description: 'Args to pass to the docker-compose command in run-ee.sh'
@@ -29,9 +32,11 @@ runs:
         # source to work with.
         rm -r **/*.override.yml
 
-        # Do not add quotes around $INPUT_COMPOSE_ARGS as it interferes with the args being
+        # Do not add quotes around $COMPOSE_ARGS as it interferes with the args being
         # spread out.
-        ./scripts/run-ee.sh ${INPUT_COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
+        ./scripts/run-ee.sh ${COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
+      env:
+        $COMPOSE_ARGS: ${{ inputs.compose-args }}
 
     - name: Wait for services to start
       shell: bash
