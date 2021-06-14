@@ -65,6 +65,16 @@ fi
 
 export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_NAME}:${PULUMI_LOCAL_DATABASE_PORT}"
 
+if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" ]]; then
+    echo "Checkpoint object storage configuration not found. Defaulting to local path..."
+    export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"
+fi
+
+if [[ -z "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-}" ]] && [[ "${PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:-}" ]]; then
+    echo "Policy pack object storage configuration not found. Defaulting to local path..."
+    export PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS="${PULUMI_DATA_PATH}/policypacks"
+fi
+
 docker_compose_stop() {
     if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
         docker-compose stop
