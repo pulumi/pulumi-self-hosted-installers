@@ -67,7 +67,7 @@ jobs:
           ./mc mb "minio/${MINIO_PP_BUCKET_NAME}"
 
       - uses: ./pulumi-ee/.github/actions/run-self-hosted
-        timeout-minutes: 5
+        timeout-minutes: 30
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.yml'
         env:

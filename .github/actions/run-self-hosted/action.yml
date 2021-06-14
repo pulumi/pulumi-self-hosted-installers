@@ -26,7 +26,9 @@ runs:
         echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
         # Do not add quotes around $INPUT_COMPOSE_ARGS as it interferes with the args being
         # spread out.
-        ./pulumi-ee/scripts/run-ee.sh ${INPUT_COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
+        pushd ./pulumi-ee
+        ./scripts/run-ee.sh ${INPUT_COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
+        popd
 
     - name: Wait for services to start
       shell: bash
