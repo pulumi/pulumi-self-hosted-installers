@@ -63,7 +63,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - uses: .github/actions/run-self-hosted
+      - uses: ./.github/actions/run-self-hosted
         timeout-minutes: 10
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
