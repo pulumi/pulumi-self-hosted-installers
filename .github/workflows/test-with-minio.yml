@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Minio
         run: |
-          docker run -d --rm --name minio \
+          docker run -it --name minio \
               --publish 9000:9000 \
               --volume /tmp/minio-persistence:/data \
               --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
