@@ -34,6 +34,7 @@ runs:
 
         # Do not add quotes around $COMPOSE_ARGS as it interferes with the args being
         # spread out.
+        echo "Running Docker Compose with args ${COMPOSE_ARGS}..."
         ./scripts/run-ee.sh ${COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
       env:
         $COMPOSE_ARGS: ${{ inputs.compose-args }}
