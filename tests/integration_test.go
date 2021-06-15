@@ -15,7 +15,6 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
 	ptesting "github.com/pulumi/pulumi/sdk/v3/go/common/testing"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 )
 
 func TestStackUpdate(t *testing.T) {
@@ -30,24 +29,15 @@ func TestStackUpdate(t *testing.T) {
 		t.Fatalf("Error running npm ci command: %v", npmErr)
 	}
 
-	proj := auto.Project(workspace.Project{
-		Backend: &workspace.ProjectBackend{
-			URL: "http://localhost:8080",
-		},
-	})
-
 	envVars := auto.EnvVars(map[string]string{
 		"PULUMI_ACCESS_TOKEN": testAccountAccessToken,
+		"PULUMI_BACKEND_URL":  pulumiAPIURI,
 	})
 
-	w, err := auto.NewLocalWorkspace(ctx, auto.WorkDir(testEnv.CWD), proj, envVars)
+	// Upsert will create or select the stack.
+	stack, err := auto.UpsertStackLocalSource(ctx, "dev", testEnv.CWD, envVars)
 	if err != nil {
-		t.Fatalf("Error creating local workspace: %v", err)
-	}
-
-	stack, err := auto.NewStack(ctx, "dev", w)
-	if err != nil {
-		t.Fatalf("Error creating a new stack: %v", err)
+		t.Fatalf("Error creating a stack: %v", err)
 	}
 
 	// create a temp file that we can tail during while our program runs
