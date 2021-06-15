@@ -18,12 +18,6 @@ var testAccountAccessToken string
 
 const pulumiAPIURI = "http://localhost:8080"
 
-type utmParameters struct {
-	Campaign string `json:"campaign"`
-	Source   string `json:"source"`
-	Medium   string `json:"medium"`
-}
-
 // emailUserSignupRequest mirrors the type defined in the service repo's
 // pkg/apitype/login.go.
 type emailUserSignupRequest struct {
