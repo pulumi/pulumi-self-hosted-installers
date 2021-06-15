@@ -24,7 +24,8 @@ func TestStackUpdate(t *testing.T) {
 	testApp := "test-pulumi-app"
 	testAppPath := path.Join(".", testApp)
 	testEnv := ptesting.NewEnvironment(t)
-	_, _, npmErr := testEnv.GetCommandResults("npm", "--prefix", testAppPath, "ci")
+	testEnv.ImportDirectory(testAppPath)
+	_, _, npmErr := testEnv.GetCommandResults("npm", "ci")
 	if npmErr != nil {
 		t.Fatalf("Error running npm ci command: %v", npmErr)
 	}
@@ -39,7 +40,7 @@ func TestStackUpdate(t *testing.T) {
 		"PULUMI_ACCESS_TOKEN": testAccountAccessToken,
 	})
 
-	w, err := auto.NewLocalWorkspace(ctx, auto.WorkDir(testApp), proj, envVars)
+	w, err := auto.NewLocalWorkspace(ctx, auto.WorkDir(testEnv.CWD), proj, envVars)
 	if err != nil {
 		t.Fatalf("Error creating local workspace: %v", err)
 	}
