@@ -1,6 +1,5 @@
-# TEMPORARILY DISABLED!
-#on:
-#  pull_request:
+on:
+  pull_request:
 
 name: PR test
 

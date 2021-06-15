@@ -1,10 +1,10 @@
-on:
-  pull_request:
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
+on: workflow_dispatch
 
 name: Test Minio as object storage
 
 jobs:
-  test:
+  minio-test:
 
     runs-on: ubuntu-latest
     env:
