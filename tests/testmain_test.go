@@ -16,7 +16,7 @@ import (
 
 var testAccountAccessToken string
 
-const pulumiAPI = "http://localhost:8080"
+const pulumiAPIURI = "http://localhost:8080"
 
 type utmParameters struct {
 	Campaign string `json:"campaign"`
@@ -66,13 +66,14 @@ func createPulumiEmailUser() error {
 		return errors.Wrap(err, "marshaling signup request")
 	}
 
-	resp, err := http.Post(pulumiAPI, "application/json", bytes.NewReader(b))
+	emailUserSignupEndpoint := fmt.Sprintf("%s/api/console/email/signup", pulumiAPIURI)
+	resp, err := http.Post(emailUserSignupEndpoint, "application/json", bytes.NewReader(b))
 	if err != nil {
 		return errors.Wrap(err, "creating test user")
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("Unexpected response status code: %v", resp.StatusCode)
+		return errors.Errorf("unexpected response status code: %v", resp.StatusCode)
 	}
 
 	var signupResponse loginWithGitHubResponse

@@ -4,20 +4,31 @@ package tests
 
 import (
 	"context"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto/optup"
+	ptesting "github.com/pulumi/pulumi/sdk/v3/go/common/testing"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/workspace"
 )
 
 func TestStackUpdate(t *testing.T) {
 	ctx := context.Background()
+
+	testApp := "test-pulumi-app"
+	testAppPath := path.Join(".", testApp)
+	testEnv := ptesting.NewEnvironment(t)
+	_, _, npmErr := testEnv.GetCommandResults("npm", "--prefix", testAppPath, "ci")
+	if npmErr != nil {
+		t.Fatalf("Error running npm ci command: %v", npmErr)
+	}
+
 	proj := auto.Project(workspace.Project{
 		Backend: &workspace.ProjectBackend{
 			URL: "http://localhost:8080",
@@ -28,7 +39,7 @@ func TestStackUpdate(t *testing.T) {
 		"PULUMI_ACCESS_TOKEN": testAccountAccessToken,
 	})
 
-	w, err := auto.NewLocalWorkspace(ctx, auto.WorkDir("test-pulumi-app"), proj, envVars)
+	w, err := auto.NewLocalWorkspace(ctx, auto.WorkDir(testApp), proj, envVars)
 	if err != nil {
 		t.Fatalf("Error creating local workspace: %v", err)
 	}
