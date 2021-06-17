@@ -1,9 +1,5 @@
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
-#on: workflow_dispatch
-
-# FOR TESTING!
-on:
-  pull_request:
+on: workflow_dispatch
 
 name: Test Minio as object storage
 
@@ -103,7 +99,7 @@ jobs:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
 
       - name: Run integration tests
-        run: go test ./tests/... -v --tags=minio
+        run: go test ./tests/... -v
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0
