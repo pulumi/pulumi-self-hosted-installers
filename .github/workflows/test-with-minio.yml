@@ -12,11 +12,6 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: "us-west-2"
-      # The only AWS resource the service will access is the Minio container
-      # so we map its keys as the AWS keys for the service.
-      AWS_ACCESS_KEY_ID: ${{ env.MINIO_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ env.MINIO_SECRET_KEY }}
       # The fake access keys used to configure the Minio container.
       # We will use these keys as the AWS access keys so that the
       # Pulumi service can connect to the Minio storage service.
@@ -29,10 +24,26 @@ jobs:
       # That is, create a license that has a max unit of just 1 unless
       # otherwise required.
       PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
-      PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
-      PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
     steps:
+      - name: Set env vars
+        run: |
+          # There doesn't seem to be a way to map environment variables into other enviroments
+          # when these are also defined in the same place as the ones they depend on.
+          # So set those env vars using:
+          # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+
+          # The only AWS resource the service will access is the Minio container
+          # so we map its keys as the AWS keys for the service.
+          echo "AWS_REGION=us-west-2" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}" >> $GITHUB_ENV
+
+          checkpoint_endpoint="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
+          pp_endpoint="s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
+          echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${checkpoint_endpoint}" >> $GITHUB_ENV
+          echo "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${pp_endpoint}" >> $GITHUB_ENV
+
       - uses: actions/setup-go@v2
         with:
           go-version: '~1.16.0'
