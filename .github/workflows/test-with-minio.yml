@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: "us-west-2"
+      # The only AWS resource the service will access is the Minio container
+      # so we map its keys as the AWS keys for the service.
+      AWS_ACCESS_KEY_ID: ${{ env.MINIO_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ env.MINIO_SECRET_KEY }}
       # The fake access keys used to configure the Minio container.
       # We will use these keys as the AWS access keys so that the
       # Pulumi service can connect to the Minio storage service.
@@ -21,6 +25,12 @@ jobs:
       MINIO_HOST: "minio:9000"
       MINIO_BUCKET_NAME: "pulumi-checkpoints"
       MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
+      # When regenerating the license, create a restricted license.
+      # That is, create a license that has a max unit of just 1 unless
+      # otherwise required.
+      PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
+      PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
+      PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
     steps:
       - uses: actions/setup-go@v2
@@ -80,17 +90,6 @@ jobs:
         timeout-minutes: 2
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
-        env:
-          # When regenerating the license, create a restricted license.
-          # That is, create a license that has a max unit of just 1 unless
-          # otherwise required.
-          PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
-          # The only AWS resource the service will access is the Minio container
-          # so we map its keys as the AWS keys for the service.
-          AWS_ACCESS_KEY_ID: ${{ env.MINIO_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ env.MINIO_SECRET_KEY }}
-          PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
-          PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
       - name: Run integration tests
         run: go test ./tests/... -v --tags=minio
