@@ -1,5 +1,12 @@
-# https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
-on: workflow_dispatch
+# workflow_dispatch allows for manual triggering from the GitHub Actions UI, as well
+# as the API. repository_dispatch allows us to trigger multiple workflows that
+# match on an event_type parameter when triggered via an API call.
+# https://docs.github.com/en/actions/reference/events-that-trigger-workflows
+on:
+  workflow_dispatch:
+
+  repository_dispatch:
+    types: [integration_tests]
 
 name: Test Minio as object storage
 
