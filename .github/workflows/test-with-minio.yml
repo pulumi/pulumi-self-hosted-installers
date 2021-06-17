@@ -1,5 +1,9 @@
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_dispatch
-on: workflow_dispatch
+#on: workflow_dispatch
+
+# FOR TESTING!
+on:
+  pull_request:
 
 name: Test Minio as object storage
 
@@ -89,7 +93,7 @@ jobs:
           PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://${{ env.MINIO_PP_BUCKET_NAME }}?endpoint=${{ env.MINIO_HOST }}&disableSSL=true&s3ForcePathStyle=true"
 
       - name: Run integration tests
-        run: go test ./tests/... -v
+        run: go test ./tests/... -v --tags=minio
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0
