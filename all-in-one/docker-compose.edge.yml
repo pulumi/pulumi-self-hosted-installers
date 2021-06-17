@@ -1,0 +1,28 @@
+# This is the DEV version of the all-in-one compose file.
+# The overrides the build context so that it uses the local sources
+# to build an image rather than the published image.
+
+version: "3.0"
+
+networks:
+  pulumi-ee:
+    # Setting external to true will prevent docker-compose from creating the
+    # network if it doesn't exist already.
+    external: true
+
+  pulumi-services:
+
+services:
+
+  api:
+    ports:
+      - 8080:8080
+    image: "pulumi/service:edge"
+
+  console:
+    ports:
+      - 3000:3000
+    image: "pulumi/console:edge"
+
+  migration:
+    image: "pulumi/migrations:edge"

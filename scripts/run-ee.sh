@@ -65,6 +65,16 @@ fi
 
 export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_NAME}:${PULUMI_LOCAL_DATABASE_PORT}"
 
+if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" ]]; then
+    echo "Checkpoint object storage configuration not found. Defaulting to local path..."
+    export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"
+fi
+
+if [[ -z "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-}" ]] && [[ -z "${PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:-}" ]]; then
+    echo "Policy pack object storage configuration not found. Defaulting to local path..."
+    export PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS="${PULUMI_DATA_PATH}/policypacks"
+fi
+
 docker_compose_stop() {
     if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
         docker-compose stop
@@ -78,5 +88,7 @@ trap docker_compose_stop SIGINT SIGTERM ERR EXIT
 if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
     docker-compose up --build
 else
+    # Don't add quotes around the variable below. We might pass multiple args and the quotes
+    # will make multiple args look like a single arg.
     docker-compose ${DOCKER_COMPOSE_ARGS} up --build
 fi
