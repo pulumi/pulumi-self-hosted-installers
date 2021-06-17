@@ -14,9 +14,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-var testAccountAccessToken string
-
 const pulumiAPIURI = "http://localhost:8080"
+
+var (
+	// testAccountAccessToken is the Pulumi user access token for a new
+	// user created when the tests run.
+	testAccountAccessToken string
+
+	testEmailUserSignupRequest = emailUserSignupRequest{
+		Name:      "Pulumi EE Test User",
+		LoginName: "pulumi-ee-test",
+		Email:     "pulumi-ee-test@pulumi-test.test",
+		Password:  "fake-password",
+	}
+)
 
 // emailUserSignupRequest mirrors the type defined in the service repo's
 // pkg/apitype/login.go.
@@ -48,14 +59,7 @@ type loginWithGitHubResponse struct {
 }
 
 func createPulumiEmailUser() error {
-	emailUserSignupRequest := emailUserSignupRequest{
-		Name:      "Pulumi EE Test User",
-		LoginName: "pulumi-ee-test",
-		Email:     "pulumi-ee-test@pulumi-test.test",
-		Password:  "fake-password",
-	}
-
-	b, err := json.Marshal(emailUserSignupRequest)
+	b, err := json.Marshal(testEmailUserSignupRequest)
 	if err != nil {
 		return errors.Wrap(err, "marshaling signup request")
 	}

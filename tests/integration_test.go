@@ -1,13 +1,15 @@
 // Copyright 2016-2021, Pulumi Corporation.  All rights reserved.
 
+// +build minio
+
 package tests
 
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,11 +19,22 @@ import (
 	ptesting "github.com/pulumi/pulumi/sdk/v3/go/common/testing"
 )
 
-func TestStackUpdate(t *testing.T) {
+func TestStackUpdateForMinioStorage(t *testing.T) {
 	ctx := context.Background()
 
+	checkpointStorageEndpoint := os.Getenv("PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT")
+	if !strings.HasPrefix(checkpointStorageEndpoint, "s3://") {
+		t.Fatalf("Checkpoint storage endpoint is not an S3-compatible endpoint instead it was %s", checkpointStorageEndpoint)
+	}
+
+	// testApp is the name of the folder and it just so happens the Pulumi
+	// project name is the same too in Pulumi.yaml.
 	testApp := "test-pulumi-app"
+	stackName := "dev"
 	testAppPath := path.Join(".", testApp)
+
+	// Initialize a new local environment using the integration test framework
+	// which makes it easy to also run commands to restore deps etc.
 	testEnv := ptesting.NewEnvironment(t)
 	testEnv.ImportDirectory(testAppPath)
 	_, _, npmErr := testEnv.GetCommandResults("npm", "ci")
@@ -35,17 +48,12 @@ func TestStackUpdate(t *testing.T) {
 	})
 
 	// Upsert will create or select the stack.
-	stack, err := auto.UpsertStackLocalSource(ctx, "dev", testEnv.CWD, envVars)
+	stack, err := auto.UpsertStackLocalSource(ctx, stackName, testEnv.CWD, envVars)
 	if err != nil {
 		t.Fatalf("Error creating a stack: %v", err)
 	}
 
-	// create a temp file that we can tail during while our program runs
-	tmp, _ := ioutil.TempFile(os.TempDir(), "")
-	// optup.ProgressStreams allows us to stream incremental output to stdout, a file to tail, etc.
-	//this gives us incremental status over time
-	progressStreams := []io.Writer{os.Stdout, tmp}
-	// this update will incrementally stream unstructured progress messages to stdout and our temp file
+	progressStreams := []io.Writer{os.Stdout}
 	result, err := stack.Up(ctx, optup.ProgressStreams(progressStreams...))
 	if err != nil {
 		t.Fatalf("Stack update failed: error: %v", err)
@@ -64,7 +72,5 @@ func TestStackUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Error exporting stack: %v", err)
 		}
-
-		// TODO: deserialize deployment to ensure stack checkpoint is valid.
 	})
 }
