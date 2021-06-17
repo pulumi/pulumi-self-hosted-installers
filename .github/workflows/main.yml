@@ -13,8 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Remove override files
+    - name: Remove unnecessary files from for packaging
       run: |
+        # Don't need tests and override files for the final package.
+        rm -rf tests
         rm *.override.yml
         rm -r **/*.override.yml
         rm -r **/*.edge.yml
