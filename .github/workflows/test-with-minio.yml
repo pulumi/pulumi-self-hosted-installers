@@ -131,3 +131,13 @@ jobs:
           body: See https://github.com/pulumi/pulumi-ee/actions/runs/${{ env.GITHUB_RUN_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: failure()
+        name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          text: Minio integration test failed for latest service edge build
+          fields: job,workflow
+          status: ${{ job.status }}
