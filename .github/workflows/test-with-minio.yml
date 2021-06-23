@@ -121,7 +121,7 @@ jobs:
           name: service-log
           path: ${{ env.SERVICE_LOG }}
 
-      - name: issue-bot
+      - name: Create issue on failure
         if: failure()
         uses: imjohnbo/issue-bot@v3
         with:
