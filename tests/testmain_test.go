@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -44,12 +45,38 @@ type emailUserSignupRequest struct {
 }
 
 func TestMain(m *testing.M) {
+	waitForPulumiAPIReadiness()
+
 	if err := createPulumiEmailUser(); err != nil {
 		panic(fmt.Sprintf("Error creating email-based user: %v", err))
 	}
 
 	exitCode := m.Run()
 	os.Exit(exitCode)
+}
+
+func waitForPulumiAPIReadiness() {
+	timeout := false
+	time.AfterFunc(120*time.Second, func() {
+		timeout = true
+	})
+	fmt.Println("Checking if Pulumi API is ready...")
+	for {
+		resp, err := http.Get(fmt.Sprintf("%s/api/status", pulumiAPIURI))
+		if err != nil {
+			panic("Failed calling the API's status endpoint")
+		}
+
+		if resp.StatusCode == http.StatusOK {
+			fmt.Println("Got 200 status code from /api/status!")
+			break
+		}
+		if timeout {
+			panic("Timed out waiting for the API's status endpoint to become ready")
+		}
+		fmt.Println("Sleeping before trying again...")
+		time.Sleep(5 * time.Second)
+	}
 }
 
 type loginWithGitHubResponse struct {
