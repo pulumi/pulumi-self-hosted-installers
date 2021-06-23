@@ -127,7 +127,6 @@ jobs:
         with:
           labels: impact/breaking
           pinned: false
-          close-previous: true
           title: Minio integration test failure
           body: See https://github.com/pulumi/pulumi-ee/actions/runs/${{ env.GITHUB_RUN_ID }}
         env:
