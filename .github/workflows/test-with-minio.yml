@@ -136,6 +136,9 @@ jobs:
         name: Notify Slack
         uses: 8398a7/action-slack@v3
         env:
+          # The Slack webhook URL must be specific to the pulumi-service Slack channel.
+          # The name of the Slack app is "Pulumi Webhooks". You must have access to it
+          # to be able to see it on https://api.slack.com.
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
           text: Minio integration test failed for latest service edge build
