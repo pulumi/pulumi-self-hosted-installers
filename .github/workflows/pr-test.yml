@@ -7,11 +7,6 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
-    env:
-      # When regenerating the license, create a restricted license.
-      # That is, create a license that has a max unit of just 1 unless
-      # otherwise required.
-      PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
 
     steps:
       - uses: actions/checkout@v2
@@ -24,6 +19,11 @@ jobs:
 
       - uses: ./.github/actions/run-self-hosted
         timeout-minutes: 2
+        env:
+          # When regenerating the license, create a restricted license.
+          # That is, create a license that has a max unit of just 1 unless
+          # otherwise required.
+          PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml'
 

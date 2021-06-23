@@ -45,15 +45,7 @@ runs:
       shell: bash
       run: |
         printf "API Service "
-        while true
-        do
-            code=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8080/api/status)
-            if [ "${code}" = "200" ]; then
-              break
-            fi
-            printf '.'
-            sleep 1
-        done
+        while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080/api/status)" != "200" ]]; do printf '.' && sleep 1; done
         echo ""
 
         printf "Console Backend "
