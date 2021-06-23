@@ -14,6 +14,12 @@ jobs:
   minio-test:
 
     runs-on: ubuntu-latest
+    # Grant write permissions to the issues API for the default
+    # GITHUB_TOKEN for this workflow so that the imjohnbo/issue-bot
+    # can create an issue on workflow failures.
+    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
+    permissions:
+      issues: write
     env:
       # The fake access keys used to configure the Minio container.
       # We will use these keys as the AWS access keys so that the
@@ -106,7 +112,7 @@ jobs:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
 
       - name: Run integration tests
-        run: go test ./tests/... -v
+        run: go test ./tests/... -v --tags=minio
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0
@@ -114,3 +120,15 @@ jobs:
         with:
           name: service-log
           path: ${{ env.SERVICE_LOG }}
+
+      - name: issue-bot
+        if: failure()
+        uses: imjohnbo/issue-bot@v3
+        with:
+          labels: impact/breaking
+          pinned: false
+          close-previous: true
+          title: Minio integration test failure
+          body: See https://github.com/pulumi/pulumi-ee/actions/runs/${{ env.GITHUB_RUN_ID }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
