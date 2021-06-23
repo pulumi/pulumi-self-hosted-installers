@@ -45,7 +45,7 @@ runs:
       shell: bash
       run: |
         printf "API Service "
-        while:
+        while true
         do
             code=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8080/api/status)
             if [ "${code}" = "200" ]; then
