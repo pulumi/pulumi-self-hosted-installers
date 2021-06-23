@@ -72,6 +72,8 @@ func waitForPulumiAPIReadiness() {
 		if timeout {
 			panic("Timed out waiting for the API's status endpoint to become ready")
 		}
+		fmt.Println("Sleeping before trying again...")
+		time.Sleep(5 * time.Second)
 	}
 }
 
