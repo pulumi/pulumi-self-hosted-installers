@@ -60,6 +60,7 @@ func waitForPulumiAPIReadiness() {
 	time.AfterFunc(120*time.Second, func() {
 		timeout = true
 	})
+	fmt.Println("Checking if Pulumi API is ready...")
 	for {
 		resp, err := http.Get(fmt.Sprintf("%s/api/status", pulumiAPIURI))
 		if err != nil {
@@ -67,6 +68,7 @@ func waitForPulumiAPIReadiness() {
 		}
 
 		if resp.StatusCode == http.StatusOK {
+			fmt.Println("Got 200 status code from /api/status!")
 			break
 		}
 		if timeout {
