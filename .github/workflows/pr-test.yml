@@ -24,44 +24,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Run all-in-one
+      - uses: ./.github/actions/run-self-hosted
+        timeout-minutes: 2
         env:
           # When regenerating the license, create a restricted license.
           # That is, create a license that has a max unit of just 1 unless
           # otherwise required.
           PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
-        run: |
-          # NOTE: If the service or console emit secrets
-          # we would accidentally reveal that in plaintext when the logs
-          # are uploaded as a build artifact later in this workflow.
-          # Right now the service and the console use default configuration
-          # in this setup. So they don't have any secrets aside from the license
-          # key, which is not emitted by the service.
-          #
-          # Create a temp file for logs.
-          SERVICE_LOG=$(mktemp)
-
-          # Make the SERVICE_LOG available to later steps in the workflow.
-          # Access it as ${{ env.SERVICE_LOG }}
-          echo "SERVICE_LOG=${SERVICE_LOG}" >> $GITHUB_ENV
-          ./scripts/run-ee.sh -f ./all-in-one/docker-compose.yml > "${SERVICE_LOG}" 2>&1 &
-
-      - name: Wait for services to start
-        timeout-minutes: 2
-        run: |
-          printf "API Service "
-          until $(curl --output /dev/null --silent http://localhost:8080/api/status); do
-              printf '.'
-              sleep 1
-          done
-          echo ""
-
-          printf "Console Backend "
-          until $(curl --output /dev/null --silent http://localhost:3000/index.html); do
-              printf '.'
-              sleep 1
-          done
-          echo ""
+        with:
+          compose-args: '-f ./all-in-one/docker-compose.yml'
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0

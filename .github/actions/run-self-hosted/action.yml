@@ -45,7 +45,12 @@ runs:
       shell: bash
       run: |
         printf "API Service "
-        until $(curl --output /dev/null --silent http://localhost:8080/api/status); do
+        while:
+        do
+            code=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:8080/api/status)
+            if [ "${code}" = "200" ]; then
+              break
+            fi
             printf '.'
             sleep 1
         done
