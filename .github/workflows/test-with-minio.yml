@@ -14,12 +14,6 @@ jobs:
   minio-test:
 
     runs-on: ubuntu-latest
-    # Grant write permissions to the issues API for the default
-    # GITHUB_TOKEN for this workflow so that the imjohnbo/issue-bot
-    # can create an issue on workflow failures.
-    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
-    permissions:
-      issues: write
     env:
       # The fake access keys used to configure the Minio container.
       # We will use these keys as the AWS access keys so that the
