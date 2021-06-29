@@ -31,7 +31,7 @@ which migratecli >/dev/null || {
             "Linux") GOOS="linux";;
             "Darwin") GOOS="darwin";;
             *)
-                echo "Unknown OS. If you are running this on Windows, please set GOOS=windows and retry."
+                echo "Unknown OS"
                 exit 1
                 ;;
         esac
