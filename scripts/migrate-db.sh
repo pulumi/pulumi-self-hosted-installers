@@ -24,7 +24,20 @@ which migratecli >/dev/null || {
     pushd "${CLONE_DIR}"
     # https://github.com/golang-migrate/migrate/blob/master/CONTRIBUTING.md
     INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
-    DATABASE=mysql CLI_BUILD_OUTPUT=${INSTALL_DEST}/migratecli make build-cli
+
+    # If GOOS (read Go OS) is not set, then try and determine if this is a linux-like environment.
+    if [ -z "${GOOS:-}" ]; then
+        case $(uname) in
+            "Linux") GOOS="linux";;
+            "Darwin") GOOS="darwin";;
+            *)
+                echo "Unknown OS"
+                exit 1
+                ;;
+        esac
+    fi
+
+    GOOS="${GOOS}" DATABASE=mysql SOURCE=file CLI_BUILD_OUTPUT=${INSTALL_DEST}/migratecli make build-cli
     popd
 
     # Ensure the version we built is on the PATH for the rest of this script
