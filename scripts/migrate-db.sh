@@ -85,7 +85,7 @@ fi
 # Force the migration to 1 if the option to skip creation of the
 # pulumi_service DB user is set.
 if [ -n "${SKIP_CREATE_PULUMI_SERVICE_DB_USER:-}" ]; then
-    echo "Force the schema migrations version to 1"
+    echo "Skipping the first migration script"
     migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
 fi
 
