@@ -86,7 +86,7 @@ fi
 # pulumi_service DB user is set.
 if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
     current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version)
-    if [ "${current_version}" = "0" ]; then
+    if [ "${current_version}" -eq "0" ]; then
         echo "NOTE: Skipping the first migration script. You will need to set the PULUMI_DATABASE_USER_NAME and PULUMI_DATABASE_USER_PASSWORD environment variables in the API container, to specify a custom database user name and password for your service instance."
         migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
     else
