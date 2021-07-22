@@ -85,8 +85,13 @@ fi
 # Force the migration to 1 if the option to skip creation of the
 # pulumi_service DB user is set.
 if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
-    echo "NOTE: Skipping the first migration script. You will need to set the PULUMI_DATABASE_USER_NAME and PULUMI_DATABASE_USER_PASSWORD environment variables in the API container, to specify a custom database user name and password for your service instance."
-    migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
+    current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}")
+    if [ "${current_version}" = "0" ]; then
+        echo "NOTE: Skipping the first migration script. You will need to set the PULUMI_DATABASE_USER_NAME and PULUMI_DATABASE_USER_PASSWORD environment variables in the API container, to specify a custom database user name and password for your service instance."
+        migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
+    else
+        echo "Current migration version is not 0. Will not force version to 1."
+    fi
 fi
 
 # Options are only recognized if they come *before* the command.
