@@ -96,8 +96,7 @@ if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
     # the output alone is not enough.
     current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version 2>&1) || {
         # Skip the first migration script only if the error is because there isn't a previous
-        # migration. We do a regexp search here for the string "no migration". Hence, the use
-        # of =~.
+        # migration. We do a regexp search here for the string "no migration".
         if [[ "${current_version}" == *"no migration"* ]]; then
             echo "Fresh DB instance"
             skip_first_migration
