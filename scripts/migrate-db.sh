@@ -94,9 +94,14 @@ if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
     # Since this script sets errexit option at the beginning, we should ensure that the command
     # failure is captured properly or the script will stop at the first failed command. Redirecting
     # the output alone is not enough.
-    current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version 2>/dev/null) || {
-        # No prior migrations
-        skip_first_migration
+    current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version 2>&1) || {
+        # Skip the first migration script only if the error is because there isn't a previous
+        # migration. We do a regexp search here for the string "no migration". Hence, the use
+        # of =~.
+        if [[ "${current_version}" == *"no migration"* ]]; then
+            echo "Fresh DB instance"
+            skip_first_migration
+        fi
     }
 
     if [ "${current_version}" = 0 ]; then
