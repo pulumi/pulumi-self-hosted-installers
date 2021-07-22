@@ -90,6 +90,7 @@ skip_first_migration() {
 # Force the migration to 1 if the option to skip creation of the
 # pulumi_service DB user is set.
 if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
+    # When there is no prior migration in a database, the `version` command will fail with a "error: no migration".
     # Since this script sets errexit option at the beginning, we should ensure that the command
     # failure is captured properly or the script will stop at the first failed command. Redirecting
     # the output alone is not enough.
