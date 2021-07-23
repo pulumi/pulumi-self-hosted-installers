@@ -82,11 +82,31 @@ if [ -z "${MIGRATIONS_DIR:-}" ]; then
     MIGRATIONS_DIR=migrations
 fi
 
+skip_first_migration() {
+    echo "NOTE: Skipping the first migration script. You will need to set the PULUMI_DATABASE_USER_NAME and PULUMI_DATABASE_USER_PASSWORD environment variables in the API container, to specify a custom database user name and password for your service instance."
+    migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
+}
+
 # Force the migration to 1 if the option to skip creation of the
 # pulumi_service DB user is set.
 if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
-    echo "NOTE: Skipping the first migration script. You will need to set the PULUMI_DATABASE_USER_NAME and PULUMI_DATABASE_USER_PASSWORD environment variables in the API container, to specify a custom database user name and password for your service instance."
-    migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
+    # When there is no prior migration in a database, the `version` command will fail with a "error: no migration".
+    # Since this script sets errexit option at the beginning, we should ensure that the command
+    # failure is captured properly or the script will stop at the first failed command. Redirecting
+    # the output alone is not enough.
+    current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version 2>&1) || {
+        # Skip the first migration script only if the error is because there isn't a previous
+        # migration. We do a regexp search here for the string "no migration".
+        if [[ "${current_version}" == *"no migration"* ]]; then
+            echo "Fresh DB instance"
+            skip_first_migration
+        fi
+    }
+
+    if [ "${current_version}" = 0 ]; then
+        echo "Migration version is 0"
+        skip_first_migration
+    fi
 fi
 
 # Options are only recognized if they come *before* the command.
