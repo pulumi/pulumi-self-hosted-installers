@@ -30,7 +30,6 @@ func TestStackUpdateForMinioStorage(t *testing.T) {
 	// testApp is the name of the folder and it just so happens the Pulumi
 	// project name is the same too in Pulumi.yaml.
 	testApp := "test-pulumi-app"
-	stackName := "dev"
 	testAppPath := path.Join(".", testApp)
 
 	// Initialize a new local environment using the integration test framework
@@ -43,34 +42,48 @@ func TestStackUpdateForMinioStorage(t *testing.T) {
 	}
 
 	envVars := auto.EnvVars(map[string]string{
-		"PULUMI_ACCESS_TOKEN": testAccountAccessToken,
-		"PULUMI_BACKEND_URL":  pulumiAPIURI,
+		"PULUMI_BACKEND_URL": pulumiAPIURI,
 	})
 
-	// Upsert will create or select the stack.
-	stack, err := auto.UpsertStackLocalSource(ctx, stackName, testEnv.CWD, envVars)
-	if err != nil {
-		t.Fatalf("Error creating a stack: %v", err)
-	}
+	runStackUpdate := func(t *testing.T, stackName string) {
+		// Upsert will create or select the stack.
+		stack, err := auto.UpsertStackLocalSource(ctx, stackName, testEnv.CWD, envVars)
+		if err != nil {
+			t.Fatalf("Error creating a stack: %v", err)
+		}
 
-	progressStreams := []io.Writer{os.Stdout}
-	result, err := stack.Up(ctx, optup.ProgressStreams(progressStreams...))
-	if err != nil {
-		t.Fatalf("Stack update failed: error: %v", err)
-	}
+		progressStreams := []io.Writer{os.Stdout}
+		result, err := stack.Up(ctx, optup.ProgressStreams(progressStreams...))
+		if err != nil {
+			t.Fatalf("Stack update failed: error: %v", err)
+		}
 
-	outputResult, ok := result.Outputs["result"]
-	assert.True(t, ok)
-	assert.True(t, outputResult.Secret)
+		outputResult, ok := result.Outputs["result"]
+		assert.True(t, ok)
+		assert.True(t, outputResult.Secret)
 
-	valueStr, ok := outputResult.Value.(string)
-	assert.True(t, ok)
-	assert.NotEmpty(t, valueStr)
+		valueStr, ok := outputResult.Value.(string)
+		assert.True(t, ok)
+		assert.NotEmpty(t, valueStr)
 
-	t.Run("StackExport", func(t *testing.T) {
-		_, err := stack.Export(ctx)
+		_, err = stack.Export(ctx)
 		if err != nil {
 			t.Fatalf("Error exporting stack: %v", err)
 		}
+	}
+
+	t.Run("StackUpdate", func(t *testing.T) {
+		stackName := "dev"
+		runStackUpdate(t, stackName)
+	})
+
+	t.Run("StackUpdateWithPolicyPack", func(t *testing.T) {
+		orgName := publishPolicyPack(t)
+		if orgName == "" || t.Failed() {
+			t.FailNow()
+		}
+
+		fqsn := auto.FullyQualifiedStackName(orgName, testApp, "dev")
+		runStackUpdate(t, fqsn)
 	})
 }
