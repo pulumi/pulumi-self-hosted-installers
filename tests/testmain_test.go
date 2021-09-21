@@ -28,7 +28,7 @@ type emailUserSignupRequest struct {
 	// The reCAPTCHA response token that needs to be verified by the service.
 	Token *string `json:"token,omitempty"`
 
-	// Other fields are intentionally omitted since for testing.
+	// Other fields are intentionally omitted for testing.
 }
 
 var (
