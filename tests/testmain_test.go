@@ -17,6 +17,20 @@ import (
 
 const pulumiAPIURI = "http://localhost:8080"
 
+// emailUserSignupRequest mirrors the type defined in the service repo's
+// pkg/apitype/login.go.
+type emailUserSignupRequest struct {
+	Name      string `json:"name"`
+	LoginName string `json:"loginName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+
+	// The reCAPTCHA response token that needs to be verified by the service.
+	Token *string `json:"token,omitempty"`
+
+	// Other fields are intentionally omitted for testing.
+}
+
 var (
 	// testAccountAccessToken is the Pulumi user access token for a new
 	// user created when the tests run.
@@ -30,26 +44,14 @@ var (
 	}
 )
 
-// emailUserSignupRequest mirrors the type defined in the service repo's
-// pkg/apitype/login.go.
-type emailUserSignupRequest struct {
-	Name      string `json:"name"`
-	LoginName string `json:"loginName"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-
-	// The reCAPTCHA response token that needs to be verified by the service.
-	Token *string `json:"token,omitempty"`
-
-	// Other fields are intentionally omitted since we don't need them at this time.
-}
-
 func TestMain(m *testing.M) {
 	waitForPulumiAPIReadiness()
 
 	if err := createPulumiEmailUser(); err != nil {
 		panic(fmt.Sprintf("Error creating email-based user: %v", err))
 	}
+
+	os.Setenv("PULUMI_ACCESS_TOKEN", testAccountAccessToken)
 
 	exitCode := m.Run()
 	os.Exit(exitCode)
