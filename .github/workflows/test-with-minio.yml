@@ -101,7 +101,7 @@ jobs:
           docker network connect pulumi-ee minio
 
       - uses: ./.github/actions/run-self-hosted
-        timeout-minutes: 2
+        timeout-minutes: 5
         with:
           compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
 
