@@ -75,7 +75,7 @@ jobs:
           bitnami/minio:latest
 
           # Wait until Minio starts up fully.
-          sleep 5s
+          sleep 20s
 
           docker logs minio
 
