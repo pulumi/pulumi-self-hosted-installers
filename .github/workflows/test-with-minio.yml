@@ -49,7 +49,7 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '~1.16.0'
+          go-version: '~1.17.0'
 
       - uses: actions/setup-node@v2
         with:
@@ -75,7 +75,7 @@ jobs:
           bitnami/minio:latest
 
           # Wait until Minio starts up fully.
-          sleep 5s
+          sleep 20s
 
           docker logs minio
 
