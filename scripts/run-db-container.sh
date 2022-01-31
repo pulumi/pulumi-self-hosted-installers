@@ -6,6 +6,10 @@
 
 set -e
 
+MIGRATIONS_IMAGE_TAG="${MIGRATIONS_IMAGE_TAG:-latest}"
+
+NETWORK_NAME=pulumi-ee
+
 # The volume mounted can be any stable/persistent file system.
 DEFAULT_DATA_PATH_BASE="${HOME}"
 DEFAULT_MYSQL_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-standalone-db/data"
@@ -20,13 +24,13 @@ if [ -z "${MYSQL_DATA_PATH:-}" ]; then
     export MYSQL_DATA_PATH="${DEFAULT_MYSQL_DATA_PATH}"
 fi
 
-exists=$(docker network inspect pulumi-ee)
+exists=$(docker network inspect $NETWORK_NAME)
 
 if [ ${#exists[@]} -eq 0 ]; then
-    echo "Creating pulumi-ee network"
-    docker network create pulumi-ee
+    echo "Creating $NETWORK_NAME network"
+    docker network create $NETWORK_NAME
 else
-    echo "pulumi-ee network exists already"
+    echo "$NETWORK_NAME network exists already"
 fi
 
 if [ -z "${MYSQL_ROOT_PASSWORD:-}" ]; then
@@ -40,7 +44,7 @@ if [ -z "${MYSQL_CONT:-}" ]; then
     # Boot up a MySQL 5.6 database.
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p 3306:3306 --rm -d \
-        --network pulumi-ee \
+        --network $NETWORK_NAME \
         -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e MYSQL_DATABASE=pulumi \
         -v "${MYSQL_DATA_PATH}":/var/lib/mysql \
@@ -50,6 +54,34 @@ fi
 echo "MySQL container ID: $MYSQL_CONT"
 echo "    to kill: docker kill $MYSQL_CONT"
 
+echo "Running migrations container with image tag ${MIGRATIONS_IMAGE_TAG}..."
 # Initialize the database with our scripts.
-RUN_MIGRATIONS_EXTERNALLY=true \
-    ./scripts/init-db-container.sh
+MIGRATIONS_CONTAINER_ID=$(docker run \
+    -d \
+    --network $NETWORK_NAME \
+    -e PULUMI_DATABASE_ENDPOINT="${PULUMI_DATABASE_ENDPOINT}" \
+    -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+    "pulumi/migrations:${MIGRATIONS_IMAGE_TAG}")
+
+echo "Waiting for migrations container (id $MIGRATIONS_CONTAINER_ID) to exit successfully"
+
+get_migrations_container_exit_code() {
+    docker inspect "$MIGRATIONS_CONTAINER_ID" --format='{{.State.ExitCode}}'
+}
+
+get_migrations_container_status() {
+    docker inspect "$MIGRATIONS_CONTAINER_ID" --format='{{.State.Status}}'
+}
+
+while [ "$(get_migrations_container_status)" = "running" ];
+do
+    echo "."
+    sleep 1
+done
+
+if [ "$(get_migrations_container_exit_code)" != "0" ]; then
+    echo "migrations container exited with a non-zero exit code!"
+    exit 1
+fi
+
+echo "Migrations completed successfully!"

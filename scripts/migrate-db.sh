@@ -18,30 +18,8 @@ echo "Running migrations"
 # When this script is run inside the `pulumi/migrations` container,
 # this tool is pre-installed as part of creating the container image.
 which migratecli >/dev/null || {
-    echo "Building 'migratecli' from source."
-    CLONE_DIR="${GOPATH}/src/github.com/pulumi/golang-migrate"
-    git clone git@github.com:pulumi/golang-migrate.git "${CLONE_DIR}"
-    pushd "${CLONE_DIR}"
-    # https://github.com/golang-migrate/migrate/blob/master/CONTRIBUTING.md
-    INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
-
-    # If GOOS (read Go OS) is not set, then try and determine if this is a linux-like environment.
-    if [ -z "${GOOS:-}" ]; then
-        case $(uname) in
-            "Linux") GOOS="linux";;
-            "Darwin") GOOS="darwin";;
-            *)
-                echo "Unknown OS"
-                exit 1
-                ;;
-        esac
-    fi
-
-    GOOS="${GOOS}" DATABASE=mysql SOURCE=file CLI_BUILD_OUTPUT=${INSTALL_DEST}/migratecli make build-cli
-    popd
-
-    # Ensure the version we built is on the PATH for the rest of this script
-    export PATH="${INSTALL_DEST}:${PATH}"
+    echo "migratecli not found."
+    exit 1
 }
 
 DB_USER=pulumi_service
