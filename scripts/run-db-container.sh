@@ -6,6 +6,16 @@
 
 set -e
 
+# The docker image used for the database.
+if [ -z "${DEFAULT_DB_IMAGE:-}" ]; then
+  DEFAULT_DB_IMAGE=mysql:5.6
+fi
+
+# The port which the database is exposed.
+if [ -z "${MYSQL_PORT:-}" ]; then
+  MYSQL_PORT=3306
+fi
+
 # The volume mounted can be any stable/persistent file system.
 DEFAULT_DATA_PATH_BASE="${HOME}"
 DEFAULT_MYSQL_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-standalone-db/data"
@@ -39,12 +49,12 @@ MYSQL_CONT=$(docker ps --filter "name=pulumi-db" --format "{{.ID}}")
 if [ -z "${MYSQL_CONT:-}" ]; then
     # Boot up a MySQL 5.6 database.
     MYSQL_CONT=$(docker run \
-        --name pulumi-db -p 3306:3306 --rm -d \
+        --name pulumi-db -p ${MYSQL_PORT}:3306 --rm -d \
         --network pulumi-ee \
         -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e MYSQL_DATABASE=pulumi \
         -v "${MYSQL_DATA_PATH}":/var/lib/mysql \
-        mysql:5.6)
+       ${DEFAULT_DB_IMAGE})
 fi
 
 echo "MySQL container ID: $MYSQL_CONT"

@@ -15,6 +15,10 @@ if [ -z "${MYSQL_ROOT_USERNAME:-}" ]; then
     MYSQL_ROOT_USERNAME=root
 fi
 
+if [ -z "${MYSQL_PORT:-}" ]; then
+    MYSQL_PORT=3306
+fi
+
 # If PULUMI_DATABASE_PING_ENDPOINT is not defined, then the "default" ping endpoint value
 # is determined using the RUN_MIGRATIONS_EXTERNALLY var.
 if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
@@ -29,7 +33,7 @@ if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
     fi
 fi
 
-while ! mysqladmin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
+while ! mysqladmin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" -P "${MYSQL_PORT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
 
 echo "MySQL is running!"
 
