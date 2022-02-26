@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script sets up a docker bridge network called pulumi-ee,
+# This script sets up a docker bridge network called pulumi-self-hosted-installers,
 # then starts a MySQL v5.6 container in that network.
 # Lastly, it runs migrations against the MySQL instance running in the container.
 
@@ -20,13 +20,13 @@ if [ -z "${MYSQL_DATA_PATH:-}" ]; then
     export MYSQL_DATA_PATH="${DEFAULT_MYSQL_DATA_PATH}"
 fi
 
-exists=$(docker network inspect pulumi-ee)
+exists=$(docker network inspect pulumi-self-hosted-installers)
 
 if [ ${#exists[@]} -eq 0 ]; then
-    echo "Creating pulumi-ee network"
-    docker network create pulumi-ee
+    echo "Creating pulumi-self-hosted-installers network"
+    docker network create pulumi-self-hosted-installers
 else
-    echo "pulumi-ee network exists already"
+    echo "pulumi-self-hosted-installers network exists already"
 fi
 
 if [ -z "${MYSQL_ROOT_PASSWORD:-}" ]; then
@@ -40,7 +40,7 @@ if [ -z "${MYSQL_CONT:-}" ]; then
     # Boot up a MySQL 5.6 database.
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p 3306:3306 --rm -d \
-        --network pulumi-ee \
+        --network pulumi-self-hosted-installers \
         -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e MYSQL_DATABASE=pulumi \
         -v "${MYSQL_DATA_PATH}":/var/lib/mysql \
@@ -52,4 +52,4 @@ echo "    to kill: docker kill $MYSQL_CONT"
 
 # Initialize the database with our scripts.
 RUN_MIGRATIONS_EXTERNALLY=true \
-    ./scripts/init-db-container.sh
+    ./quickstart-docker-compose/scripts/init-db-container.sh

@@ -24,8 +24,8 @@ var (
 
 	testEmailUserSignupRequest = emailUserSignupRequest{
 		Name:      "Pulumi EE Test User",
-		LoginName: "pulumi-ee-test",
-		Email:     "pulumi-ee-test@pulumi-test.test",
+		LoginName: "pulumi-self-hosted-installers-test",
+		Email:     "pulumi-self-hosted-installers-test@pulumi-test.test",
 		Password:  "fake-password",
 	}
 )

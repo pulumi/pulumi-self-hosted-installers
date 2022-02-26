@@ -1,12 +1,12 @@
 #!/bin/bash
 # This script is the main starting point for the quickstart solutions for self-hosted Pulumi Service.
 # By default, this script will use the docker-compose.yml file (and an override file, if present) in the root
-# directory of pulumi-ee.
+# directory of pulumi-self-hosted-installers.
 #
 # Any arguments passed to this script will be passed to the docker-compose CLI.
 # To specify alternate compose files, simply pass the compose files using the -f flag and they will be passed
 # to the `docker-compose up` command. For example,
-# ./scripts/run-ee.sh -f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.override.yml
+# ./quickstart-docker-compose/scripts/run-ee.sh -f ./quickstart-docker-compose/all-in-one/docker-compose.yml -f ./quickstart-docker-compose/all-in-one/docker-compose.override.yml
 
 set -e
 
@@ -17,7 +17,7 @@ set -e
 DOCKER_COMPOSE_ARGS=$@
 
 DEFAULT_DATA_PATH_BASE="${HOME}"
-DEFAULT_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-ee/data"
+DEFAULT_DATA_PATH="${DEFAULT_DATA_PATH_BASE}/pulumi-self-hosted-installers/data"
 
 if [ -z "${PULUMI_LICENSE_KEY:-}" ]; then
     echo "Please set PULUMI_LICENSE_KEY. If you don't have a license key, please contact sales@pulumi.com."
@@ -48,11 +48,11 @@ else
     head -c 32 /dev/random >$PULUMI_LOCAL_KEYS
 fi
 
-if docker network inspect pulumi-ee >/dev/null 2>&1; then
-    echo "pulumi-ee network exists already"
+if docker network inspect pulumi-self-hosted-installers >/dev/null 2>&1; then
+    echo "pulumi-self-hosted-installers network exists already"
 else
-    echo "Creating pulumi-ee network"
-    docker network create pulumi-ee
+    echo "Creating pulumi-self-hosted-installers network"
+    docker network create pulumi-self-hosted-installers
 fi
 
 if [ -z "${PULUMI_LOCAL_DATABASE_NAME:-}" ]; then

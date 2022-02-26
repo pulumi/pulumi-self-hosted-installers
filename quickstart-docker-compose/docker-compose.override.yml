@@ -1,0 +1,50 @@
+# This is the DEV version.
+# The overrides the build context so that it uses the local sources
+# to build an image rather than the published image.
+
+version: "3.0"
+
+networks:
+    pulumi-self-hosted-installers:
+        # Setting external to true will prevent docker-compose from creating the
+        # network if it doesn't exist already.
+        external: true
+
+    # The pulumi-services network is used to put all the Pulumi services (i.e. api and console)
+    # in the same network to enable communication between them using their container names.
+    pulumi-services:
+
+services:
+    api:
+        ports:
+            - 8080:8080
+            - 8443:8443
+        image: "pulumi/service:scratch"
+        build:
+            context: ../
+            dockerfile: ./cmd/service/Dockerfile
+        environment:
+            API_TLS_CERTIFICATE: "${API_TLS_CERTIFICATE}"
+            API_TLS_PRIVATE_KEY: "${API_TLS_PRIVATE_KEY}"
+            API_MIN_TLS_VERSION: "1.2"
+            PULUMI_API_DOMAIN: "localhost:8443"
+            PULUMI_CONSOLE_DOMAIN: "localhost:3443"
+        healthcheck:
+            test: ["CMD", "curl", "-f", "https://localhost:8443/api/status"]
+    console:
+        ports:
+            - 3000:3000
+            - 3443:3443
+        image: "pulumi/console:scratch"
+        build:
+            context: ../cmd/console2
+            args:
+                - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
+        environment:
+            PULUMI_API: "https://localhost:8443"
+            PULUMI_API_INTERNAL_ENDPOINT: "https://pulumi-api:8443"
+            PULUMI_CONSOLE_DOMAIN: "localhost:3443"
+            PULUMI_HOMEPAGE_DOMAIN: "localhost:3443"
+            CONSOLE_TLS_CERTIFICATE: "${CONSOLE_TLS_CERTIFICATE}"
+            CONSOLE_TLS_PRIVATE_KEY: "${CONSOLE_TLS_PRIVATE_KEY}"
+            ALLOW_INVALID_CERTS: "true"

@@ -1,4 +1,4 @@
-module github.com/pulumi/pulumi-ee
+module github.com/pulumi/pulumi-self-hosted-installers
 
 go 1.16
 

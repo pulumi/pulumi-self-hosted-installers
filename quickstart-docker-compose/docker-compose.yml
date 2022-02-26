@@ -1,0 +1,119 @@
+version: "3.0"
+
+networks:
+    pulumi-self-hosted-installers:
+        # Setting external to true will prevent docker-compose from creating the
+        # network if it doesn't exist already.
+        external: true
+
+    # The pulumi-services network is used to put all the Pulumi services (i.e. api and console)
+    # in the same network to enable communication between them using their container names.
+    pulumi-services:
+
+services:
+    api:
+        ports:
+            - 8080:8080
+        image: "pulumi/service:latest"
+        env_file: service_vars.env
+        environment:
+            PULUMI_LICENSE_KEY:
+            PULUMI_ENTERPRISE: "true"
+            PULUMI_DATABASE_NAME: "pulumi"
+            # Used for SAML SSO. Endpoint must be reachable by clients either
+            # locally on your company network or internet-routable.
+            # If you do not have SAML SSO setup, then this setting is not used.
+            PULUMI_API_DOMAIN: "localhost:8080"
+            PULUMI_CONSOLE_DOMAIN: "localhost:3000"
+            PULUMI_DATABASE_ENDPOINT: "${PULUMI_DATABASE_ENDPOINT}"
+            # Local key (configure one)
+            PULUMI_LOCAL_KEYS:
+            # AWS KMS
+            PULUMI_KMS_KEY:
+            # Azure KeyVault
+            PULUMI_AZURE_KV_URI:
+            PULUMI_AZURE_KV_KEY_NAME:
+            PULUMI_AZURE_KV_KEY_VERSION:
+            # Email identity config for self-service password reset.
+            # The site (RECAPTCHA_SITE_KEY) key counterpart for this
+            # must be set in the `console` service below.
+            RECAPTCHA_SECRET_KEY:
+            # Checkpoint object storage (configure one)
+            PULUMI_LOCAL_OBJECTS:
+            PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:
+            # Policy pack object storage (configure one)
+            PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:
+            PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:
+            # AWS env vars
+            AWS_REGION:
+            AWS_PROFILE:
+            AWS_ACCESS_KEY_ID:
+            AWS_SECRET_ACCESS_KEY:
+            AWS_SESSION_TOKEN:
+            AWS_ROLE_ARN:
+            # Add any other AWS env vars you may need to provide to this container
+            # here.
+            #
+            # Azure env vars
+            AZURE_CLIENT_ID:
+            AZURE_STORAGE_ACCOUNT:
+            AZURE_STORAGE_KEY:
+            AZURE_CLIENT_SECRET:
+            AZURE_TENANT_ID:
+            AZURE_SUBSCRIPTION_ID:
+        networks:
+            pulumi-self-hosted-installers:
+            pulumi-services:
+                aliases:
+                    - pulumi-api
+        volumes:
+            - $PULUMI_LOCAL_KEYS:$PULUMI_LOCAL_KEYS
+            - $PULUMI_DATA_PATH/checkpoints:$PULUMI_DATA_PATH/checkpoints
+            - $PULUMI_DATA_PATH/policy_packs:$PULUMI_DATA_PATH/policy_packs
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/api/status"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+        ulimits:
+            nofile:
+                soft: 100000
+                hard: 200000
+        restart: unless-stopped
+
+    console:
+        ports:
+            - 3000:3000
+        image: "pulumi/console:latest"
+        networks:
+            - pulumi-services
+        env_file: console_vars.env
+        environment:
+            # This value must be reachable from a client outside the container network.
+            # If you have an internet routable address that resolves to the API container,
+            # you may specify that here.
+            PULUMI_API: "http://localhost:8080"
+            # The internal endpoint that can be resolved by this service using
+            # container-to-container communication.
+            # If this env var is removed, then it defaults to the value of PULUMI_API.
+            PULUMI_API_INTERNAL_ENDPOINT: "http://pulumi-api:8080"
+            PULUMI_CONSOLE_DOMAIN: "localhost:3000"
+            PULUMI_HOMEPAGE_DOMAIN: "localhost:3000"
+            # OAuth configuration for social identities
+            GITHUB_OAUTH_ID:
+            GITHUB_OAUTH_SECRET:
+            GITLAB_OAUTH_ID:
+            GITLAB_OAUTH_SECRET:
+            BITBUCKET_OAUTH_ID:
+            BITBUCKET_OAUTH_SECRET:
+            # Email identity config for self-service password reset.
+            # The secret (RECAPTCHA_SECRET_KEY) key counterpart for this
+            # must be set in the `api` service above.
+            RECAPTCHA_SITE_KEY:
+            # Allow traffic communicating over the PULUMI_API_INTERNAL_ENDPOINT to
+            # connect insecurely without TLS verification. This may be applicable when
+            # using self signed certs for example.
+            ALLOW_INVALID_CERTS: "false"
+        depends_on:
+            - api
+        restart: unless-stopped

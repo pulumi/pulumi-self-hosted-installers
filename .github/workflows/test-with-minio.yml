@@ -3,138 +3,137 @@
 # match on an event_type parameter when triggered via an API call.
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
-  workflow_dispatch:
+    workflow_dispatch:
 
-  repository_dispatch:
-    types: [integration_tests]
+    repository_dispatch:
+        types: [integration_tests]
 
 name: Test Minio as object storage
 
 jobs:
-  minio-test:
-
-    runs-on: ubuntu-latest
-    env:
-      # The fake access keys used to configure the Minio container.
-      # We will use these keys as the AWS access keys so that the
-      # Pulumi service can connect to the Minio storage service.
-      MINIO_ACCESS_KEY: "minio-access-key"
-      MINIO_SECRET_KEY: "minio-secret-key"
-      MINIO_HOST: "minio:9000"
-      MINIO_BUCKET_NAME: "pulumi-checkpoints"
-      MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
-      # When regenerating the license, create a restricted license.
-      # That is, create a license that has a max unit of just 1 unless
-      # otherwise required.
-      PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
-
-    steps:
-      - name: Set env vars
-        run: |
-          # There doesn't seem to be a way to map environment variables into other enviroments
-          # when these are also defined in the same place as the ones they depend on.
-          # So set those env vars using:
-          # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-
-          # The only AWS resource the service will access is the Minio container
-          # so we map its keys as the AWS keys for the service.
-          echo "AWS_REGION=us-west-2" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}" >> $GITHUB_ENV
-
-          checkpoint_endpoint="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
-          pp_endpoint="s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
-          echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${checkpoint_endpoint}" >> $GITHUB_ENV
-          echo "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${pp_endpoint}" >> $GITHUB_ENV
-
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '~1.16.0'
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Checkout pulumi/pulumi-ee
-        uses: actions/checkout@v2
-
-      - name: Login to Docker Hub as pulumi-bot
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
-      - name: Run Minio
-        run: |
-          mkdir -p "${RUNNER_TEMP}/minio-persistence"
-          docker run -d --name minio \
-              --publish 9000:9000 \
-              --volume ${RUNNER_TEMP}/minio-persistence:/data \
-              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
-              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
-          bitnami/minio:latest
-
-          # Wait until Minio starts up fully.
-          sleep 5s
-
-          docker logs minio
-
-          echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
-
-      - name: Create Minio buckets
-        run: |
-          # https://docs.min.io/docs/minio-client-quickstart-guide.html
-          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-
-          # Create a new alias called minio for our Minio container.
-          ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
-
-          # Create the bucket using the minio alias.
-          ./mc mb "minio/${MINIO_BUCKET_NAME}"
-          ./mc mb "minio/${MINIO_PP_BUCKET_NAME}"
-
-      - name: Configure Minio network
-        run: |
-          # Connect Minio to the pulumi-ee docker network.
-          docker network create pulumi-ee
-          docker network connect pulumi-ee minio
-
-      - uses: ./.github/actions/run-self-hosted
-        timeout-minutes: 2
-        with:
-          compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
-
-      - name: Run integration tests
-        run: go test ./tests/... -v --tags=minio
-
-      - name: Upload service log as artifact
-        uses: actions/upload-artifact@v1.0.0
-        if: ${{ always() }}
-        with:
-          name: service-log
-          path: ${{ env.SERVICE_LOG }}
-
-      - name: Create issue on failure
-        if: failure()
-        uses: imjohnbo/issue-bot@v3
-        with:
-          labels: impact/breaking
-          pinned: false
-          title: Minio integration test failure
-          body: See https://github.com/pulumi/pulumi-ee/actions/runs/${{ env.GITHUB_RUN_ID }}
+    minio-test:
+        runs-on: ubuntu-latest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            # The fake access keys used to configure the Minio container.
+            # We will use these keys as the AWS access keys so that the
+            # Pulumi service can connect to the Minio storage service.
+            MINIO_ACCESS_KEY: "minio-access-key"
+            MINIO_SECRET_KEY: "minio-secret-key"
+            MINIO_HOST: "minio:9000"
+            MINIO_BUCKET_NAME: "pulumi-checkpoints"
+            MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
+            # When regenerating the license, create a restricted license.
+            # That is, create a license that has a max unit of just 1 unless
+            # otherwise required.
+            PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
 
-      - if: failure()
-        name: Notify Slack
-        uses: 8398a7/action-slack@v3
-        env:
-          # The Slack webhook URL must be specific to the pulumi-service Slack channel.
-          # The name of the Slack app is "Pulumi Webhooks". You must have access to it
-          # to be able to see it on https://api.slack.com.
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        with:
-          text: Minio integration test failed for latest service edge build
-          fields: job,workflow
-          status: ${{ job.status }}
+        steps:
+            - name: Set env vars
+              run: |
+                  # There doesn't seem to be a way to map environment variables into other enviroments
+                  # when these are also defined in the same place as the ones they depend on.
+                  # So set those env vars using:
+                  # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+
+                  # The only AWS resource the service will access is the Minio container
+                  # so we map its keys as the AWS keys for the service.
+                  echo "AWS_REGION=us-west-2" >> $GITHUB_ENV
+                  echo "AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}" >> $GITHUB_ENV
+                  echo "AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}" >> $GITHUB_ENV
+
+                  checkpoint_endpoint="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
+                  pp_endpoint="s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
+                  echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${checkpoint_endpoint}" >> $GITHUB_ENV
+                  echo "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${pp_endpoint}" >> $GITHUB_ENV
+
+            - uses: actions/setup-go@v2
+              with:
+                  go-version: "~1.16.0"
+
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "14"
+
+            - name: Checkout pulumi/pulumi-self-hosted-installers
+              uses: actions/checkout@v2
+
+            - name: Login to Docker Hub as pulumi-bot
+              uses: docker/login-action@v1
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+            - name: Run Minio
+              run: |
+                  mkdir -p "${RUNNER_TEMP}/minio-persistence"
+                  docker run -d --name minio \
+                      --publish 9000:9000 \
+                      --volume ${RUNNER_TEMP}/minio-persistence:/data \
+                      --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
+                      --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
+                  bitnami/minio:latest
+
+                  # Wait until Minio starts up fully.
+                  sleep 5s
+
+                  docker logs minio
+
+                  echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
+
+            - name: Create Minio buckets
+              run: |
+                  # https://docs.min.io/docs/minio-client-quickstart-guide.html
+                  wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
+                  chmod +x mc
+
+                  # Create a new alias called minio for our Minio container.
+                  ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
+
+                  # Create the bucket using the minio alias.
+                  ./mc mb "minio/${MINIO_BUCKET_NAME}"
+                  ./mc mb "minio/${MINIO_PP_BUCKET_NAME}"
+
+            - name: Configure Minio network
+              run: |
+                  # Connect Minio to the pulumi-self-hosted-installers docker network.
+                  docker network create pulumi-self-hosted-installers
+                  docker network connect pulumi-self-hosted-installers minio
+
+            - uses: ./.github/actions/run-self-hosted
+              timeout-minutes: 2
+              with:
+                  compose-args: "-f ./quickstart-docker-compose/all-in-one/docker-compose.yml -f ./quickstart-docker-compose/all-in-one/docker-compose.edge.yml"
+
+            - name: Run integration tests
+              run: go test ./quickstart-docker-compose/tests/... -v --tags=minio
+
+            - name: Upload service log as artifact
+              uses: actions/upload-artifact@v1.0.0
+              if: ${{ always() }}
+              with:
+                  name: service-log
+                  path: ${{ env.SERVICE_LOG }}
+
+            - name: Create issue on failure
+              if: failure()
+              uses: imjohnbo/issue-bot@v3
+              with:
+                  labels: impact/breaking
+                  pinned: false
+                  title: Minio integration test failure
+                  body: See https://github.com/pulumi/pulumi-self-hosted-installers/actions/runs/${{ env.GITHUB_RUN_ID }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - if: failure()
+              name: Notify Slack
+              uses: 8398a7/action-slack@v3
+              env:
+                  # The Slack webhook URL must be specific to the pulumi-service Slack channel.
+                  # The name of the Slack app is "Pulumi Webhooks". You must have access to it
+                  # to be able to see it on https://api.slack.com.
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+              with:
+                  text: Minio integration test failed for latest service edge build
+                  fields: job,workflow
+                  status: ${{ job.status }}
