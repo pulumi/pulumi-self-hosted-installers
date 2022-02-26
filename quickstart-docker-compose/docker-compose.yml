@@ -1,11 +1,13 @@
 version: "3.0"
 
 networks:
-  pulumi-ee:
+  pulumi-self-hosted-installers:
     # Setting external to true will prevent docker-compose from creating the
     # network if it doesn't exist already.
     external: true
 
+  # The pulumi-services network is used to put all the Pulumi services (i.e. api and console)
+  # in the same network to enable communication between them using their container names.
   pulumi-services:
 
 services:
@@ -14,10 +16,7 @@ services:
     ports:
       - 8080:8080
     image: "pulumi/service:latest"
-    env_file: ../service_vars.env
-    # Environment variables can be dynamically configured by setting them in your host's environment.
-    # Only the keys of such environment variables must be listed below. The value part must be left
-    # empty here.
+    env_file: service_vars.env
     environment:
       PULUMI_LICENSE_KEY:
       PULUMI_ENTERPRISE: "true"
@@ -37,7 +36,7 @@ services:
       PULUMI_AZURE_KV_KEY_NAME:
       PULUMI_AZURE_KV_KEY_VERSION:
       # Email identity config for self-service password reset.
-      # The site (RECAPTCHA_SITE_KEY) key counterpart for this 
+      # The site (RECAPTCHA_SITE_KEY) key counterpart for this
       # must be set in the `console` service below.
       RECAPTCHA_SECRET_KEY:
       # Checkpoint object storage (configure one)
@@ -64,7 +63,7 @@ services:
       AZURE_TENANT_ID:
       AZURE_SUBSCRIPTION_ID:
     networks:
-      pulumi-ee:
+      pulumi-self-hosted-installers:
       pulumi-services:
         aliases:
           - pulumi-api
@@ -81,17 +80,15 @@ services:
       nofile:
         soft: 100000
         hard: 200000
-    depends_on:
-      - db
     restart: unless-stopped
 
   console:
     ports:
       - 3000:3000
     image: "pulumi/console:latest"
-    env_file: ../console_vars.env
     networks:
       - pulumi-services
+    env_file: console_vars.env
     environment:
       # This value must be reachable from a client outside the container network.
       # If you have an internet routable address that resolves to the API container,
@@ -101,8 +98,8 @@ services:
       # container-to-container communication.
       # If this env var is removed, then it defaults to the value of PULUMI_API.
       PULUMI_API_INTERNAL_ENDPOINT: "http://pulumi-api:8080"
-      CONSOLE_DOMAIN: "http://localhost:3000"
-      HOMEPAGE_DOMAIN: "http://localhost:3000"
+      PULUMI_CONSOLE_DOMAIN: "localhost:3000"
+      PULUMI_HOMEPAGE_DOMAIN: "localhost:3000"
       # OAuth configuration for social identities
       GITHUB_OAUTH_ID:
       GITHUB_OAUTH_SECRET:
@@ -114,30 +111,10 @@ services:
       # The secret (RECAPTCHA_SECRET_KEY) key counterpart for this
       # must be set in the `api` service above.
       RECAPTCHA_SITE_KEY:
+      # Allow traffic communicating over the PULUMI_API_INTERNAL_ENDPOINT to
+      # connect insecurely without TLS verification. This may be applicable when
+      # using self signed certs for example.
+      ALLOW_INVALID_CERTS: "false"
     depends_on:
       - api
     restart: unless-stopped
-  
-  db:
-    image: "mysql:5.6"
-    environment:
-      MYSQL_DATABASE: "pulumi"
-      # This is set to true because we never expose the db service outside the local network.
-      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
-    networks:
-      pulumi-ee:
-        aliases:
-          - pulumi-db
-    volumes:
-      - $PULUMI_DATA_PATH:/var/lib/mysql
-    restart: unless-stopped
-
-  migration:
-    image: "pulumi/migrations:latest"
-    environment:
-      PULUMI_DATABASE_ENDPOINT: "${PULUMI_DATABASE_ENDPOINT}"
-    networks:
-      - pulumi-ee
-    restart: on-failure
-    depends_on:
-      - db

@@ -55,7 +55,7 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Checkout pulumi/pulumi-ee
+      - name: Checkout pulumi/pulumi-self-hosted-installers
         uses: actions/checkout@v2
 
       - name: Login to Docker Hub as pulumi-bot
@@ -96,17 +96,17 @@ jobs:
 
       - name: Configure Minio network
         run: |
-          # Connect Minio to the pulumi-ee docker network.
-          docker network create pulumi-ee
-          docker network connect pulumi-ee minio
+          # Connect Minio to the pulumi-self-hosted-installers docker network.
+          docker network create pulumi-self-hosted-installers
+          docker network connect pulumi-self-hosted-installers minio
 
       - uses: ./.github/actions/run-self-hosted
         timeout-minutes: 5
         with:
-          compose-args: '-f ./all-in-one/docker-compose.yml -f ./all-in-one/docker-compose.edge.yml'
+          compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml -f ./quickstart-docker-compose/all-in-one/docker-compose.edge.yml'
 
       - name: Run integration tests
-        run: go test ./tests/... -v --tags=minio
+        run: go test ./quickstart-docker-compose/tests/... -v --tags=minio
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0
@@ -124,6 +124,6 @@ jobs:
           # to be able to see it on https://api.slack.com.
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
-          text: Minio integration test in pulumi-ee failed for service's latest edge build
+          text: Minio integration test in pulumi-self-hosted-installers failed for service's latest edge build
           fields: job,workflow
           status: ${{ job.status }}

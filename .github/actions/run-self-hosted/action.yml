@@ -7,7 +7,7 @@ inputs:
   compose-args:
     description: 'Args to pass to the docker-compose command in run-ee.sh'
     required: true
-    default: '-f ./all-in-one/docker-compose.yml'
+    default: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml'
 runs:
   using: "composite"
   steps:
@@ -37,7 +37,7 @@ runs:
         # Do not add quotes around $COMPOSE_ARGS as it interferes with the args being
         # spread out.
         echo "Running Docker Compose with args ${COMPOSE_ARGS}..."
-        ./scripts/run-ee.sh ${COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
+        ./quickstart-docker-compose/scripts/run-ee.sh ${COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
       env:
         COMPOSE_ARGS: ${{ inputs.compose-args }}
 

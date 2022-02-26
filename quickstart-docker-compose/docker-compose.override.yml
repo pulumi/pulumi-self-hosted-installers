@@ -5,7 +5,7 @@
 version: "3.0"
 
 networks:
-  pulumi-ee:
+  pulumi-self-hosted-installers:
     # Setting external to true will prevent docker-compose from creating the
     # network if it doesn't exist already.
     external: true
@@ -22,7 +22,7 @@ services:
       - 8443:8443
     image: "pulumi/service:scratch"
     build:
-      context: ../
+      context: ../../
       dockerfile: ./cmd/service/Dockerfile
     environment:
       API_TLS_CERTIFICATE: "${API_TLS_CERTIFICATE}"
