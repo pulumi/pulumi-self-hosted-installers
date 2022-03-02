@@ -6,6 +6,18 @@ This folder and sub folders contain the three Pulumi programs to build the infra
 
 > ℹ️ You will likely want to use one of the [Self-Managed Backends](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend) as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc) so that future updates will be straightforward for you and your colleagues.
 
+## Prerequisites
+* Domain name and access to create two endpoints:
+  * api.{domain} - e.g. api.pulumi.example.com
+  * app.{domain} - e.g. app.pulumi.example.com
+* TLS certificates for each domain endpoint.  
+You can use the folloowing to create self-signed certs:
+  ```
+  openssl \
+  req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem \
+  -days { days_until_expiration } -nodes -subj "/CN={ common_name }"
+  ```
+
 ## What does each Pulumi program do?
 
 ### 01-infrastructure
@@ -33,9 +45,9 @@ To ensure that the Pulumi program can access variables between the three deploym
 
 To deploy entire stack, run the following in your terminal:
 
-1. `cd fully-managed-azure/01-infrastructure`
+1. `cd 01-infrastructure`
 1. `npm install`
-1. `pulumi stack init {stackName1}`
+1. `pulumi stack init {stackName1}` - see note above about NO NUMBERS in stack name
 1. `pulumi config set azure-native:location {azure region}`
 1. `pulumi config set networkCidr 10.2.0.0/16` - this should be set to what you want your VNet cidr block to be
 1. `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
@@ -43,12 +55,12 @@ To deploy entire stack, run the following in your terminal:
 1. `pulumi up`
 1. `cd ../02-kubernetes`
 1. `npm install`
-1. `pulumi stack init {stackName2}`
+1. `pulumi stack init {stackName2}` - see note above about NO NUMBERS in stack name
 1. `pulumi config set stackName1 {stackName1}`
 1. `pulumi up`
 1. `cd ../03-application`
 1. `npm install`
-1. `pulumi stack init {stackName3}`
+1. `pulumi stack init {stackName3}` - see note above about NO NUMBERS in stack name
 1. `pulumi config set stackName1 {stackName1}`
 1. `pulumi config set stackName2 {stackName2}`
 1. `pulumi config set apiDomain {domain for api}`

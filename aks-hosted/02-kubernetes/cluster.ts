@@ -64,7 +64,7 @@ export class KubernetesCluster extends pulumi.ComponentResource {
             ],
           },
         },
-        kubernetesVersion: "1.19.11",
+        kubernetesVersion: "1.21.9",
         nodeResourceGroup: `${name}-aks-nodes-rg`,
 
         tags: args.tags,
