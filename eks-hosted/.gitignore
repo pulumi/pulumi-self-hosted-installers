@@ -1,0 +1,6 @@
+build/
+*.license
+*-config.yaml
+*kubeconfig*
+*.cert
+*.key

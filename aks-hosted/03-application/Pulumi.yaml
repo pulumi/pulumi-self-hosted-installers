@@ -1,0 +1,3 @@
+name: k8s-azure-03-application
+runtime: nodejs
+description: Set up deployments, services and ingress
