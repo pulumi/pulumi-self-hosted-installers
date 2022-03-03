@@ -1,0 +1,15 @@
+{
+  "name": "k8s-aws-cluster-svcs",
+  "devDependencies": {
+    "typescript": "^3.0.0"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^4.3.1",
+    "@pulumi/awsx": "^0.30.0",
+    "@pulumi/eks": "^0.30.0",
+    "@pulumi/kubernetes": "^3.1.2",
+    "@pulumi/kubernetesx": "^0.1.6",
+    "@pulumi/pulumi": "^3.2.1",
+    "@pulumi/random": "^4.1.1"
+  }
+}

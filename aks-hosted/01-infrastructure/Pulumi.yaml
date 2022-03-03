@@ -1,0 +1,3 @@
+name: k8s-azure-01-infrastructure
+runtime: nodejs
+description: Infrastructure required for Pulumi self hosted

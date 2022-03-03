@@ -1,0 +1,3 @@
+name: pulumi-selfhosted-local-docker
+runtime: nodejs
+description: A Pulumi project for provisioning Pulumi Self-Hosted to a local Docker Engine

@@ -1,0 +1,3 @@
+name: pulumi-selfhosted-01-cluster-configuration
+description: Platform resources - VPC, EKS, IAM, etc.
+runtime: nodejs

@@ -1,0 +1,45 @@
+region: us-west-2
+licenseFilePath: pulumi-selfhosted-company.license
+route53Zone: example.com
+route53Subdomain: pulumi
+dockerHubUsername: janedoe
+dockerHubAccessToken: 00000000-1111-2222-3333-444444444444
+imageTag: 20201208-13347-signed
+
+#
+# These values seem to offer the quickest full deployment option.
+#
+
+# 01-cluster-configuration
+clusterConfig:
+  stackName: dev-pulumi-selfhosted-01-cluster-configuration
+  clusterVersion:
+    value: "1.21"
+  standardNodeGroupDesiredCapacity:
+    value: 1
+  standardNodeGroupMinSize:
+    value: 1
+  standardNodeGroupMaxSize:
+    value: 1
+  pulumiNodeGroupDesiredCapacity:
+    value: 1
+  pulumiNodeGroupMinSize:
+    value: 1
+  pulumiNodeGroupMaxSize:
+    value: 1
+
+# 02-cluster-services
+clusterServicesConfig:
+  stackName: dev-pulumi-selfhosted-02-cluster-services
+  dbReplicas:
+    value: 1
+  dbInstanceType:
+    value: db.t3.medium
+
+# 03-apps
+appsConfig:
+  stackName: dev-pulumi-selfhosted-03-apps
+  apiReplicas:
+    value: 1
+  consoleReplicas:
+    value: 1
