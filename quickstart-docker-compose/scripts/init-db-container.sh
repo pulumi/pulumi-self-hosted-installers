@@ -47,6 +47,6 @@ PULUMI_LOCAL_DB_SUPERUSER="${MYSQL_ROOT_USERNAME}" \
     PULUMI_LOCAL_DB_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
     MIGRATE_AS_SUPERUSER=true \
     PULUMI_LOCAL_DATABASE_ENDPOINT="${PULUMI_DATABASE_ENDPOINT}" \
-    ./scripts/migrate-db.sh
+    ./quickstart-docker-compose/scripts/migrate-db.sh
 
 echo "Database migrations completed!"

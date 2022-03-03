@@ -25,7 +25,7 @@ jobs:
           # otherwise required.
           PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
         with:
-          compose-args: '-f ./all-in-one/docker-compose.yml'
+          compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml'
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@v1.0.0

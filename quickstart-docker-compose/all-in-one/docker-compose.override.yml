@@ -5,7 +5,7 @@
 version: "3.0"
 
 networks:
-  pulumi-ee:
+  pulumi-self-hosted-installers:
     # Setting external to true will prevent docker-compose from creating the
     # network if it doesn't exist already.
     external: true
@@ -19,7 +19,7 @@ services:
       - 8080:8080
     image: "pulumi/service:scratch"
     build:
-      context: ../../
+      context: ../../../
       dockerfile: ./cmd/service/Dockerfile
 
   console:
@@ -27,12 +27,12 @@ services:
       - 3000:3000
     image: "pulumi/console:scratch"
     build:
-      context: ../../cmd/console2
+      context: ../../../cmd/console2
       args:
         - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
 
   migration:
     image: "pulumi/migrations:scratch"
     build:
-      context: ../../
+      context: ../../../
       dockerfile: ./migrations/Dockerfile
