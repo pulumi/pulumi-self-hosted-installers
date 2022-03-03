@@ -18,7 +18,6 @@ jobs:
         # Don't need tests and override files for the final package.
         rm -rf ./quickstart-docker-compose/tests
         rm -r **/*.override.yml
-        rm -r **/*.edge.yml
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
