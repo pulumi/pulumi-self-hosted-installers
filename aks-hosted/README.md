@@ -11,11 +11,12 @@ This folder and sub folders contain the three Pulumi programs to build the infra
   * api.{domain} - e.g. api.pulumi.example.com
   * app.{domain} - e.g. app.pulumi.example.com
 * TLS certificates for each domain endpoint.  
-You can use the folloowing to create self-signed certs:
+You can use the following to create self-signed certs:
   ```
   openssl \
   req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem \
-  -days { days_until_expiration } -nodes -subj "/CN={ common_name }"
+  -days { days_until_expiration } -nodes -subj "/CN={ common_name }" \
+  -addext "subjectAltName = DNS:{ common name }"
   ```
 
 ## What does each Pulumi program do?
@@ -66,8 +67,6 @@ To deploy entire stack, run the following in your terminal:
 1. `pulumi config set apiDomain {domain for api}`
 1. `pulumi config set consoleDomain {domain for console}`
 1. `pulumi config set licenseKey {licenseKey} --secret`
-1. `pulumi config set dockerHubUsername {dockerhub username}`
-1. `pulumi config set dockerHubAccessToken {dockerhub accesstoken} --secret`
 1. `pulumi config set imageTag {imageTag}`
 1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine)

@@ -50,7 +50,6 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
       password:config.database.password,
       serverName: config.database.serverName
     },
-    imagePullSecretB64: config.imagePullSecretB64,
     licenseKey: config.licenseKey,
     smtpDetails: {
       smtpServer: config.smtpServer,
@@ -227,7 +226,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               ],
             },
           ],
-          imagePullSecrets: [{ name: secrets.ImagePullSecret.metadata.name }],
         },
       },
     },
@@ -244,6 +242,10 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
       },
   }, { provider, parent: apiDeployment });
 
+  const apiServiceEndpoint = k8s.core.v1.Endpoints.get("apiServiceEndpoints", apiService.id, {provider})
+  const apiServiceEndpointAddress = apiServiceEndpoint.subsets[0].addresses[0].ip
+  const apiServiceEndpointPort = apiServiceEndpoint.subsets[0].ports[0].port
+
   const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleName}`, {
     metadata: {
       namespace: appsNamespace.metadata.name,
@@ -255,7 +257,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
       template: {
         metadata: {labels: consoleAppLabel},
         spec: {
-          imagePullSecrets: [{ name: secrets.ImagePullSecret.metadata.name }],
           containers: [{
             image: config.consoleImageName,
               name: consoleName,
@@ -280,7 +281,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_API_INTERNAL_ENDPOINT",
-                  value: pulumi.interpolate`http://${apiService.metadata.name}:${config.servicePort}`
+                  value: pulumi.interpolate`http://${apiServiceEndpointAddress}:${apiServiceEndpointPort}`
                 },
                 {
                   name: "RECAPTCHA_SITE_KEY",
