@@ -18,8 +18,8 @@ jobs:
       # The fake access keys used to configure the Minio container.
       # We will use these keys as the AWS access keys so that the
       # Pulumi service can connect to the Minio storage service.
-      MINIO_ACCESS_KEY: "minio-access-key"
-      MINIO_SECRET_KEY: "minio-secret-key"
+      MINIO_ROOT_USER: "minio-access-key"
+      MINIO_ROOT_PASSWORD: "minio-secret-key"
       MINIO_HOST: "minio:9000"
       MINIO_BUCKET_NAME: "pulumi-checkpoints"
       MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
@@ -39,8 +39,8 @@ jobs:
           # The only AWS resource the service will access is the Minio container
           # so we map its keys as the AWS keys for the service.
           echo "AWS_REGION=us-west-2" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}" >> $GITHUB_ENV
 
           checkpoint_endpoint="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
           pp_endpoint="s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
@@ -70,8 +70,8 @@ jobs:
           docker run -d --name minio \
               --publish 9000:9000 \
               --volume ${RUNNER_TEMP}/minio-persistence:/data \
-              --env MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY}" \
-              --env MINIO_SECRET_KEY="${MINIO_SECRET_KEY}" \
+              --env MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
+              --env MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
           bitnami/minio:latest
 
           # Wait until Minio starts up fully.
@@ -88,7 +88,7 @@ jobs:
           chmod +x mc
 
           # Create a new alias called minio for our Minio container.
-          ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
+          ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
 
           # Create the bucket using the minio alias.
           ./mc mb "minio/${MINIO_BUCKET_NAME}"
