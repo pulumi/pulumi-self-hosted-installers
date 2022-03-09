@@ -34,14 +34,6 @@ const licenseKeySecret = new kx.Secret("license-key", {
     stringData: { key: config.licenseKey }
 }, { provider });
 
-// Create an image pull Secret for the Docker creds.
-// inspect this with `kubectl get secret --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode`
-const imagePullSecret = new kx.Secret("pulumi-image-pull-secret", {
-    type: "kubernetes.io/dockerconfigjson",
-    metadata: { namespace: config.appsNamespaceName },
-    data: { ".dockerconfigjson": config.imagePullSecretB64 },
-}, { provider });
-
 // Create a Secret from the DB connection information.
 const dbConnSecret = new kx.Secret("aurora-db-conn",
     {
@@ -234,7 +226,6 @@ export const apiPodBuilder = new kx.PodBuilder({
             effect: "NoSchedule",
         },
     ],
-    imagePullSecrets: [{ name: imagePullSecret.metadata.name }],
     serviceAccountName: serviceAccountName,
     // TODO: simplify this logic once initContainer support is added to kx (https://github.com/pulumi/pulumi-kubernetesx/issues/53)
     initContainers: [{
@@ -338,7 +329,6 @@ const consolePodBuilder = new kx.PodBuilder({
         },
         resources: consoleResources,
     }],
-    imagePullSecrets: [{ name: imagePullSecret.metadata.name }],
 });
 const consoleDeployment = new kx.Deployment(consoleName, {
     metadata: { namespace: config.appsNamespaceName },

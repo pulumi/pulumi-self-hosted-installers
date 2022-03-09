@@ -7,20 +7,6 @@ const pulumiConfig = new pulumi.Config();
 const clusterStackRef = new pulumi.StackReference(pulumiConfig.require("clusterStackRef"));
 const clusterSvcsStackRef = new pulumi.StackReference(pulumiConfig.require("clusterSvcsStackRef"));
 
-// Docker creds with access to private pulumi/pulumi Docker Hub registry.
-const dockerHubUsername = pulumiConfig.requireSecret("dockerHubUsername");
-const dockerHubAccessToken = pulumiConfig.requireSecret("dockerHubAccessToken");
-const imagePullSecret = pulumi.all([dockerHubUsername, dockerHubAccessToken]).apply(([username, accessToken]) => {
-    return JSON.stringify({
-        "auths": {
-            "https://index.docker.io/v1/": {
-                "auth": Buffer.from(`${username}:${accessToken}`).toString("base64"),
-            }
-        }
-    })
-});
-const imagePullSecretB64 = imagePullSecret.apply(it => Buffer.from(it).toString("base64"));
-
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
 
@@ -43,7 +29,6 @@ export const config = {
     hostedZoneDomainSubdomain: pulumiConfig.require("hostedZoneDomainSubdomain"),
 
     // Self-hosted Pulumi
-    imagePullSecretB64: imagePullSecretB64,
     imageTag: pulumiConfig.require("imageTag"),
     licenseKey: licenseKey,
     dbConn: clusterSvcsStackRef.requireOutput("dbConn"),

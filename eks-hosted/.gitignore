@@ -4,3 +4,4 @@ build/
 *kubeconfig*
 *.cert
 *.key
+node_modules
