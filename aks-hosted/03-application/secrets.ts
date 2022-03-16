@@ -20,7 +20,6 @@ export interface SecretsCollectionArgs {
             password: Input<string>,
             serverName: Input<string>,
         },
-        imagePullSecretB64: Input<string>,
         smtpDetails: {
             smtpServer: Input<string>,
             smtpUsername: Input<string>,
@@ -39,7 +38,6 @@ export class SecretsCollection extends ComponentResource {
     ApiCertificateSecret: kx.Secret;
     ConsoleCertificateSecret: kx.Secret;
     DBConnSecret: kx.Secret;
-    ImagePullSecret: kx.Secret;
     SmtpSecret: kx.Secret;
     RecaptchaSecret: kx.Secret;
     constructor(name: string, args: SecretsCollectionArgs, opts?: ComponentResourceOptions) {
@@ -81,15 +79,6 @@ export class SecretsCollection extends ComponentResource {
             },
           }, { provider: args.provider, parent: this });
         
-        this.ImagePullSecret = new kx.Secret(`${args.commonName}-image-pull-secret`, {
-          metadata: {
-            namespace: args.namespace,
-          },
-          data: {
-            ".dockerconfigjson": args.secretValues.imagePullSecretB64,
-          },
-          type: "kubernetes.io/dockerconfigjson",
-        }, { provider: args.provider, parent: this });
 
         this.SmtpSecret = new kx.Secret(`${args.commonName}-smtp-secret`, {
             metadata: {
@@ -118,7 +107,6 @@ export class SecretsCollection extends ComponentResource {
             ApiCertificateSecret: this.ApiCertificateSecret,
             ConsoleCertificateSecret: this.ConsoleCertificateSecret,
             DBConnSecret: this.DBConnSecret,
-            ImagePullSecret: this.ImagePullSecret,
             SmtpSecret: this.SmtpSecret,
             RecaptchaSecret: this.RecaptchaSecret
         })

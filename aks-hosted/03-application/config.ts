@@ -16,19 +16,6 @@ const stackName2 = stackConfig.require("stackName2");
 const infrastructureStack = new pulumi.StackReference(stackName1);
 const clusterStack = new pulumi.StackReference(stackName2);
 
-const dockerHubUsername = stackConfig.requireSecret("dockerHubUsername");
-const dockerHubAccessToken = stackConfig.requireSecret("dockerHubAccessToken");
-const imagePullSecret = pulumi.all([dockerHubUsername, dockerHubAccessToken]).apply(([username, accessToken]) => {
-    return JSON.stringify({
-        "auths": {
-            "https://index.docker.io/v1/": {
-                "auth": Buffer.from(`${username}:${accessToken}`).toString("base64"),
-            }
-        }
-    })
-});
-const imagePullSecretB64 = imagePullSecret.apply(it => Buffer.from(it).toString("base64"));
-
 const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 
@@ -45,7 +32,6 @@ export const config = {
         password: infrastructureStack.requireOutput("dbPassword"),
         serverName: infrastructureStack.requireOutput("dbServerName")
     },
-    imagePullSecretB64,
     migrationImageName: `pulumi/migrations:${imageTag}`,
     consoleImageName: `pulumi/console:${imageTag}`,
     serviceImageName: `pulumi/service:${imageTag}`,
