@@ -9,8 +9,6 @@ interface SelfHostedConfig {
     licenseFilePath: string;
     route53Zone: string;
     route53Subdomain: string;
-    dockerHubUsername: string;
-    dockerHubAccessToken: string;
     imageTag: string;
 
     smtpServer: string;
@@ -45,12 +43,6 @@ const checkPrerequisites = function (config: SelfHostedConfig) {
     }
     if (!config.route53Subdomain) {
         throw Error(`[route53Subdomain] is a required configuration property.`);
-    }
-    if (!config.dockerHubUsername) {
-        throw Error(`[dockerHubUsername] is a required configuration property.`);
-    }
-    if (!config.dockerHubAccessToken) {
-        throw Error(`[dockerHubAccessToken] is a required configuration property.`);
     }
     if (!config.imageTag) {
         throw Error(`[imageTag] is a required configuration property.`);
@@ -164,8 +156,6 @@ export const run = async () => {
             "clusterSvcsStackRef": { value: config.clusterServicesConfig.stackName },
             "hostedZoneDomainName": { value: config.route53Zone },
             "hostedZoneDomainSubdomain": { value: config.route53Subdomain },
-            "dockerHubUsername": { value: config.dockerHubUsername },
-            "dockerHubAccessToken": { value: config.dockerHubAccessToken },
             "imageTag": { value: config.imageTag },
             "samlSsoEnabled": { value: config.samlSsoEnabled },
             "licenseKey": {

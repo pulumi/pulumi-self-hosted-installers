@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 const pulumiConfig = new pulumi.Config();
 
 export const config = {
-    clusterVersion: pulumiConfig.get("clusterVersion") || "1.18", // Note: Version 1.19 is not currently supported.
+    clusterVersion: pulumiConfig.get("clusterVersion") || "1.21", 
 
     /**
      * EKS Node Group
