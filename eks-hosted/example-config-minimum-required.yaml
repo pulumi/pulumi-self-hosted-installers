@@ -2,8 +2,6 @@ region: us-west-2
 licenseFilePath: pulumi-selfhosted-company.license
 route53Zone: example.com
 route53Subdomain: pulumi
-dockerHubUsername: janedoe
-dockerHubAccessToken: 00000000-1111-2222-3333-444444444444
 imageTag: 20201208-13347-signed
 
 # 01-cluster-configuration

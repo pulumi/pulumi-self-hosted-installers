@@ -6,7 +6,7 @@ Deploys the Pulumi API Service and Console in Kubernetes using AWS.
 
 > ℹ️ You will likely want to use one of the [Self-Managed Backends](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend) as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc) so that future updates will be straightforward for you and your colleagues.
 
-## Revision History
+## Installer Revision History
 Version ID | Date | K8s Version Supported | Note
 ---|---|---|--
 1.0 | N/A | 1.18 | Original installer version.
@@ -14,14 +14,13 @@ Version ID | Date | K8s Version Supported | Note
 2.1 | January 10, 2022 | 1.21 | Implements email-login disablement options. Changes default SAML-SSO behavior to be DISABLED. NOTE: if you are currently using SAML SSO, be sure to update your config file to explicitly enable SAML SSO.
 
 
-> ℹ️ See the **Updates and Upgrades** section below for how to upgrade from earlier versions of the installer and k8s.
+> ℹ️ See the **Updates and Upgrades** section below for how to upgrade from earlier versions of the installer and k8s and Pulumi service images.
 
 
 ## User Guides:
 
 - [Self-Hosted Pulumi Service][self-hosted-pulumi-user-guide]
-- [Pulumi API Service][pulumi-api-service-user-guide]
-- [Pulumi Console Service][pulumi-console-service-user-guide]
+- [Self-Hosted EKS Installer][self-hosted-eks-user-guide]
 
 ## Requirements
 
@@ -85,13 +84,13 @@ The Pulumi services operate in Kubernetes with the following app properties.
   using [disruption budgets][pdb]. This ensures a minimum availability of the services
   during events like node draining and migrations.
 
-## Install
+## Setup
 
 1.  Clone the repo and install dependencies:
 
     ```bash
-    git clone https://github.com/pulumi/pulumi-onprem-kubernetes
-    cd fully-managed-aws
+    git clone https://github.com/pulumi/pulumi-self-hosted-installers.git 
+    cd eks-hosted
     npm install
     ```
 
@@ -101,122 +100,43 @@ The Pulumi services operate in Kubernetes with the following app properties.
     pulumi login s3://<bucket-name>
     ```
 
-3.  An all-in-one installer using the [Pulumi Automation API][pulumi-automation-api] to
-    initialize, configure, and deploy the self-hosted Pulumi. Alternatively, you
-    can manually manage each Pulumi project if you choose.
+## Using the Self-Hosted Installer
+See [Deploy Self-Hosted Pulumi](#deploy-self-hosted-pulumi) for step-by step instructions.
 
-    ### Usage
+This installer is an all-in-one installer based on the [Pulumi Automation API][pulumi-automation-api] to
+initialize, configure, and deploy the self-hosted Pulumi. Alternatively, you can manually manage each Pulumi project if you choose.
 
-    ```bash
-    npm run installer -- <options>
-    ```
+### Usage
 
-    Options:
+```bash
+npm run installer -- <options>
+```
 
-    ```bash
-    index.js <cmd> [args]
+Options:
 
-    Commands:
-    index.js init [project]           initialize the project stack(s)
-    index.js update [project]         update the project stack(s)
-    index.js destroy [project]        destroy the project stack(s)
-    index.js unprotect-all [project]  unprotect resources in the project stack(s)
+```bash
+index.js <cmd> [args]
 
-    Options:
-    --version  Show version number                                                                               [boolean]
-    --help     Show help                                                                                         [boolean]
-    ```
+Commands:
+index.js init [project]           initialize the project stack(s)
+index.js update [project]         update the project stack(s)
+index.js destroy [project]        destroy the project stack(s)
+index.js unprotect-all [project]  unprotect resources in the project stack(s)
 
-    ### Required Configuration
+Options:
+--version  Show version number                                                                               [boolean]
+--help     Show help                                                                                         [boolean]
+```
 
-    > Note: All configuration properties shown in this section are **required**.
+## Deploy Self-Hosted Pulumi
+1. Create a [Configuration File](#configuration-file).
 
-    The installer requires a YAML configuration file with the following configuration properties:
-
-    ```yaml
-    region: us-west-2
-    stackName: selfhosted-us-west-2
-    licenseFilePath: pulumi-selfhosted-company.license
-    route53Zone: example.com
-    route53Subdomain: pulumi
-    dockerHubUsername: janedoe
-    dockerHubAccessToken: 00000000-1111-2222-3333-444444444444
-    imageTag: 20201201-13317-signed
-    ```
-
-    > Note: Assumes `example.com` is an existing public hosted zone in Route53.
-
-    ### Optional Configuration
-
-    Configuration properties can be passed for SMTP and SSO support as well as to the individual sub-projects through the same YAML file under the
-    `clusterConfig`, `clusterServicesConfig`, and `appsConfig` sections. For example:
-
-    ```yaml
-    region: us-west-2
-    stackName: selfhosted-us-west-2
-    licenseFilePath: pulumi-selfhosted-company.license
-    route53Zone: example.com
-    route53Subdomain: pulumi
-    dockerHubUsername: janedoe
-    dockerHubAccessToken: 00000000-1111-2222-3333-444444444444
-    imageTag: 20201201-13317-signed
-
-    # Optional SMTP Settings
-    smtpServer: smtp.example.com:587  # If using SES be sure to use port 587
-    smtpUsername: johndoe
-    smtpPassword: abcdefghi
-    smtpGenericSender: sender@domain.com  # Be sure this email is allowed to send emails via your SMTP server.
-
-    # Optional reCAPTCHA settings
-    # reCAPTCHA is used if too many incorrect passwords are entered or if the user clicks the forgot password link.
-    # If not set, default "test" values will be used to allow these flows to work.
-    # See: https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha-what-should-i-do
-    recaptchaSiteKey: abcdefghijklmno
-    recaptchaSecretKey: pqrstuvwxyzabc
-
-    # Optional SSO SAML configuration
-    samlSsoEnabled: false # should only be set to true AFTER configuring SAML SSO since setting to true forces the user to the organization login screen. Defaults to FALSE if not set.
-
-    # Optional Email Sign-up and Login Settings  
-    # See: https://www.pulumi.com/docs/guides/self-hosted/console/#email-identity  
-    consoleHideEmailSignup: false # false = makes email signup available on console; true = hides email sign up option on console  
-    consoleHideEmailLogin: false  # false = allows email login on console; true = hides email login on console   
-    # See: https://www.pulumi.com/docs/guides/self-hosted/api/#other-env-vars  
-    apiDisableEmailSignup: false # false = service api allows email signup; true = service api disallows email signup.  
-    apiDisableEmailLogin: false # false = service api allows email login; true = service api disabllows email signup.   
-
-    # overrides for 01-cluster-configuration
-    clusterConfig:
-      clusterVersion:
-        value: "1.21"
-
-    # overrides for 02-cluster-services
-    clusterServicesConfig:
-      dbReplicas:
-        value: 1
-      dbInstanceType:
-        value: db.t3.medium
-
-    # overrides for 03-apps
-    appsConfig:
-      apiReplicas:
-        value: 1
-      consoleReplicas:
-        value: 1
-    ```
-
-    See the following files to see which values can be overridden for each sub-project:
-
-    - `clusterConfig` - `01-cluster-configuration/config.ts`
-    - `clusterServicesConfig` - `02-cluster-services/config.ts`
-    - `appsConfig` - `03-apps/config.ts`
-
-    ### Deploy Pulumi
+1. Deploy Pulumi
 
     ```bash
-    npm run installer -- init --config-file dev-clstokes-us-east-1.yaml
+    npm run installer -- init --config-file my_configuration_file.yaml
 
-    npm run installer -- update --config-file dev-clstokes-us-east-1.yaml
+    npm run installer -- update --config-file my_configuration_file.yaml
     ```
 
     After ~45 minutes, all stacks will be deployed and the Pulumi endpoints
@@ -260,6 +180,97 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 ### Create an example
 
 [Get started][aws-ts-get-started] with a simple and new AWS Typescript project.
+
+
+## Configuration File
+### Required Configuration
+
+> Note: All configuration properties shown in this section are **required**.
+
+The installer requires a YAML configuration file with the following configuration properties:
+
+```yaml
+region: us-west-2
+licenseFilePath: pulumi-selfhosted-company.license
+route53Zone: example.com
+route53Subdomain: pulumi
+imageTag: 20201201-13317-signed
+clusterConfig:
+  stackName: my-selfhosted-01-cluster
+clusterServicesConfig:
+  stackName: my-selfhosted-02-cluster-services
+appsConfig:
+  stackName: my-selfhosted-03-apps
+
+```
+
+> Note: Assumes `example.com` is an existing public hosted zone in Route53.
+
+### Optional Configuration
+
+Configuration properties can be passed for SMTP and SSO support as well as to the individual sub-projects through the same YAML file under the
+`clusterConfig`, `clusterServicesConfig`, and `appsConfig` sections. For example:
+
+```yaml
+region: us-west-2
+stackName: selfhosted-us-west-2
+licenseFilePath: pulumi-selfhosted-company.license
+route53Zone: example.com
+route53Subdomain: pulumi
+imageTag: 20201201-13317-signed
+
+# Optional SMTP Settings
+smtpServer: smtp.example.com:587  # If using SES be sure to use port 587
+smtpUsername: johndoe
+smtpPassword: abcdefghi
+smtpGenericSender: sender@domain.com  # Be sure this email is allowed to send emails via your SMTP server.
+
+# Optional reCAPTCHA settings
+# reCAPTCHA is used if too many incorrect passwords are entered or if the user clicks the forgot password link.
+# If not set, default "test" values will be used to allow these flows to work.
+# See: https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha-what-should-i-do
+recaptchaSiteKey: abcdefghijklmno
+recaptchaSecretKey: pqrstuvwxyzabc
+
+# Optional SSO SAML configuration
+samlSsoEnabled: false # should only be set to true AFTER configuring SAML SSO since setting to true forces the user to the organization login screen. Defaults to FALSE if not set.
+
+# Optional Email Sign-up and Login Settings  
+# See: https://www.pulumi.com/docs/guides/self-hosted/console/#email-identity  
+consoleHideEmailSignup: false # false = makes email signup available on console; true = hides email sign up option on console  
+consoleHideEmailLogin: false  # false = allows email login on console; true = hides email login on console   
+# See: https://www.pulumi.com/docs/guides/self-hosted/api/#other-env-vars  
+apiDisableEmailSignup: false # false = service api allows email signup; true = service api disallows email signup.  
+apiDisableEmailLogin: false # false = service api allows email login; true = service api disabllows email signup.   
+
+# overrides for 01-cluster-configuration
+clusterConfig:
+  stackName: my-selfhosted-01-cluster
+  clusterVersion:
+    value: "1.21"
+
+# overrides for 02-cluster-services
+clusterServicesConfig:
+  stackName: my-selfhosted-02-cluster-services
+  dbReplicas:
+    value: 1
+  dbInstanceType:
+    value: db.t3.medium
+
+# overrides for 03-apps
+appsConfig:
+  stackName: my-selfhosted-03-apps
+  apiReplicas:
+    value: 1
+  consoleReplicas:
+    value: 1
+```
+
+See the following files to see which values can be overridden for each sub-project:
+
+- `clusterConfig` - `01-cluster-configuration/config.ts`
+- `clusterServicesConfig` - `02-cluster-services/config.ts`
+- `appsConfig` - `03-apps/config.ts`
 
 # Updates and Upgrades
 
@@ -412,28 +423,6 @@ npm run installer -- destroy --config-file <config-file>
 You may see an error about deleting the S3 buckets.
 In which case, manually delete the checkpoints and policy buckets and rerun the destroy command.
 
-[cw-k8s]: https://www.pulumi.com/crosswalk/kubernetes/
-[get-started-aws]: https://www.pulumi.com/docs/get-started/aws/
-[get-started-k8s]: https://www.pulumi.com/docs/get-started/kubernetes/
-[s3-backend]: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-aws-s3-backend
-[eks]: https://aws.amazon.com/eks/
-[r53]: https://aws.amazon.com/route53/
-[rds]: https://aws.amazon.com/rds/aurora/
-[s3]: https://aws.amazon.com/s3/
-[acm]: https://aws.amazon.com/certificate-manager/
-[alb]: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
-[external-dns]: https://github.com/kubernetes-sigs/external-dns
-[alb-ingress]: https://github.com/kubernetes-sigs/aws-alb-ingress-controller
-[cloudwatch-logs]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html
-[fluentd-cloudwatch]: https://github.com/helm/charts/tree/master/incubator/fluentd-cloudwatch
-[pdb]: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-[aws-ts-get-started]: https://www.pulumi.com/docs/get-started/aws/create-project/
-[pulumi-login-docs]: https://www.pulumi.com/docs/get-started/aws/create-project/
-[pulumi-automation-api]: https://www.pulumi.com/blog/automation-api/
-[self-hosted-pulumi-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/
-[pulumi-api-service-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/api/
-[pulumi-console-service-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/console/
-
 # Troubleshooting
 
 ## Set up kubeconfig file to access K8s cluster
@@ -483,3 +472,26 @@ kubectl logs -f -n apps-xxxx pulmi-api-xxxx
 - Re-run commands:
   - `npm run installer -- init --config-file XXXXXX`
   - `npm run installer -- update --config-file XXXXX`
+
+[cw-k8s]: https://www.pulumi.com/crosswalk/kubernetes/
+[get-started-aws]: https://www.pulumi.com/docs/get-started/aws/
+[get-started-k8s]: https://www.pulumi.com/docs/get-started/kubernetes/
+[s3-backend]: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-aws-s3-backend
+[eks]: https://aws.amazon.com/eks/
+[r53]: https://aws.amazon.com/route53/
+[rds]: https://aws.amazon.com/rds/aurora/
+[s3]: https://aws.amazon.com/s3/
+[acm]: https://aws.amazon.com/certificate-manager/
+[alb]: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
+[external-dns]: https://github.com/kubernetes-sigs/external-dns
+[alb-ingress]: https://github.com/kubernetes-sigs/aws-alb-ingress-controller
+[cloudwatch-logs]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html
+[fluentd-cloudwatch]: https://github.com/helm/charts/tree/master/incubator/fluentd-cloudwatch
+[pdb]: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+[aws-ts-get-started]: https://www.pulumi.com/docs/get-started/aws/create-project/
+[pulumi-login-docs]: https://www.pulumi.com/docs/get-started/aws/create-project/
+[pulumi-automation-api]: https://www.pulumi.com/blog/automation-api/
+[self-hosted-pulumi-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/
+[self-hosted-eks-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/eks-hosted
+[pulumi-api-service-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/components/api/
+[pulumi-console-service-user-guide]: https://www.pulumi.com/docs/guides/self-hosted/components/console/
