@@ -5,6 +5,7 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/common"
 )
 
 func getCommonName(first string, second string) string {
@@ -49,57 +50,84 @@ func main() {
 			return err
 		}
 
-		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "s3-endpoint"), &ec2.VpcEndpointArgs{
+		s3ServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.s3", config.region))
+		s3Endpoint, err := ec2.NewVpcEndpoint(ctx, getCommonName(name, "s3-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:       pulumi.String(config.vpcId),
-			ServiceName: pulumi.String(fmt.Sprintf("com.amazonaws.%s.s3", config.region)),
+			ServiceName: pulumi.String(s3ServiceName),
 		})
 
 		if err != nil {
 			return err
 		}
 
+		privateS3PrefixList := ec2.GetPrefixListOutput(ctx, ec2.GetPrefixListOutputArgs{
+			PrefixListId: s3Endpoint.PrefixListId,
+		}, nil)
+
+		dkrServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.ecr.dkr", config.region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "ecr-dkr-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.vpcId),
-			ServiceName:       pulumi.String(fmt.Sprintf("com.amazonaws.%s.ecr.dkr", config.region)),
+			ServiceName:       pulumi.String(dkrServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
-			PrivateDnsEnabled: pulumi.BoolPtr(false),
+			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
+			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
+		ecrServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.ecr.api", config.region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "ecr-api-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.vpcId),
-			ServiceName:       pulumi.String(fmt.Sprintf("com.amazonaws.%s.ecr.api", config.region)),
+			ServiceName:       pulumi.String(ecrServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
-			PrivateDnsEnabled: pulumi.BoolPtr(false),
+			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
+			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
+		smServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.secretsmanager", config.region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "secrets-manager-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.vpcId),
-			ServiceName:       pulumi.String(fmt.Sprintf("com.amazonaws.%s.secretsmanager", config.region)),
+			ServiceName:       pulumi.String(smServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
-			PrivateDnsEnabled: pulumi.BoolPtr(false),
+			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
+			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
+		cwServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.logs", config.region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "cloudwatch-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.vpcId),
-			ServiceName:       pulumi.String(fmt.Sprintf("com.amazonaws.%s.logs", config.region)),
+			ServiceName:       pulumi.String(cwServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
-			PrivateDnsEnabled: pulumi.BoolPtr(false),
+			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
+			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		elbServicName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.elasticloadbalancing", config.region))
+		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "elb-endpoint"), &ec2.VpcEndpointArgs{
+			VpcId:             pulumi.String(config.vpcId),
+			ServiceName:       pulumi.String(elbServicName),
+			VpcEndpointType:   pulumi.String("Interface"),
+			PrivateDnsEnabled: pulumi.BoolPtr(true),
+			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
+			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
 		})
 
 		if err != nil {
@@ -117,6 +145,7 @@ func main() {
 		ctx.Export("dbPassword", pulumi.ToSecret(database.dbPassword))
 		ctx.Export("dbSecurityGroupId", database.dbSecurityGroupId)
 		ctx.Export("endpointSecurityGroupId", endpointSecurityGroup.ID())
+		ctx.Export("s3EndpointPrefixId", privateS3PrefixList.Id())
 
 		return nil
 	})

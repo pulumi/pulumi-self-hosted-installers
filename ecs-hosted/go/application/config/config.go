@@ -1,6 +1,9 @@
 package config
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -27,6 +30,9 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	resource.ProjectName = ctx.Project()
 	resource.StackName = ctx.Stack()
 
+	// enabling private LB and limiting egress will enforce strict egress limits on ECS services as well as provide an additional internal LB for the API service
+	resource.EnablePrivateLoadBalancerAndLimitEgress = appConfig.GetBool("enablePrivateLoadBalancerAndLimitEgress")
+
 	// we require these values to be present in configuration (aka already created in AWS account)
 	resource.AcmCertificateArn = appConfig.Require("acmCertificateArn")
 	resource.KmsServiceKeyId = appConfig.Require("kmsServiceKeyId")
@@ -42,7 +48,7 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		return nil, err
 	}
 
-	// retrieve database and VPC output values from the infrastack
+	// retrieve networking, database, and VPC output values from the infrastack
 	resource.VpcId = stackRef.GetStringOutput(pulumi.String("vpcId"))
 	resource.PublicSubnetIds = OutputToStringArray(stackRef.GetOutput(pulumi.String("publicSubnetIds")))
 	resource.PrivateSubnetIds = OutputToStringArray(stackRef.GetOutput(pulumi.String("privateSubnetIds")))
@@ -58,7 +64,10 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	}
 
 	// this SG protects the VPCEs created in the infrastructure stack
-	resource.EndpointSecurityGroup = stackRef.GetStringOutput(pulumi.String("endpointSecurityGroup"))
+	resource.EndpointSecurityGroup = stackRef.GetStringOutput(pulumi.String("endpointSecurityGroupId"))
+
+	// prefix list is needed for private connection to s3 (fargate control plane)
+	resource.PrefixListId = stackRef.GetStringOutput(pulumi.String("s3EndpointPrefixId"))
 
 	// provide defaults if needed
 	resource.RecaptchaSecretKey = appConfig.Get("recaptchaSecretKey")
@@ -72,19 +81,30 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		resource.RecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 	}
 
-	// require the samlCertPrivate key secret only if Public Key is present
-	samlCertPublicKey := appConfig.Get("samlCertPublicKey")
-	if samlCertPublicKey != "" {
+	// check if saml config is enabled
+	samlEnabled := appConfig.GetBool("samlEnabled")
+	if samlEnabled {
 		resource.SamlArgs = &SamlArgs{
-			CertPublicKey:  samlCertPublicKey,
-			CertPrivateKey: appConfig.RequireSecret("samlCertPrivateKey"),
+			Enabled: true,
+		}
+
+		// allow user to provide their own SAML certs, if they choose
+		userProvidedPublicKey := appConfig.Get("samlCertPublicKey")
+		userProvidedPrivateKey := appConfig.Get("samlCertPrivateKey")
+		if userProvidedPublicKey != "" && userProvidedPrivateKey != "" {
+			resource.SamlArgs.UserProvidedCerts = true
+			resource.SamlArgs.CertPublicKey = pulumi.String(userProvidedPublicKey).ToStringOutput()
+			resource.SamlArgs.CertPrivateKey = appConfig.RequireSecret("samlCertPrivateKey")
 		}
 	}
 
 	// values will be used to construct URLs for API and UI (console) services
+	// we only require the route53 zone, the subdomain is optional
 	resource.Route53ZoneName = appConfig.Require("route53ZoneName")
 	resource.Route53Subdomain = appConfig.Get("route53Subdomain")
 
+	// allow a provided white list of cidrs to be applied on the public load balancer
+	// we assume 0.0.0.0/0 if none is provided
 	appConfig.GetObject("whiteListCideBlocks", &resource.WhiteListCidrBlocks)
 
 	// gather values for our API and UI (console) services
@@ -106,8 +126,6 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 
 	resource.LogType = log.LogType(appConfig.GetFloat64("logType"))
 	resource.LogArgs = appConfig.Get("logArgs")
-
-	// TODO: log args
 
 	return &resource, nil
 }
@@ -136,6 +154,13 @@ func hydrateApiValues(appConfig *config.Config, resource *ConfigArgs) {
 	resource.ApiContainerMemoryReservation = appConfig.GetInt("apiContainerMemoryReservation")
 	if resource.ApiContainerMemoryReservation == 0 {
 		resource.ApiContainerMemoryReservation = 512
+	}
+
+	executeMigrations, ok := os.LookupEnv("PULUMI_EXECUTE_MIGRATIONS")
+	if !ok {
+		resource.ApiExecuteMigrations = true
+	} else {
+		resource.ApiExecuteMigrations, _ = strconv.ParseBool(executeMigrations)
 	}
 }
 
@@ -198,6 +223,7 @@ type ConfigArgs struct {
 	IsolatedSubnetIds     pulumi.StringArrayOutput
 	DatabaseArgs          *DatabaseArgs
 	EndpointSecurityGroup pulumi.StringOutput
+	PrefixListId          pulumi.StringOutput
 
 	ImageTag           string
 	RecaptchaSiteKey   string
@@ -208,6 +234,8 @@ type ConfigArgs struct {
 	Route53Subdomain    string
 	WhiteListCidrBlocks []string
 
+	EnablePrivateLoadBalancerAndLimitEgress bool
+
 	// API Related Values
 	ApiDesiredNumberTasks         int
 	ApiTaskMemory                 int
@@ -216,6 +244,7 @@ type ConfigArgs struct {
 	ApiContainerMemoryReservation int
 	ApiDisableEmailLogin          bool
 	ApiDisableEmailSign           bool
+	ApiExecuteMigrations          bool
 
 	// Console Related Values
 	ConsoleDesiredNumberTasks         int
@@ -251,6 +280,8 @@ type SmtpArgs struct {
 }
 
 type SamlArgs struct {
-	CertPublicKey  string
-	CertPrivateKey pulumi.StringOutput
+	Enabled           bool
+	UserProvidedCerts bool
+	CertPublicKey     pulumi.StringOutput
+	CertPrivateKey    pulumi.StringOutput
 }

@@ -1,0 +1,5 @@
+config:
+  aws:profile: pulumi-ce
+  aws:region: us-west-2
+  dns-go:appStackReference: phillipedwards/application-go/application-go
+  dns-go:enablePrivateLoadBalancerAndLimitEgress: "true"

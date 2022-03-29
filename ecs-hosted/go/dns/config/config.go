@@ -18,6 +18,8 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	resource.AccountId = caller.AccountId
 
 	appConfig := config.New(ctx, "")
+	resource.EnablePrivateLoadBalancerAndLimitEgress = appConfig.GetBool("enablePrivateLoadBalancerAndLimitEgress")
+
 	awsConfig := config.New(ctx, "aws")
 
 	resource.Region = awsConfig.Require("region")
@@ -31,26 +33,29 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		return nil, err
 	}
 
+	// TODO: how can we create logic to determine whether internal load balancer is present without using apply?
+
 	resource.Route53ZoneName = stackRef.GetStringOutput(pulumi.String("route53ZoneName"))
 	resource.Route53Subdomain = stackRef.GetStringOutput(pulumi.String("route53Subdomain"))
-	resource.ApiLoadBalancerDnsName = stackRef.GetStringOutput(pulumi.String("apiLoadBalancerDnsName"))
-	resource.ApiLoadBalancerZoneId = stackRef.GetStringOutput(pulumi.String("apiLoadBalancerZoneId"))
-	resource.ConsoleLoadBalancerDnsName = stackRef.GetStringOutput(pulumi.String("consoleLoadBalancerDnsName"))
-	resource.ConsoleLoadBalancerZoneId = stackRef.GetStringOutput(pulumi.String("consoleLoadBalancerZoneId"))
+	resource.PublicLoadBalancerDnsName = stackRef.GetStringOutput(pulumi.String("publicLoadBalancerDnsName"))
+	resource.PublicLoadBalancerZoneId = stackRef.GetStringOutput(pulumi.String("publicLoadBalancerZoneId"))
+	resource.InternalLoadBalancerDnsName = stackRef.GetStringOutput(pulumi.String("internalLoadBalancerDnsName"))
+	resource.InternalLoadBalancerZoneId = stackRef.GetStringOutput(pulumi.String("internalLoadBalancerZoneId"))
 
 	return &resource, nil
 }
 
 type ConfigArgs struct {
-	Region                     string
-	Profile                    string
-	AccountId                  string
-	ProjectName                string
-	StackName                  string
-	Route53ZoneName            pulumi.StringOutput
-	Route53Subdomain           pulumi.StringOutput
-	ApiLoadBalancerDnsName     pulumi.StringOutput
-	ApiLoadBalancerZoneId      pulumi.StringOutput
-	ConsoleLoadBalancerDnsName pulumi.StringOutput
-	ConsoleLoadBalancerZoneId  pulumi.StringOutput
+	Region                                  string
+	Profile                                 string
+	AccountId                               string
+	ProjectName                             string
+	StackName                               string
+	EnablePrivateLoadBalancerAndLimitEgress bool
+	Route53ZoneName                         pulumi.StringOutput
+	Route53Subdomain                        pulumi.StringOutput
+	PublicLoadBalancerDnsName               pulumi.StringOutput
+	PublicLoadBalancerZoneId                pulumi.StringOutput
+	InternalLoadBalancerDnsName             pulumi.StringOutput
+	InternalLoadBalancerZoneId              pulumi.StringOutput
 }

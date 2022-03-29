@@ -29,9 +29,14 @@ const endpointSecurityGroup = new ec2.SecurityGroup(`${config.commonName}-endpoi
 });
 
 // mount these endpoints to our VPC (Private Link) to allow services within our VPC to access AWS Managed Services without traversing public internet
-new ec2.VpcEndpoint(`${config.commonName}-s3-endpoint`, {
+const s3Endpoint = new ec2.VpcEndpoint(`${config.commonName}-s3-endpoint`, {
     vpcId: config.vpcId,
     serviceName: `com.amazonaws.${config.region}.s3`,
+});
+
+// retrieve the prefix id and export for downstream SGs to use
+const s3PrivatePrefixList = ec2.getPrefixListOutput({
+    name: s3Endpoint.prefixListId
 });
 
 new ec2.VpcEndpoint(`${config.commonName}-ecr-dkr-endpoint`, {
@@ -40,7 +45,7 @@ new ec2.VpcEndpoint(`${config.commonName}-ecr-dkr-endpoint`, {
     vpcEndpointType: "Interface",
     privateDnsEnabled: true,
     securityGroupIds: [endpointSecurityGroup.id],
-    subnetIds: config.publicSubnetIds
+    subnetIds: config.privateSubnetIds
 });
 
 new ec2.VpcEndpoint(`${config.commonName}-ecr-api-endpoint`, {
@@ -49,7 +54,7 @@ new ec2.VpcEndpoint(`${config.commonName}-ecr-api-endpoint`, {
     vpcEndpointType: "Interface",
     privateDnsEnabled: true,
     securityGroupIds: [endpointSecurityGroup.id],
-    subnetIds: config.publicSubnetIds
+    subnetIds: config.privateSubnetIds
 });
 
 new ec2.VpcEndpoint(`${config.commonName}-secrets-manager-endpoint`, {
@@ -58,7 +63,7 @@ new ec2.VpcEndpoint(`${config.commonName}-secrets-manager-endpoint`, {
     vpcEndpointType: "Interface",
     privateDnsEnabled: true,
     securityGroupIds: [endpointSecurityGroup.id],
-    subnetIds: config.publicSubnetIds
+    subnetIds: config.privateSubnetIds
 });
 
 new ec2.VpcEndpoint(`${config.commonName}-cloudwatch-endpoint`, {
@@ -67,7 +72,7 @@ new ec2.VpcEndpoint(`${config.commonName}-cloudwatch-endpoint`, {
     vpcEndpointType: "Interface",
     privateDnsEnabled: true,
     securityGroupIds: [endpointSecurityGroup.id],
-    subnetIds: config.publicSubnetIds
+    subnetIds: config.privateSubnetIds
 });
 
 export const vpcId = pulumi.output(config.vpcId);
@@ -81,3 +86,4 @@ export const dbUsername = database.dbUsername;
 export const dbPassword = pulumi.secret(database.dbPassword);
 export const dbSecurityGroupId = database.dbSecurityGroupId;
 export const endpointSecurityGroupId = endpointSecurityGroup.id;
+export const s3EndpointPrefixId = s3PrivatePrefixList.id;

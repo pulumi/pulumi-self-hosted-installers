@@ -26,21 +26,10 @@ func NewConsoleContainerService(ctx *pulumi.Context, name string, args *ConsoleC
 	// create our parented options
 	options := append(opts, pulumi.Parent(&resource))
 
-	healthCheck := &lb.TargetGroupHealthCheckArgs{
-		Interval:           pulumi.Int(10), //seconds
-		Path:               pulumi.String("/"),
-		Port:               pulumi.String(fmt.Sprintf("%d", consolePort)),
-		Protocol:           pulumi.String("HTTP"),
-		Matcher:            pulumi.String("200-299"),
-		Timeout:            pulumi.Int(5), //seconds
-		HealthyThreshold:   pulumi.Int(5),
-		UnhealthyThreshold: pulumi.Int(2),
-	}
-
 	listenerConditions := &lb.ListenerRuleConditionArray{
 		lb.ListenerRuleConditionArgs{
 			HostHeader: lb.ListenerRuleConditionHostHeaderArgs{
-				Values: pulumi.StringArray{pulumi.String(args.ConsoleUrl), args.TrafficManager.Console.LoadBalancer.DnsName},
+				Values: pulumi.StringArray{pulumi.String(args.ConsoleUrl)},
 			},
 		},
 		lb.ListenerRuleConditionArgs{
@@ -55,30 +44,67 @@ func NewConsoleContainerService(ctx *pulumi.Context, name string, args *ConsoleC
 		return nil, err
 	}
 
-	resource.ContainerService, err = NewContainerService(ctx, name, &ContainerServiceArgs{
-		ContainerBaseArgs:  args.ContainerBaseArgs,
-		HealthCheck:        healthCheck,
-		ListenerPriority:   1,
-		ListenerConditions: listenerConditions,
-		PulumiLoadBalancer: args.TrafficManager.Console,
-		TargetPort:         consolePort,
-		TaskDefinitionArgs: taskArgs,
-	}, options...)
+	tgName := fmt.Sprintf("%s-tg", name)
+	tgOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	tg, err := lb.NewTargetGroup(ctx, tgName, &lb.TargetGroupArgs{
+		VpcId:      args.VpcId,
+		Protocol:   pulumi.String("HTTP"),
+		Port:       pulumi.Int(consolePort),
+		TargetType: pulumi.String("ip"),
+		HealthCheck: &lb.TargetGroupHealthCheckArgs{
+			Interval:           pulumi.Int(10), //seconds
+			Path:               pulumi.String("/"),
+			Port:               pulumi.String(fmt.Sprintf("%d", consolePort)),
+			Protocol:           pulumi.String("HTTP"),
+			Matcher:            pulumi.String("200-299"),
+			Timeout:            pulumi.Int(5), //seconds
+			HealthyThreshold:   pulumi.Int(5),
+			UnhealthyThreshold: pulumi.Int(2),
+		},
+	}, tgOptions...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	httpsListener, err := args.TrafficManager.Public.CreateListenerRule(ctx, fmt.Sprintf("%s-https", name), true, tg.Arn, listenerConditions, options...)
+	if err != nil {
+		return nil, err
+	}
 
+	httpListener, err := args.TrafficManager.Public.CreateListenerRule(ctx, fmt.Sprintf("%s-http", name), false, tg.Arn, listenerConditions, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceOptions := append(options, pulumi.DependsOn([]pulumi.Resource{httpsListener, httpListener}))
+	resource.ContainerService, err = NewContainerService(ctx, name, &ContainerServiceArgs{
+		ContainerBaseArgs:          args.ContainerBaseArgs,
+		PulumiLoadBalancer:         args.TrafficManager.Public,
+		PulumiInternalLoadBalancer: args.TrafficManager.Internal,
+		TargetPort:                 consolePort,
+		TaskDefinitionArgs:         taskArgs,
+		TargetGroups:               []*lb.TargetGroup{tg},
+	}, serviceOptions...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
 	_, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-lb-to-ecs-rule", name), &ec2.SecurityGroupRuleArgs{
 		Type:                  pulumi.String("egress"),
-		SecurityGroupId:       args.TrafficManager.Console.SecurityGroup.ID(),
+		SecurityGroupId:       args.TrafficManager.Public.SecurityGroup.ID(),
 		SourceSecurityGroupId: resource.ContainerService.SecurityGroup.ID(),
 		FromPort:              pulumi.Int(consolePort),
 		ToPort:                pulumi.Int(consolePort),
 		Protocol:              pulumi.String("TCP"),
-	}, sgOptions...)
+		Description:           pulumi.String("Allow access from UI LB to ecs service"),
+	}, options...)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if err != nil {
 		return nil, err
@@ -123,7 +149,7 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 
 	// resolve all needed outputs to construct our container definition in JSON
 	conatinerDefinitions, _ := pulumi.All(
-		args.TrafficManager.Console.LoadBalancer.DnsName,
+		args.TrafficManager.Public.LoadBalancer.DnsName,
 		args.LogDriver).ApplyT(func(applyArgs []interface{}) (string, error) {
 
 		dnsName := applyArgs[0].(string)
@@ -131,17 +157,17 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 
 		containerJson, err := json.Marshal([]interface{}{
 			map[string]interface{}{
-				"name":              consoleContainerName,
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
 				"cpu":               containerCpu,
+				"environment":       newConsoleEnvironmentVariables(args, dnsName),
+				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
+				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
+				"name":              consoleContainerName,
 				"portMappings": []map[string]interface{}{
 					{
 						"containerPort": consolePort,
 					},
 				},
-				"environment":      newConsoleEnvironmentVariables(args, dnsName),
-				"logConfiguration": logDriver.GetConfiguration(),
 			},
 		})
 
@@ -165,16 +191,20 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName string) []map[string]interface{} {
 
 	env := []map[string]interface{}{
+		CreateEnvVar("AWS_REGION", args.Region),
+		CreateEnvVar("LOGIN_RECAPTCHA_SITE_KEY", args.RecaptchaSiteKey),
 		CreateEnvVar("PULUMI_API", fmt.Sprintf("https://%s", args.ApiUrl)),
 		CreateEnvVar("PULUMI_CONSOLE_DOMAIN", args.ConsoleUrl),
 		CreateEnvVar("PULUMI_HOMEPAGE_DOMAIN", args.ConsoleUrl),
 		CreateEnvVar("PULUMI_ROOT_DOMAIN", args.RootDomain),
-		CreateEnvVar("AWS_REGION", args.Region),
 		CreateEnvVar("RECAPTCHA_SITE_KEY", args.RecaptchaSiteKey),
-		CreateEnvVar("LOGIN_RECAPTCHA_SITE_KEY", args.RecaptchaSiteKey),
+	}
 
-		// NOTE: this ENV var will cause the console to redirect requests directly to the APIs LB and can have impacts on requests from the CLI succeeding or not.
-		//CreateEnvVar("PULUMI_API_INTERNAL_ENDPOINT", lbDnsName),
+	// this URL should correspond to a route53 A record which aliases the internal private NLB
+	// this is only needed when egress on the ECS service SG is locked down to VPC CIDR
+	// ALB's don't have static IP addresses, hence, the NLB
+	if args.EnablePrivateLoadBalancerAndLimitEgress {
+		env = append(env, CreateEnvVar("PULUMI_API_INTERNAL_ENDPOINT", fmt.Sprintf("https://%s", args.ApiInternalUrl)))
 	}
 
 	if args.HideEmailLogin {
@@ -195,25 +225,24 @@ func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName
 type ConsoleContainerServiceArgs struct {
 	ContainerBaseArgs
 
-	ContainerMemoryReservation int
+	ApiUrl                     string
+	ApiInternalUrl             string
+	ConsoleUrl                 string
 	ContainerCpu               int
+	ContainerMemoryReservation int
+	DesiredNumberTasks         int
 	EcrRepoAccountId           string
+	HideEmailSignup            bool
+	HideEmailLogin             bool
 	ImageTag                   string
-	// LogType LogType
-	// LogArgs any
-	RecaptchaSiteKey    string
-	DesiredNumberTasks  int
-	SamlSsoEnabled      bool
-	TaskMemory          int
-	TaskCpu             int
-	TrafficManager      *network.TrafficManager
-	HideEmailSignup     bool
-	HideEmailLogin      bool
-	ConsoleUrl          string
-	ApiUrl              string
-	RootDomain          string
-	WhiteListCidrBlocks []string
-	LogDriver           log.LogDriver
+	LogDriver                  log.LogDriver
+	RecaptchaSiteKey           string
+	RootDomain                 string
+	SamlSsoEnabled             bool
+	TaskMemory                 int
+	TaskCpu                    int
+	TrafficManager             *network.TrafficManager
+	WhiteListCidrBlocks        []string
 }
 
 type ConsoleContainerService struct {
