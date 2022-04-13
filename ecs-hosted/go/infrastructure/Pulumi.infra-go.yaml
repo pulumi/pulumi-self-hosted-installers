@@ -1,6 +1,0 @@
-config:
-  aws:region: us-west-2
-  infrastructure-go:isolatedSubnetIds: '["subnet-06979f4dd0467744c","subnet-054f2335eaca7cc0a","subnet-00cd5841cadb0cb3d"]'
-  infrastructure-go:privateSubnetIds: '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
-  infrastructure-go:publicSubnetIds: '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
-  infrastructure-go:vpcId: vpc-0f46995f9f01e39d5
