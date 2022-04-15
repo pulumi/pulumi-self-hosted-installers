@@ -9,6 +9,7 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
+2 | 04/15/2022 | Golang application now supports Pulumi Service operating in a private, no public internet access environment. This configuration, which is disabled by default, can be enabled by setting the `enablePrivateLoadBalancerAndLimitEgress` configuration value in both the `application` and `dns` stack configurations.
 
 ## User Guides:
 
@@ -137,6 +138,9 @@ The Pulumi services operate in Kubernetes with the following app properties.
     pulumi stack init # follow prompt
     ```
 
+    ### NOTE
+    Pulumi Migrations container, by default, will execute on every `pulumi up` of the `application` project. This behavior can be disabled by setting the environment variable `$PULUMI_EXECUTE_MIGRATIONS` to `false`.
+
     ### Required Configuration
     ```
     region - AWS Region
@@ -151,6 +155,11 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     ### Optional Configuration
     ```
+    enablePrivateLoadBalancerAndLimitEgress - boolean - if enabled, internal NLB will be deployed into private subnets and ECS Service Security Groups will have their public internet access (0.0.0.0/0) removed. Note: this additional NLB will use the same ACM certificate provided.
+    samlEnabled - boolean - if enabled, SAML certificates will be created and SAML SSO will be enabled for the Pulumi Service. Note, if user provides their own SAML certificates through samlCertPublicKey and samlCertPrivateKey, those will be respected.
+    samlCertPublicKey - public key to be used for SAML SSO interaction
+    samlCertPrivateKey - private key to be used for SAML SSO interaction
+
     apiDesiredNumberTasks - Desired number of ECS tasks for the API. Default is 1.
     apiTaskMemory - ECS Task level Memory. Default is 1024mb.
     apiTaskCpu - ECS Task level CPU. Default is 512mb.
@@ -220,7 +229,7 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     ### Optional Configuration
     
-    none
+    enablePrivateLoadBalancerAndLimitEgress - boolean - if enabled, an additional Route 53 A record will be created which allows private routing to the internal, private NLB.
 
     **Note: below configuration values are examples. Provide your own.**
     ### Set Configuration Values
