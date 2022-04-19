@@ -35,26 +35,12 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 	// create our parented options
 	options := append(opts, pulumi.Parent(&resource))
 
-	healthCheck := &lb.TargetGroupHealthCheckArgs{
-		Interval:           pulumi.Int(10), //seconds
-		Path:               pulumi.String("/api/status"),
-		Port:               pulumi.String(fmt.Sprintf("%d", apiPort)),
-		Protocol:           pulumi.String("HTTP"),
-		Matcher:            pulumi.String("200-299"),
-		Timeout:            pulumi.Int(5), //seconds
-		HealthyThreshold:   pulumi.Int(5),
-		UnhealthyThreshold: pulumi.Int(2),
-	}
-
 	listenerConditions := &lb.ListenerRuleConditionArray{
 		lb.ListenerRuleConditionArgs{
 			HostHeader: lb.ListenerRuleConditionHostHeaderArgs{
-				Values: pulumi.StringArray{pulumi.String(args.ApiUrl), args.TrafficManager.Api.LoadBalancer.DnsName},
-			},
-		},
-		lb.ListenerRuleConditionArgs{
-			PathPattern: lb.ListenerRuleConditionPathPatternArgs{
-				Values: pulumi.StringArray{pulumi.String("/*")},
+				Values: pulumi.StringArray{
+					pulumi.String(args.ApiUrl),
+				},
 			},
 		},
 	}
@@ -110,33 +96,134 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 		return nil, err
 	}
 
+	tgName := fmt.Sprintf("%s-tg", name)
+	deleteBeforeReplaceOpts := append(options, pulumi.DeleteBeforeReplace(true))
+	tg, err := lb.NewTargetGroup(ctx, tgName, &lb.TargetGroupArgs{
+		VpcId:      args.VpcId,
+		Protocol:   pulumi.String("HTTP"),
+		Port:       pulumi.Int(apiPort),
+		TargetType: pulumi.String("ip"),
+		HealthCheck: &lb.TargetGroupHealthCheckArgs{
+			Interval:           pulumi.Int(10), //seconds
+			Path:               pulumi.String("/api/status"),
+			Port:               pulumi.String(fmt.Sprintf("%d", apiPort)),
+			Protocol:           pulumi.String("HTTP"),
+			Matcher:            pulumi.String("200-299"),
+			Timeout:            pulumi.Int(5), //seconds
+			HealthyThreshold:   pulumi.Int(5),
+			UnhealthyThreshold: pulumi.Int(2),
+		},
+	}, deleteBeforeReplaceOpts...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	serviceTgs := []*lb.TargetGroup{tg}
+
+	httpsListener, err := args.TrafficManager.Public.CreateListenerRule(ctx, fmt.Sprintf("%s-https", name), true, tg.Arn, listenerConditions, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	httpListener, err := args.TrafficManager.Public.CreateListenerRule(ctx, fmt.Sprintf("%s-http", name), false, tg.Arn, listenerConditions, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	// create listeners and target groups for NLB -> API
+
+	serviceOptions := append(options, pulumi.DependsOn([]pulumi.Resource{httpsListener, httpListener}))
+
+	if args.EnablePrivateLoadBalancerAndLimitEgress {
+		// do stuff here
+		// 2 new target groups
+		// 2 listeners (http and https)
+		// map tgs into ecs service for LB purposes
+
+		privateHttpsTg, err := lb.NewTargetGroup(ctx, fmt.Sprintf("%s-nlb-tgs", name), &lb.TargetGroupArgs{
+			VpcId:      args.VpcId,
+			Protocol:   pulumi.String("TCP"),
+			Port:       pulumi.Int(apiPort),
+			TargetType: pulumi.String("ip"),
+		}, deleteBeforeReplaceOpts...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		privateHttpsListener, err := args.TrafficManager.Internal.CreateListener(ctx, fmt.Sprintf("%s-https", name), privateHttpsTg.Arn, args.CertificateArn, options...)
+		if err != nil {
+			return nil, err
+		}
+
+		privateHttpTg, err := lb.NewTargetGroup(ctx, fmt.Sprintf("%s-nlb-tg", name), &lb.TargetGroupArgs{
+			VpcId:      args.VpcId,
+			Protocol:   pulumi.String("TCP"),
+			Port:       pulumi.Int(apiPort),
+			TargetType: pulumi.String("ip"),
+		}, deleteBeforeReplaceOpts...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		privateHttpListener, err := args.TrafficManager.Internal.CreateListener(ctx, fmt.Sprintf("%s-http", name), privateHttpTg.Arn, "", options...)
+		if err != nil {
+			return nil, err
+		}
+
+		serviceTgs = append(serviceTgs, privateHttpTg, privateHttpsTg)
+		serviceOptions = append(serviceOptions, pulumi.DependsOn([]pulumi.Resource{privateHttpListener, privateHttpsListener}))
+	}
+
+	dbSgEgressRules := ec2.SecurityGroupEgressArray{
+		ec2.SecurityGroupEgressArgs{
+			FromPort:       pulumi.Int(3306),
+			ToPort:         pulumi.Int(3306),
+			SecurityGroups: pulumi.StringArray{args.DatabaseArgs.SecurityGroupId},
+			Protocol:       pulumi.String("TCP"),
+			Description:    pulumi.String("Allow SG egress from ECS Service to Aurora DB"),
+		},
+		ec2.SecurityGroupEgressArgs{
+			FromPort:    pulumi.Int(3306),
+			ToPort:      pulumi.Int(3306),
+			CidrBlocks:  pulumi.StringArray{args.VpcCidrBlock},
+			Protocol:    pulumi.String("TCP"),
+			Description: pulumi.String("Allow VPC CIDR egress from ECS service on DB Port"),
+		},
+	}
+
 	resource.ContainerService, err = NewContainerService(ctx, name, &ContainerServiceArgs{
-		ContainerBaseArgs:  args.ContainerBaseArgs,
-		HealthCheck:        healthCheck,
-		ListenerPriority:   1,
-		ListenerConditions: listenerConditions,
-		PulumiLoadBalancer: args.TrafficManager.Api,
-		TargetPort:         apiPort,
-		TaskDefinitionArgs: taskArgs,
-	}, options...)
+		ContainerBaseArgs:          args.ContainerBaseArgs,
+		TargetGroups:               serviceTgs,
+		PulumiLoadBalancer:         args.TrafficManager.Public,
+		PulumiInternalLoadBalancer: args.TrafficManager.Internal,
+		TargetPort:                 apiPort,
+		TaskDefinitionArgs:         taskArgs,
+		SecurityGroupEgressRules:   dbSgEgressRules,
+	}, serviceOptions...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = NewMigrationsService(ctx, fmt.Sprintf("%s-migrations", name), &MigrationsContainerServiceArgs{
-		ContainerBaseArgs: args.ContainerBaseArgs,
-		DatabaseArgs:      args.DatabaseArgs,
-		EcrRepoAccountId:  args.EcrRepoAccountId,
-		ImageTag:          args.ImageTag,
-	}, options...)
+	// Allow access out of ALBs SG to ECS SG
+	_, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-alb-to-ecs-rule", name), &ec2.SecurityGroupRuleArgs{
+		Type:                  pulumi.String("egress"),
+		SecurityGroupId:       args.TrafficManager.Public.SecurityGroup.ID(),
+		SourceSecurityGroupId: resource.ContainerService.SecurityGroup.ID(),
+		FromPort:              pulumi.Int(apiPort),
+		ToPort:                pulumi.Int(apiPort),
+		Protocol:              pulumi.String("TCP"),
+		Description:           pulumi.String("Allow access from API LB to ecs service"),
+	}, deleteBeforeReplaceOpts...)
 
 	if err != nil {
 		return nil, err
 	}
 
-	apidbOptions := append(options, pulumi.DeleteBeforeReplace(true), pulumi.Aliases([]pulumi.Alias{{Name: pulumi.String("pulumi-service-api-to-db-rule")}}))
-
+	// DB to allow communication from ECS API tasks and vice versa
 	_, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-ecs-to-db-rule", name), &ec2.SecurityGroupRuleArgs{
 		Type:                  pulumi.String("ingress"),
 		SecurityGroupId:       args.DatabaseArgs.SecurityGroupId,
@@ -144,21 +231,19 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 		FromPort:              pulumi.Int(3306),
 		ToPort:                pulumi.Int(3306),
 		Protocol:              pulumi.String("TCP"),
-	}, apidbOptions...)
+	}, deleteBeforeReplaceOpts...)
 
 	if err != nil {
 		return nil, err
 	}
-
-	lbapiOptions := append(options, pulumi.DeleteBeforeReplace(true), pulumi.Aliases([]pulumi.Alias{{Name: pulumi.String("pulumi-service-lb-to-api-rule")}}))
-	_, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-lb-to-ecs-rule", name), &ec2.SecurityGroupRuleArgs{
-		Type:                  pulumi.String("egress"),
-		SecurityGroupId:       args.TrafficManager.Api.SecurityGroup.ID(),
-		SourceSecurityGroupId: resource.ContainerService.SecurityGroup.ID(),
-		FromPort:              pulumi.Int(apiPort),
-		ToPort:                pulumi.Int(apiPort),
-		Protocol:              pulumi.String("TCP"),
-	}, lbapiOptions...)
+	_, err = NewMigrationsService(ctx, fmt.Sprintf("%s-migrations", name), &MigrationsContainerServiceArgs{
+		ContainerBaseArgs:        args.ContainerBaseArgs,
+		DatabaseArgs:             args.DatabaseArgs,
+		EcrRepoAccountId:         args.EcrRepoAccountId,
+		ImageTag:                 args.ImageTag,
+		ExecuteMigrations:        args.ExecuteMigrations,
+		SecurityGroupEgressRules: dbSgEgressRules,
+	}, options...)
 
 	if err != nil {
 		return nil, err
@@ -211,7 +296,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		args.CheckPointbucket.Bucket,      // 5
 		args.PolicyPacksBucket.Bucket,     // 6
 		args.LogDriver,                    // 7
-		args.SamlArgs).ApplyT(func(applyArgs []interface{}) (string, error) {
+		args.SamlArgs.CertPublicKey).ApplyT(func(applyArgs []interface{}) (string, error) {
 
 		dbEndpoint := applyArgs[0].(string)
 		dbPort := applyArgs[3].(int)
@@ -219,13 +304,22 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		policypackBucket := applyArgs[6].(string)
 		secretsOutput := applyArgs[4].([]map[string]interface{})
 		logDriver := applyArgs[7].(log.LogDriver)
+		publicKeyCert := applyArgs[8].(string)
 
 		containerJson, err := json.Marshal([]interface{}{
 			map[string]interface{}{
-				"name":              apiContainerName,
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
 				"cpu":               containerCpu,
+				"environment":       newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket, publicKeyCert),
+				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
+				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
+				"name":              apiContainerName,
+				"portMappings": []map[string]interface{}{
+					{
+						"containerPort": apiPort,
+					},
+				},
+				"secrets": secretsOutput,
 				"ulimits": []map[string]interface{}{
 					{
 						"softLimit": 100000,
@@ -233,18 +327,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 						"name":      "nofile",
 					},
 				},
-				"portMappings": []map[string]interface{}{
-					{
-						"containerPort": apiPort,
-					},
-				},
-				"environment":      newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket),
-				"secrets":          secretsOutput,
-				"logConfiguration": logDriver.GetConfiguration(),
 			},
 		})
-
-		ctx.Log.Info(string(containerJson), nil)
 
 		if err != nil {
 			return "", err
@@ -327,7 +411,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	}, nil
 }
 
-func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string, dbPort int, checkpointBucket string, policypackBucket string) []map[string]interface{} {
+func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string, dbPort int, checkpointBucket string, policypackBucket string, samlPublicKey string) []map[string]interface{} {
 
 	env := []map[string]interface{}{
 		CreateEnvVar("PULUMI_LICENSE_KEY", args.LicenseKey),
@@ -357,8 +441,8 @@ func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string
 		env = append(env, CreateEnvVar("SMTP_GENERIC_SENDER", args.SmtpArgs.GenericSender))
 	}
 
-	if args.SamlArgs != nil {
-		env = append(env, CreateEnvVar("SAML_CERTIFICATE_PUBLIC_KEY", args.SamlArgs.CertPublicKey))
+	if args.SamlArgs != nil && args.SamlArgs.Enabled {
+		env = append(env, CreateEnvVar("SAML_CERTIFICATE_PUBLIC_KEY", samlPublicKey))
 	}
 
 	return env
@@ -396,6 +480,7 @@ type ApiContainerServiceArgs struct {
 	WhiteListCidrBlocks        []string
 	CheckPointbucket           *s3.Bucket
 	PolicyPacksBucket          *s3.Bucket
+	ExecuteMigrations          bool
 }
 
 type ApiContainerService struct {

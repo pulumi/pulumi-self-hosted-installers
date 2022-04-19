@@ -9,6 +9,17 @@ import (
 	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/common"
 )
 
+/*
+Current State:
+1 ALB fronts both UI and API ECS fargate services
+- listener and target group for each service
+
+Future:
+1 ALB
+- traffic direct to UI
+- traffic to intermediate NLB which (for api) which fronts API (static IP)
+*/
+
 func NewTrafficManager(ctx *pulumi.Context, name string, args *LoadBalancerArgs, opts ...pulumi.ResourceOption) (*TrafficManager, error) {
 	var resource TrafficManager
 
@@ -20,6 +31,8 @@ func NewTrafficManager(ctx *pulumi.Context, name string, args *LoadBalancerArgs,
 	// create our parented options
 	options := append(opts, pulumi.Parent(&resource))
 
+	// only create an access log s3 bucket if enabled
+	// default is false
 	var accessLogsBucket *s3.Bucket
 	prefix := "pulumi-elb"
 	if args.EnabledAccessLogs {
@@ -32,19 +45,24 @@ func NewTrafficManager(ctx *pulumi.Context, name string, args *LoadBalancerArgs,
 	}
 
 	apiLoadBalancerArgs := newLoadBalancerArgs(args, accessLogsBucket, prefix)
-	consoleLoadBalancerArgs := newLoadBalancerArgs(args, accessLogsBucket, prefix)
-
 	apiName := fmt.Sprintf("%s-api", name)
-	consoleName := fmt.Sprintf("%s-console", name)
 
-	resource.Api, err = NewPulumiLoadBalancer(ctx, apiName, apiLoadBalancerArgs, options...)
+	resource.Public, err = NewPulumiLoadBalancer(ctx, apiName, apiLoadBalancerArgs, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	resource.Console, err = NewPulumiLoadBalancer(ctx, consoleName, consoleLoadBalancerArgs, options...)
-	if err != nil {
-		return nil, err
+	// we will not enable private LB be default
+	// this will be used to allow console to route traffic to api, without public internet routeability
+	// UI SG will be locked down to not allow 0.0.0.0/0 egress and will target an internal NLB directly
+	if args.EnabledPrivateLoadBalancer {
+		internalLoadBalancerArgs := newLoadBalancerArgs(args, nil, prefix)
+		internalName := fmt.Sprintf("%s-internal", name)
+
+		resource.Internal, err = NewPulumiInternalLoadBalancer(ctx, internalName, internalLoadBalancerArgs, options...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &resource, nil
@@ -58,8 +76,8 @@ func newLoadBalancerArgs(args *LoadBalancerArgs, bucket *s3.Bucket, prefix strin
 		CertificateArn:      args.CertificateArn,
 		EnabledAccessLogs:   args.EnabledAccessLogs,
 		IdleTimeout:         args.IdleTimeout,
-		InternalLb:          args.InternalLb,
 		PublicSubnetIds:     args.PublicSubnetIds,
+		PrivateSubnetIds:    args.PrivateSubnetIds,
 		Region:              args.Region,
 		VpcId:               args.VpcId,
 		WhiteListCidrBlocks: args.WhiteListCidrBlocks,
@@ -119,6 +137,6 @@ func newAccessLogBucket(ctx *pulumi.Context, region string, name string, prefix 
 type TrafficManager struct {
 	pulumi.ResourceState
 
-	Api     *PulumiLoadBalancer
-	Console *PulumiLoadBalancer
+	Public   *PulumiLoadBalancer
+	Internal *PulumiInternalLoadBalancer
 }

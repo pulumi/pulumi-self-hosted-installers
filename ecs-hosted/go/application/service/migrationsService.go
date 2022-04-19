@@ -59,16 +59,35 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 		return nil, err
 	}
 
+	egress := args.SecurityGroupEgressRules
+
+	if args.EnablePrivateLoadBalancerAndLimitEgress {
+		egress = append(egress, ec2.SecurityGroupEgressArgs{
+			FromPort:       pulumi.Int(443),
+			ToPort:         pulumi.Int(443),
+			Protocol:       pulumi.String("TCP"),
+			SecurityGroups: pulumi.StringArray{args.VpcEndpointSecurityGroupId},
+			Description:    pulumi.String("Allow egress from ecs service to VPC Endpoint"),
+		}, ec2.SecurityGroupEgressArgs{
+			FromPort:      pulumi.Int(443),
+			ToPort:        pulumi.Int(443),
+			Protocol:      pulumi.String("TCP"),
+			PrefixListIds: pulumi.StringArray{args.PrefixListId},
+			Description:   pulumi.String("Allow egress from ecs service to S3 VPC Endpoint"),
+		})
+	} else {
+		egress = append(egress, ec2.SecurityGroupEgressArgs{
+			FromPort:    pulumi.Int(0),
+			ToPort:      pulumi.Int(0),
+			Protocol:    pulumi.String("-1"),
+			CidrBlocks:  pulumi.ToStringArray([]string{"0.0.0.0/0"}),
+			Description: pulumi.String("Allows egress to all IP addresses"),
+		})
+	}
+
 	resource.SecurityGroup, err = ec2.NewSecurityGroup(ctx, fmt.Sprintf("%s-sg", name), &ec2.SecurityGroupArgs{
-		VpcId: args.VpcId,
-		Egress: ec2.SecurityGroupEgressArray{
-			ec2.SecurityGroupEgressArgs{
-				ToPort:     pulumi.Int(0),
-				FromPort:   pulumi.Int(0),
-				Protocol:   pulumi.String("-1"),
-				CidrBlocks: pulumi.StringArray{pulumi.String("0.0.0.0/0")},
-			},
-		},
+		VpcId:  args.VpcId,
+		Egress: egress,
 	}, options...)
 
 	if err != nil {
@@ -117,6 +136,11 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 
 	if ctx.DryRun() {
 		ctx.Log.Info("Skipping database migration task on Pulumi Preview", nil)
+		return nil, nil
+	}
+
+	if !args.ExecuteMigrations {
+		ctx.Log.Info("Skipping database migration based on PULUMI_EXECUTE_MIGRATIONS env var set to 'false'", nil)
 		return nil, nil
 	}
 
@@ -237,9 +261,11 @@ func newContainerDefinitions(ctx *pulumi.Context, name string, args *MigrationsC
 type MigrationsContainerServiceArgs struct {
 	ContainerBaseArgs
 
-	DatabaseArgs     *config.DatabaseArgs
-	EcrRepoAccountId string
-	ImageTag         string
+	DatabaseArgs             *config.DatabaseArgs
+	EcrRepoAccountId         string
+	ExecuteMigrations        bool
+	ImageTag                 string
+	SecurityGroupEgressRules ec2.SecurityGroupEgressArray
 }
 
 type MigrationsContainerService struct {

@@ -47,43 +47,40 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		}
 	}
 
-	sgName := fmt.Sprintf("%s-service-sg", name)
-	resource.SecurityGroup, err = ec2.NewSecurityGroup(ctx, sgName, &ec2.SecurityGroupArgs{
-		VpcId: args.VpcId,
-		Egress: ec2.SecurityGroupEgressArray{
-			ec2.SecurityGroupEgressArgs{
-				FromPort:   pulumi.Int(0),
-				ToPort:     pulumi.Int(0),
-				Protocol:   pulumi.String("-1"),
-				CidrBlocks: pulumi.ToStringArray([]string{"0.0.0.0/0"}),
-			},
-		},
-		Ingress: ec2.SecurityGroupIngressArray{
-			ec2.SecurityGroupIngressArgs{
-				FromPort:       pulumi.Int(args.TargetPort),
-				ToPort:         pulumi.Int(args.TargetPort),
-				Protocol:       pulumi.String("TCP"),
-				SecurityGroups: pulumi.StringArray{args.PulumiLoadBalancer.SecurityGroup.ID()},
-			},
-		},
-	}, options...)
-
+	resource.SecurityGroup, err = NewEscServiceSecurityGroup(ctx, name, args, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	tgName := fmt.Sprintf("%s-tg", name)
-	resource.TargetGroup, err = lb.NewTargetGroup(ctx, tgName, &lb.TargetGroupArgs{
-		VpcId:       args.VpcId,
-		Protocol:    pulumi.String("HTTP"),
-		Port:        pulumi.Int(args.TargetPort),
-		HealthCheck: args.HealthCheck,
-		TargetType:  pulumi.String("ip"),
-	}, options...)
+	// // ECS tasks need to be able to communicate with VPCEs
+	// _, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-ecs-to-vpce-rule", name), &ec2.SecurityGroupRuleArgs{
+	// 	Type:                  pulumi.String("egress"),
+	// 	SecurityGroupId:       resource.SecurityGroup.ID(),
+	// 	SourceSecurityGroupId: args.VpcEndpointSecurityGroupId,
+	// 	FromPort:              pulumi.Int(443),
+	// 	ToPort:                pulumi.Int(443),
+	// 	Protocol:              pulumi.String("TCP"),
+	// 	Description:           pulumi.String("Allow access from ecs service to VPC Endpoint"),
+	// }, sgOptions...)
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // ECS tasks needs to be able to communicate with S3 VPCE
+	// _, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-ecs-to-s3-prefix-rule", name), &ec2.SecurityGroupRuleArgs{
+	// 	Type:            pulumi.String("egress"),
+	// 	SecurityGroupId: resource.SecurityGroup.ID(),
+	// 	PrefixListIds:   pulumi.StringArray{args.PrefixListId},
+	// 	FromPort:        pulumi.Int(443),
+	// 	ToPort:          pulumi.Int(443),
+	// 	Protocol:        pulumi.String("TCP"),
+	// 	Description:     pulumi.String("Allow access from ecs service to S3 VPC Endpoint"),
+	// }, sgOptions...)
+
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// execution role will be provided to ECS for things like pulling ECR images, sending Cloudwatch logs, etc
 	// this is not the role that will be provided to the actual application
@@ -92,6 +89,7 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		return nil, err
 	}
 
+	// only API should need secrets manager
 	if args.SecretsManagerPrefix != "" && args.KmsServiceKeyId != "" {
 		secretsDoc, err := NewSecretsManagerPolicy(ctx, name, args.Region, args.SecretsManagerPrefix, args.KmsServiceKeyId, args.AccountId, options...)
 		if err != nil {
@@ -130,30 +128,23 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		return nil, err
 	}
 
-	listenerOpts := append(options, pulumi.DependsOn([]pulumi.Resource{args.PulumiLoadBalancer}))
-	httpsListener, err := newLbListenerRule(ctx, fmt.Sprintf("%s-https-rule", name), args.PulumiLoadBalancer.HttpsListener.Arn, resource.TargetGroup.Arn, args.ListenerConditions, listenerOpts...)
-	if err != nil {
-		return nil, err
+	// configure service to be target of N number of target groups
+	// ALB and NLB
+	var loadBalancerConfigs ecs.ServiceLoadBalancerArray
+	for _, tg := range args.TargetGroups {
+		loadBalancerConfigs = append(loadBalancerConfigs, ecs.ServiceLoadBalancerArgs{
+			ContainerName:  pulumi.String(args.TaskDefinitionArgs.ContainerName),
+			ContainerPort:  pulumi.Int(args.TaskDefinitionArgs.ContainerPort),
+			TargetGroupArn: tg.Arn,
+		})
 	}
 
-	httpListener, err := newLbListenerRule(ctx, fmt.Sprintf("%s-http-rule", name), args.PulumiLoadBalancer.HttpListener.Arn, resource.TargetGroup.Arn, args.ListenerConditions, listenerOpts...)
-	if err != nil {
-		return nil, err
-	}
-
-	serviceOpts := append(options, pulumi.DependsOn([]pulumi.Resource{httpsListener, httpListener}))
-	resource.Service, err = ecs.NewService(ctx, fmt.Sprintf("%s-service", name), &ecs.ServiceArgs{
+	resource.Service, err = ecs.NewService(ctx, fmt.Sprintf("%s-ecs", name), &ecs.ServiceArgs{
 		Cluster:                       resource.Cluster.ID(),
 		DesiredCount:                  pulumi.Int(args.TaskDefinitionArgs.NumberDesiredTasks),
 		HealthCheckGracePeriodSeconds: pulumi.Int(60),
-		LoadBalancers: ecs.ServiceLoadBalancerArray{
-			ecs.ServiceLoadBalancerArgs{
-				ContainerName:  pulumi.String(args.TaskDefinitionArgs.ContainerName),
-				ContainerPort:  pulumi.Int(args.TaskDefinitionArgs.ContainerPort),
-				TargetGroupArn: resource.TargetGroup.Arn,
-			},
-		},
-		LaunchType: pulumi.String("FARGATE"),
+		LoadBalancers:                 loadBalancerConfigs,
+		LaunchType:                    pulumi.String("FARGATE"),
 		NetworkConfiguration: ecs.ServiceNetworkConfigurationArgs{
 			AssignPublicIp: pulumi.Bool(false),
 			Subnets:        args.PrivateSubnetIds,
@@ -161,7 +152,7 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		},
 		TaskDefinition:     taskDefinition.Arn,
 		WaitForSteadyState: pulumi.Bool(false),
-	}, serviceOpts...)
+	}, options...)
 
 	if err != nil {
 		return nil, err
@@ -183,17 +174,123 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		return nil, err
 	}
 
-	err = newScalingPolicy(ctx, fmt.Sprintf("%s-autoscaling-policy-cpu", name), autoScaleTarget, "ECSServiceAverageCPUUtilization")
+	scalingOpts := append(options, pulumi.DeleteBeforeReplace(true))
+	err = newScalingPolicy(ctx, fmt.Sprintf("%s-autoscaling-policy-cpu", name), autoScaleTarget, "ECSServiceAverageCPUUtilization", scalingOpts...)
 	if err != nil {
 		return nil, err
 	}
 
-	err = newScalingPolicy(ctx, fmt.Sprintf("%s-autoscaling-policy-memory", name), autoScaleTarget, "ECSServiceAverageMemoryUtilization")
+	err = newScalingPolicy(ctx, fmt.Sprintf("%s-autoscaling-policy-memory", name), autoScaleTarget, "ECSServiceAverageMemoryUtilization", scalingOpts...)
 	if err != nil {
 		return nil, err
 	}
 
 	return &resource, nil
+}
+
+// Build out the ECS Service security group that will take into context whether or not the services are operating in a private, limited environment (networking wise)
+// will also take into account any ingress or egress rules passed as args, but will not check for duplicates/uniqueness.s
+func NewEscServiceSecurityGroup(ctx *pulumi.Context, name string, args *ContainerServiceArgs, options ...pulumi.ResourceOption) (*ec2.SecurityGroup, error) {
+
+	sgName := fmt.Sprintf("%s-service-sg", name)
+	sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	sgIngress := ec2.SecurityGroupIngressArray{
+		ec2.SecurityGroupIngressArgs{
+			FromPort:       pulumi.Int(args.TargetPort),
+			ToPort:         pulumi.Int(args.TargetPort),
+			Protocol:       pulumi.String("TCP"),
+			SecurityGroups: pulumi.StringArray{args.PulumiLoadBalancer.SecurityGroup.ID()},
+			Description:    pulumi.String("Allows access from public external load balancer"),
+		},
+	}
+
+	sgEgress := ec2.SecurityGroupEgressArray{
+		ec2.SecurityGroupEgressArgs{
+			FromPort:    pulumi.Int(0),
+			ToPort:      pulumi.Int(0),
+			Protocol:    pulumi.String("-1"),
+			CidrBlocks:  pulumi.ToStringArray([]string{"0.0.0.0/0"}),
+			Description: pulumi.String("Allows egress to all IP addresses"),
+		},
+	}
+
+	sgArgs := &ec2.SecurityGroupArgs{
+		VpcId: args.VpcId,
+	}
+
+	// If private LB is enabled we will need to allow VPC CIDR on ingress and egress for NLB to establish communicadtion
+	// Egress on ECS Service SG will be locked down to just VPC cidr to restrict all internet egress
+	if args.EnablePrivateLoadBalancerAndLimitEgress && args.PulumiInternalLoadBalancer != nil {
+		sgIngress = ec2.SecurityGroupIngressArray{
+			ec2.SecurityGroupIngressArgs{
+				FromPort:       pulumi.Int(args.TargetPort),
+				ToPort:         pulumi.Int(args.TargetPort),
+				Protocol:       pulumi.String("TCP"),
+				SecurityGroups: pulumi.StringArray{args.PulumiLoadBalancer.SecurityGroup.ID()},
+				Description:    pulumi.String("Allows access from public external load balancer"),
+			},
+			ec2.SecurityGroupIngressArgs{
+				FromPort:    pulumi.Int(args.TargetPort),
+				ToPort:      pulumi.Int(args.TargetPort),
+				Protocol:    pulumi.String("TCP"),
+				CidrBlocks:  pulumi.StringArray{args.VpcCidrBlock},
+				Description: pulumi.String("Allows access from VPC CIDR which includes private internal load balancer"),
+			},
+		}
+
+		// routeable public internet access is denied
+		// note, this could be routed to TGW/proxy if needed at some point in future
+		sgEgress = ec2.SecurityGroupEgressArray{
+			ec2.SecurityGroupEgressArgs{
+				FromPort:    pulumi.Int(443),
+				ToPort:      pulumi.Int(443),
+				Protocol:    pulumi.String("TCP"),
+				CidrBlocks:  pulumi.StringArray{args.VpcCidrBlock},
+				Description: pulumi.String("Allow egress on 443 to entire VPC CIDR private netowrk"),
+			},
+			ec2.SecurityGroupEgressArgs{
+				FromPort:    pulumi.Int(80),
+				ToPort:      pulumi.Int(80),
+				Protocol:    pulumi.String("TCP"),
+				CidrBlocks:  pulumi.StringArray{args.VpcCidrBlock},
+				Description: pulumi.String("Allow egress on 80 to entire VPC CIDR private netowrk"),
+			},
+			ec2.SecurityGroupEgressArgs{
+				FromPort:       pulumi.Int(443),
+				ToPort:         pulumi.Int(443),
+				Protocol:       pulumi.String("TCP"),
+				SecurityGroups: pulumi.StringArray{args.VpcEndpointSecurityGroupId},
+				Description:    pulumi.String("Allow egress from ecs service to VPC Endpoint"),
+			},
+			ec2.SecurityGroupEgressArgs{
+				FromPort:      pulumi.Int(443),
+				ToPort:        pulumi.Int(443),
+				Protocol:      pulumi.String("TCP"),
+				PrefixListIds: pulumi.StringArray{args.PrefixListId},
+				Description:   pulumi.String("Allow egress from ecs service to S3 VPC Endpoint"),
+			},
+		}
+	}
+
+	// add sg rules from args
+	// note there is no safety check for unique rules
+	if args.SecurityGroupIngressRules != nil {
+		sgIngress = append(sgIngress, args.SecurityGroupIngressRules...)
+	}
+
+	if args.SecurityGroupEgressRules != nil {
+		sgEgress = append(sgEgress, args.SecurityGroupEgressRules...)
+	}
+
+	sgArgs.Ingress = sgIngress
+	sgArgs.Egress = sgEgress
+
+	sg, err := ec2.NewSecurityGroup(ctx, sgName, sgArgs, sgOptions...)
+	if err != nil {
+		return nil, err
+	}
+
+	return sg, nil
 }
 
 // create an IAM role that ECS tasks are capable of assuming. rolePolicyDocs allows caller to inject additional policies as needed
@@ -247,7 +344,7 @@ func NewEcsRole(ctx *pulumi.Context, name string, region string, rolePolicyDocs 
 }
 
 // create a new scaling policy capable of scaling up and down via our target metric. Eg- cpu/memory/etc
-func newScalingPolicy(ctx *pulumi.Context, name string, target *appautoscaling.Target, metric string) error {
+func newScalingPolicy(ctx *pulumi.Context, name string, target *appautoscaling.Target, metric string, options ...pulumi.ResourceOption) error {
 	_, err := appautoscaling.NewPolicy(ctx, name, &appautoscaling.PolicyArgs{
 		PolicyType:        pulumi.String("TargetTrackingScaling"),
 		ResourceId:        target.ResourceId,
@@ -261,29 +358,9 @@ func newScalingPolicy(ctx *pulumi.Context, name string, target *appautoscaling.T
 			ScaleInCooldown:  pulumi.Int(60),
 			ScaleOutCooldown: pulumi.Int(60),
 		},
-	})
-
-	return err
-}
-
-// attach listener rules to our respective Load Balancer Listener. Eg- all requests on "/path/blah"
-func newLbListenerRule(ctx *pulumi.Context, name string, listenerArn pulumi.StringOutput, tgArn pulumi.StringOutput, conditions lb.ListenerRuleConditionArrayInput, options ...pulumi.ResourceOption) (*lb.ListenerRule, error) {
-	listener, err := lb.NewListenerRule(ctx, name, &lb.ListenerRuleArgs{
-		ListenerArn: listenerArn,
-		Actions: lb.ListenerRuleActionArray{
-			lb.ListenerRuleActionArgs{
-				Type:           pulumi.String("forward"),
-				TargetGroupArn: tgArn,
-			},
-		},
-		Conditions: conditions,
 	}, options...)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return listener, nil
+	return err
 }
 
 // IAM policy should allow ECS tasks to pull any Secret specified
@@ -321,26 +398,32 @@ func NewSecretsManagerPolicy(ctx *pulumi.Context, name string, region string, se
 }
 
 type ContainerBaseArgs struct {
-	AccountId            string
-	Profile              string
-	Cluster              *ecs.Cluster
-	KmsServiceKeyId      string
-	PrivateSubnetIds     pulumi.StringArrayOutput
-	Region               string
-	SecretsManagerPrefix string
-	VpcId                pulumi.StringOutput
+	AccountId                               string
+	CertificateArn                          string
+	Cluster                                 *ecs.Cluster
+	EnablePrivateLoadBalancerAndLimitEgress bool
+	KmsServiceKeyId                         string
+	PrefixListId                            pulumi.StringOutput
+	PrivateSubnetIds                        pulumi.StringArrayOutput
+	Profile                                 string
+	Region                                  string
+	SecretsManagerPrefix                    string
+	VpcId                                   pulumi.StringOutput
+	VpcCidrBlock                            pulumi.StringOutput
+	VpcEndpointSecurityGroupId              pulumi.StringOutput
 }
 
 type ContainerServiceArgs struct {
 	ContainerBaseArgs
 
-	HealthCheck        *lb.TargetGroupHealthCheckArgs
-	ListenerConditions lb.ListenerRuleConditionArrayInput
-
-	ListenerPriority   int
-	PulumiLoadBalancer *network.PulumiLoadBalancer
-	TargetPort         int
-	TaskDefinitionArgs *TaskDefinitionArgs
+	LoadBalancerArn            pulumi.StringOutput
+	PulumiLoadBalancer         *network.PulumiLoadBalancer
+	PulumiInternalLoadBalancer *network.PulumiInternalLoadBalancer
+	SecurityGroupEgressRules   ec2.SecurityGroupEgressArray
+	SecurityGroupIngressRules  ec2.SecurityGroupIngressArray
+	TargetGroups               []*lb.TargetGroup
+	TargetPort                 int
+	TaskDefinitionArgs         *TaskDefinitionArgs
 }
 
 type ContainerService struct {
@@ -349,7 +432,6 @@ type ContainerService struct {
 	Cluster       *ecs.Cluster
 	SecurityGroup *ec2.SecurityGroup
 	Service       *ecs.Service
-	TargetGroup   *lb.TargetGroup
 }
 
 type TaskDefinitionArgs struct {

@@ -26,13 +26,14 @@ func main() {
 		}).(pulumi.StringOutput)
 
 		dnsRecords, err := NewApplicationDns(ctx, "dns", &ApplicationDnsArgs{
-			Domain:                     domain,
-			Region:                     cfg.Region,
-			ZoneName:                   cfg.Route53ZoneName,
-			ApiLoadBalancerDnsName:     cfg.ApiLoadBalancerDnsName,
-			ApiLoadBalancerZoneId:      cfg.ApiLoadBalancerZoneId,
-			ConsoleLoadBalancerDnsName: cfg.ConsoleLoadBalancerDnsName,
-			ConsoleLoadBalancerZoneId:  cfg.ConsoleLoadBalancerZoneId,
+			Domain:                                  domain,
+			Region:                                  cfg.Region,
+			ZoneName:                                cfg.Route53ZoneName,
+			PublicLoadBalancerDnsName:               cfg.PublicLoadBalancerDnsName,
+			PublicLoadBalancerZoneId:                cfg.PublicLoadBalancerZoneId,
+			InternalLoadBalancerDnsName:             cfg.InternalLoadBalancerDnsName,
+			InternalLoadBalancerZoneId:              cfg.InternalLoadBalancerZoneId,
+			EnablePrivateLoadBalancerAndLimitEgress: cfg.EnablePrivateLoadBalancerAndLimitEgress,
 		})
 
 		if err != nil {
@@ -41,6 +42,10 @@ func main() {
 
 		ctx.Export("apiUrl", dnsRecords.ApiRecord.Fqdn)
 		ctx.Export("consoleUrl", dnsRecords.ConsoleRecord.Fqdn)
+
+		if cfg.EnablePrivateLoadBalancerAndLimitEgress {
+			ctx.Export("apiInternalUrl", dnsRecords.ApiInternalRecord.Fqdn)
+		}
 
 		return nil
 	})
