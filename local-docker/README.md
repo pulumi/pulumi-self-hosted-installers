@@ -15,8 +15,6 @@ This project contains a Pulumi project to provision and orchestrate the followin
 ## Prerequisites
 
 - You must have a license key from your sales contact.
-- You must provide your Docker Hub user id to your sales contact to access the Selfhosted Pulumi container images.
-    - Note: you may replicate these images to your own registry if you choose.
 
 ## Requirements
 
@@ -42,10 +40,10 @@ The following are requirements of this deployment option:
         - :information_source: Document the state location and passphrase for your stack in your internal documentation system or update this README to contain it.
 1. Service and registry configuration
     1. `pulumi config set licenseKey --secret {licenseKey}`
-    1. `pulumi config set imageRegistryUsername {registry username}`
-    1. `pulumi config set imageRegistryAccessToken --secret {registry access token}`
-    1. (optional) - if you're pulling images from registry other than `registry-1.docker.io`
+    1. (optional) - if you're pulling images from registry other than docker hub:
         - `pulumi config set imageRegistryAddress {registry address}`
+        - `pulumi config set imageRegistryUsername {registry username}`
+        - `pulumi config set imageRegistryAccessToken --secret {registry access token}`
     1. `pulumi config set imageTag {imageTag}`
         - see https://hub.docker.com/orgs/pulumi for the available tags. Pick the latest tag in the form of `DATE-NUMBER-signed`.
     1. create the local directory for config file storage:
@@ -67,9 +65,10 @@ The following are requirements of this deployment option:
     1. `pulumi config set storageSecretKey --secret {storage secret key}`
     1. `pulumi config set storageCheckpointBucket {storage checkpoint bucket}`
         - e.g. `s3://pulumi-checkpoints?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
+        - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
     1. `pulumi config set storagePolicyPackBucket {storage policypack bucket}`
         - e.g. `s3://pulumi-policypacks?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
-    1. Note: the `endpoint=HOST:IP` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
+        - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
 1. Domain configuration
     1. `pulumi config set apiDomain {domain for api}`
     1. `pulumi config set consoleDomain {domain for console}`
@@ -86,6 +85,8 @@ The following are requirements of this deployment option:
 1. Miscellaneous configuration
     1. (optional) - expose the containers directly for troubleshooting purposes or for integrating with an external load balancer
         - `pulumi config set exposeContainerPorts true`
+1. SSO/SAML Configuration - once set email access is not available
+    1. `pulumi config set samlSsoEnabled true`
 1. SMTP Configuration - required for "reset password" and invite emails
     1. `pulumi config set smtpServer {smtp server}`
     1. `pulumi config set smtpUsername {smtp username}`

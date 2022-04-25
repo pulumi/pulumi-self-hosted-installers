@@ -49,8 +49,8 @@ if (disableNginxProxy == false) {
  */
 const DEFAULT_IMAGE_REGISTRY = "registry-1.docker.io";
 const imageRegistryAddress = stackConfig.get("imageRegistryAddress") || DEFAULT_IMAGE_REGISTRY;
-const imageRegistryUsername = stackConfig.require("imageRegistryUsername");
-const imageRegistryAccessToken = stackConfig.requireSecret("imageRegistryAccessToken");
+const imageRegistryUsername = stackConfig.get("imageRegistryUsername");
+const imageRegistryAccessToken = stackConfig.getSecret("imageRegistryAccessToken");
 
 let imageAddressPrefix = "";
 if (imageRegistryAddress !== DEFAULT_IMAGE_REGISTRY) {
@@ -104,6 +104,8 @@ export const config = {
     apiTlsCert,
     consoleTlsKey,
     consoleTlsCert,
+
+    samlSsoEnabled: stackConfig.getBoolean("samlSsoEnabled") || false,
 
     smtpServer: stackConfig.get("smtpServer") || "",
     smtpUsername: stackConfig.get("smtpUsername") || "",

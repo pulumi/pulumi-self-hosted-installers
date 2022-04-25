@@ -86,7 +86,7 @@ const serviceImage = new docker.RemoteImage("service", {
 }, { provider: dockerProvider });
 
 const serviceContainer = new docker.Container("service", {
-    image: serviceImage.latest,
+    image: serviceImage.repoDigest,
     envs: [
         `PULUMI_ENTERPRISE=true`,
         pulumi.interpolate`PULUMI_LICENSE_KEY=${config.licenseData}`,
@@ -146,10 +146,10 @@ const consoleImage = new docker.RemoteImage("console", {
     keepLocally: true,
 }, { provider: dockerProvider });
 const consoleContainer = new docker.Container("console", {
-    image: consoleImage.latest,
+    image: consoleImage.repoDigest,
     envs: [
         `PULUMI_ENTERPRISE=true`,
-        `SAML_SSO_ENABLED=true`,
+        pulumi.interpolate`SAML_SSO_ENABLED=${config.samlSsoEnabled}`,
 
         pulumi.interpolate`PULUMI_API=${config.apiEndpoint}`,
         pulumi.interpolate`PULUMI_API_INTERNAL_ENDPOINT=http://${serviceContainer.name}:8080`,
@@ -228,7 +228,7 @@ server {
         keepLocally: true,
     }, { provider: dockerProvider });
     const nginxContainer = new docker.Container("nginx", {
-        image: nginxImage.latest,
+        image: nginxImage.repoDigest,
         networksAdvanced: [
             { name: servicesNetworkName },
         ],
