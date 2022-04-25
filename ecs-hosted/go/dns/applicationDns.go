@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/route53"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"strings"
 )
 
 func NewApplicationDns(ctx *pulumi.Context, name string, args *ApplicationDnsArgs, opts ...pulumi.ResourceOption) (*ApplicationDns, error) {
@@ -17,7 +18,6 @@ func NewApplicationDns(ctx *pulumi.Context, name string, args *ApplicationDnsArg
 
 	// create our parented options
 	options := append(opts, pulumi.Parent(&resource))
-
 	zone := route53.LookupZoneOutput(ctx, route53.LookupZoneOutputArgs{
 		Name: args.ZoneName,
 	})
@@ -36,8 +36,8 @@ func NewApplicationDns(ctx *pulumi.Context, name string, args *ApplicationDnsArg
 		Type:   pulumi.String("A"),
 		Aliases: &route53.RecordAliasArray{
 			route53.RecordAliasArgs{
-				Name:                 args.ApiLoadBalancerDnsName,
-				ZoneId:               args.ApiLoadBalancerZoneId,
+				Name:                 args.PublicLoadBalancerDnsName,
+				ZoneId:               args.PublicLoadBalancerZoneId,
 				EvaluateTargetHealth: pulumi.Bool(true),
 			},
 		},
@@ -57,8 +57,8 @@ func NewApplicationDns(ctx *pulumi.Context, name string, args *ApplicationDnsArg
 		Type:   pulumi.String("A"),
 		Aliases: &route53.RecordAliasArray{
 			route53.RecordAliasArgs{
-				Name:                 args.ConsoleLoadBalancerDnsName,
-				ZoneId:               args.ConsoleLoadBalancerZoneId,
+				Name:                 args.PublicLoadBalancerDnsName,
+				ZoneId:               args.PublicLoadBalancerZoneId,
 				EvaluateTargetHealth: pulumi.Bool(true),
 			},
 		},
@@ -68,22 +68,47 @@ func NewApplicationDns(ctx *pulumi.Context, name string, args *ApplicationDnsArg
 		return nil, err
 	}
 
+	if args.EnablePrivateLoadBalancerAndLimitEgress {
+		apiInternalName := args.Domain.ApplyT(func(s string) string {
+			return strings.Join([]string{"api-internal", s}, ".")
+		}).(pulumi.StringOutput)
+
+		resource.ApiInternalRecord, err = route53.NewRecord(ctx, fmt.Sprintf("%s-api-internal-record", name), &route53.RecordArgs{
+			ZoneId: zone.Id(),
+			Name:   apiInternalName,
+			Type:   pulumi.String("A"),
+			Aliases: &route53.RecordAliasArray{
+				route53.RecordAliasArgs{
+					Name:                 args.InternalLoadBalancerDnsName,
+					ZoneId:               args.InternalLoadBalancerZoneId,
+					EvaluateTargetHealth: pulumi.Bool(true),
+				},
+			},
+		}, options...)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &resource, nil
 }
 
 type ApplicationDnsArgs struct {
-	Region                     string
-	Domain                     pulumi.StringOutput
-	ZoneName                   pulumi.StringOutput
-	ApiLoadBalancerDnsName     pulumi.StringOutput
-	ApiLoadBalancerZoneId      pulumi.StringOutput
-	ConsoleLoadBalancerDnsName pulumi.StringOutput
-	ConsoleLoadBalancerZoneId  pulumi.StringOutput
+	Region                                  string
+	EnablePrivateLoadBalancerAndLimitEgress bool
+	Domain                                  pulumi.StringOutput
+	ZoneName                                pulumi.StringOutput
+	PublicLoadBalancerDnsName               pulumi.StringOutput
+	PublicLoadBalancerZoneId                pulumi.StringOutput
+	InternalLoadBalancerDnsName             pulumi.StringOutput
+	InternalLoadBalancerZoneId              pulumi.StringOutput
 }
 
 type ApplicationDns struct {
 	pulumi.ResourceState
 
-	ApiRecord     *route53.Record
-	ConsoleRecord *route53.Record
+	ApiRecord         *route53.Record
+	ApiInternalRecord *route53.Record
+	ConsoleRecord     *route53.Record
 }

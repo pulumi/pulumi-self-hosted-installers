@@ -53,7 +53,7 @@ func NewPulumiLoadBalancer(ctx *pulumi.Context, name string, args *LoadBalancerA
 	lbName := fmt.Sprintf("%s-lb", name)
 	lbArgs := &lb.LoadBalancerArgs{
 		LoadBalancerType: pulumi.String("application"),
-		Internal:         pulumi.Bool(args.InternalLb),
+		Internal:         pulumi.Bool(false),
 		SecurityGroups:   pulumi.StringArray{resource.SecurityGroup.ID()},
 		Subnets:          args.PublicSubnetIds,
 		IdleTimeout:      pulumi.Int(args.IdleTimeout),
@@ -68,7 +68,8 @@ func NewPulumiLoadBalancer(ctx *pulumi.Context, name string, args *LoadBalancerA
 		}
 	}
 
-	resource.LoadBalancer, err = lb.NewLoadBalancer(ctx, lbName, lbArgs, options...)
+	lbOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	resource.LoadBalancer, err = lb.NewLoadBalancer(ctx, lbName, lbArgs, lbOptions...)
 
 	if err != nil {
 		return nil, err
@@ -132,6 +133,34 @@ func NewPulumiLoadBalancer(ctx *pulumi.Context, name string, args *LoadBalancerA
 	return &resource, nil
 }
 
+func (l *PulumiLoadBalancer) CreateListenerRule(ctx *pulumi.Context, name string, isHttp bool, tgArn pulumi.StringOutput, conditions lb.ListenerRuleConditionArrayInput, options ...pulumi.ResourceOption) (*lb.ListenerRule, error) {
+
+	var listenerArn pulumi.StringOutput
+	if isHttp {
+		listenerArn = l.HttpListener.Arn
+	} else {
+		listenerArn = l.HttpsListener.Arn
+	}
+
+	listenerOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	listener, err := lb.NewListenerRule(ctx, fmt.Sprintf("%s-list-rule", name), &lb.ListenerRuleArgs{
+		ListenerArn: listenerArn,
+		Actions: lb.ListenerRuleActionArray{
+			lb.ListenerRuleActionArgs{
+				Type:           pulumi.String("forward"),
+				TargetGroupArn: tgArn,
+			},
+		},
+		Conditions: conditions,
+	}, listenerOptions...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return listener, nil
+}
+
 type PulumiLoadBalancer struct {
 	pulumi.ResourceState
 
@@ -142,15 +171,17 @@ type PulumiLoadBalancer struct {
 }
 
 type LoadBalancerArgs struct {
-	AccessLogsBucket    *s3.Bucket
-	AccessLogsPrefix    string
-	AccountId           string
-	CertificateArn      string
-	EnabledAccessLogs   bool
-	IdleTimeout         int32
-	InternalLb          bool
-	PublicSubnetIds     pulumi.StringArrayOutput
-	Region              string
-	VpcId               pulumi.StringOutput
-	WhiteListCidrBlocks []string
+	AccessLogsBucket           *s3.Bucket
+	AccessLogsPrefix           string
+	AccountId                  string
+	CertificateArn             string
+	EnabledAccessLogs          bool
+	EnabledPrivateLoadBalancer bool
+	IdleTimeout                int32
+	PublicSubnetIds            pulumi.StringArrayOutput
+	PrivateSubnetIds           pulumi.StringArrayOutput
+	Region                     string
+	VpcId                      pulumi.StringOutput
+	VpcCidrBlock               pulumi.StringOutput
+	WhiteListCidrBlocks        []string
 }
