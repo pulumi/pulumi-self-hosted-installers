@@ -91,7 +91,6 @@ const samlSsoConfig = {
     "SAML_CERTIFICATE_PUBLIC_KEY": samlSsoSecret.asEnvValue("pubkey"),
     "SAML_CERTIFICATE_PRIVATE_KEY": samlSsoSecret.asEnvValue("privatekey"),
 }
-export const publicKey = ssoCert.certPem
 
 const recaptchaSecret = new kx.Secret("recaptcha", 
 {
