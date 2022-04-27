@@ -12,6 +12,7 @@ Version ID | Date | K8s Version Supported | Note
 1.0 | N/A | 1.18 | Original installer version.
 2.0 | December 7, 2021 | 1.21 | Changes Ingress controller deployment code.
 2.1 | January 10, 2022 | 1.21 | Implements email-login disablement options. Changes default SAML-SSO behavior to be DISABLED. NOTE: if you are currently using SAML SSO, be sure to update your config file to explicitly enable SAML SSO.
+2.2 | April 25, 2022 | 1.22 | Updated and pinned package versions. 
 
 
 > ℹ️ See the **Updates and Upgrades** section below for how to upgrade from earlier versions of the installer and k8s and Pulumi service images.
@@ -233,7 +234,10 @@ recaptchaSiteKey: abcdefghijklmno
 recaptchaSecretKey: pqrstuvwxyzabc
 
 # Optional SSO SAML configuration
-samlSsoEnabled: false # should only be set to true AFTER configuring SAML SSO since setting to true forces the user to the organization login screen. Defaults to FALSE if not set.
+# Once set to true, the user will be presented with the SSO-organization login page. 
+# If you need to login via email (unless the "HIDE EMAIL" settings below are set to true) go to
+# https://app.YOURSERVICENAME/signin/email
+samlSsoEnabled: false
 
 # Optional Email Sign-up and Login Settings  
 # See: https://www.pulumi.com/docs/guides/self-hosted/console/#email-identity  
