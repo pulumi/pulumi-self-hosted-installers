@@ -91,7 +91,7 @@ func NewConsoleContainerService(ctx *pulumi.Context, name string, args *ConsoleC
 		return nil, err
 	}
 
-	//sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
 	_, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-lb-to-ecs-rule", name), &ec2.SecurityGroupRuleArgs{
 		Type:                  pulumi.String("egress"),
 		SecurityGroupId:       args.TrafficManager.Public.SecurityGroup.ID(),
@@ -100,7 +100,7 @@ func NewConsoleContainerService(ctx *pulumi.Context, name string, args *ConsoleC
 		ToPort:                pulumi.Int(consolePort),
 		Protocol:              pulumi.String("TCP"),
 		Description:           pulumi.String("Allow access from UI LB to ecs service"),
-	}, options...)
+	}, sgOptions...)
 
 	if err != nil {
 		return nil, err
