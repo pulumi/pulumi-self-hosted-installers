@@ -1,4 +1,4 @@
-# Self-Hosted Pulumi on AWS ECS Fargate
+# Self-Hosted Pulumi on AWS ECS Fargate - Typescript
 This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
@@ -9,6 +9,7 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
+2 | 05/03/2022 | README.md split into Golang and Typescript specific versions
 
 ## User Guides:
 

@@ -1,4 +1,4 @@
-# Self-Hosted Pulumi on AWS ECS Fargate
+# Self-Hosted Pulumi on AWS ECS Fargate - Golang
 This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
@@ -10,6 +10,7 @@ Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 04/15/2022 | Golang application now supports Pulumi Service operating in a private, no public internet access environment. This configuration, which is disabled by default, can be enabled by setting the `enablePrivateLoadBalancerAndLimitEgress` configuration value in both the `application` and `dns` stack configurations.
+3 | 05/03/2022 | README.md split into Golang and Typescript specific versions
 
 ## User Guides:
 
@@ -155,7 +156,6 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     ### Optional Configuration
     ```
-    enablePrivateLoadBalancerAndLimitEgress - boolean - if enabled, internal NLB will be deployed into private subnets and ECS Service Security Groups will have their public internet access (0.0.0.0/0) removed. Note: this additional NLB will use the same ACM certificate provided.
     samlEnabled - boolean - if enabled, SAML certificates will be created and SAML SSO will be enabled for the Pulumi Service. Note, if user provides their own SAML certificates through samlCertPublicKey and samlCertPrivateKey, those will be respected.
     samlCertPublicKey - public key to be used for SAML SSO interaction
     samlCertPrivateKey - private key to be used for SAML SSO interaction
@@ -180,6 +180,8 @@ The Pulumi services operate in Kubernetes with the following app properties.
     smtpUsername - SMTP username.
     smtpPassword - SMTP password.
     smtpGenericSender - Email to be used for sending emails from Pulumi API.
+    
+    enablePrivateLoadBalancerAndLimitEgress - boolean - if enabled, internal NLB will be deployed into private subnets and ECS Service Security Groups will have their public internet access (0.0.0.0/0) removed. Note: this additional NLB will use the same ACM certificate provided.
 
     logType - Type of logs to be used. Default is no logging.
     logArgs - Arguments provided to log configuration. See Logging section below.
