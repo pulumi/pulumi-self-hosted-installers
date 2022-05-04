@@ -155,7 +155,7 @@ func main() {
 			LogDriver:                  consoleLogs,
 			RecaptchaSiteKey:           config.RecaptchaSiteKey,
 			RootDomain:                 domain,
-			SamlSsoEnabled:             config.SamlArgs != nil,
+			SamlSsoEnabled:             config.SamlArgs.Enabled,
 			TaskMemory:                 config.ConsoleTaskMemory,
 			TaskCpu:                    config.ConsoleTaskCpu,
 			TrafficManager:             trafficManager,

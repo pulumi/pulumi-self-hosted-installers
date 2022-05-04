@@ -82,12 +82,11 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	}
 
 	// check if saml config is enabled
-	samlEnabled := appConfig.GetBool("samlEnabled")
-	if samlEnabled {
-		resource.SamlArgs = &SamlArgs{
-			Enabled: true,
-		}
+	resource.SamlArgs = &SamlArgs{
+		Enabled: appConfig.GetBool("samlEnabled"),
+	}
 
+	if resource.SamlArgs.Enabled {
 		// allow user to provide their own SAML certs, if they choose
 		userProvidedPublicKey := appConfig.Get("samlCertPublicKey")
 		userProvidedPrivateKey := appConfig.Get("samlCertPrivateKey")
