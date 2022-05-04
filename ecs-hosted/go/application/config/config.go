@@ -87,8 +87,6 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	}
 
 	if resource.SamlArgs.Enabled {
-		resource.SamlArgs.Enabled = true
-
 		// allow user to provide their own SAML certs, if they choose
 		userProvidedPublicKey := appConfig.Get("samlCertPublicKey")
 		userProvidedPrivateKey := appConfig.Get("samlCertPrivateKey")
