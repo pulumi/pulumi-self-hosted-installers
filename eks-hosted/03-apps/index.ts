@@ -72,7 +72,6 @@ if (config.smtpServer) {
 const ssoPrivateKey = new tls.PrivateKey("ssoPrivateKey", { algorithm: "RSA", rsaBits: 2048 })
 const ssoCert = new tls.SelfSignedCert("ssoCert", {
     allowedUses: ["cert_signing"],
-    keyAlgorithm: "RSA",
     privateKeyPem: ssoPrivateKey.privateKeyPem,
     subjects: [
         {commonName: `api.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`}
