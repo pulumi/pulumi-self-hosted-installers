@@ -1,0 +1,17 @@
+region: us-west-2
+licenseFilePath: pulumi-selfhosted-company.license
+route53Zone: example.com
+route53Subdomain: pulumi
+imageTag: 20201208-13347-signed
+
+# 01-cluster-configuration
+clusterConfig:
+  stackName: prod-pulumi-selfhosted-01-cluster-configuration
+
+# 02-cluster-services
+clusterServicesConfig:
+  stackName: prod-pulumi-selfhosted-02-cluster-services
+
+# 03-apps
+appsConfig:
+  stackName: prod-pulumi-selfhosted-03-apps

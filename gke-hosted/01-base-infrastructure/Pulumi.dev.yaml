@@ -1,0 +1,5 @@
+config:
+  gcp:project: pulumi-ce-team
+  gcp:region: us-west1
+  gcp:zone: us-west1-a
+  

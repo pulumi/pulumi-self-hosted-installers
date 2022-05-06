@@ -1,0 +1,16 @@
+{
+  "name": "pulumi-onprem-kubernetes",
+  "version": "1.0.0",
+  "devDependencies": {
+    "typescript": "^3.0.0"
+  },
+  "dependencies": {
+    "@pulumi/aws": "5.2.0",
+    "@pulumi/eks": "0.37.1",
+    "@pulumi/kubernetes": "3.18.2",
+    "@pulumi/kubernetesx": "0.1.6",
+    "@pulumi/pulumi": "3.30.0",
+    "@pulumi/random": "4.4.2",
+    "@pulumi/tls": "4.2.2"
+  }
+}

@@ -1,0 +1,3 @@
+config:
+  gcp:project: pulumi-ce-team
+  pulumi-selfhosted-02-apps:baseInfraStackName: MitchGerdisch/pulumi-selfhosted-01-cluster-configuration/dev
