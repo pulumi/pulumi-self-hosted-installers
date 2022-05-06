@@ -42,7 +42,7 @@ const dbInstance = new gcp.sql.DatabaseInstance(`${sysname}-db`, {
       authorizedNetworks: [{ value: "0.0.0.0/0" }],
     },
   },
-  deletionProtection: true,
+  deletionProtection: false, //true, this makes it easier to spin up and down during testing. Final version will set it to true.
 });
 
 // Create a user with the configured credentials for the Rails app to use.
