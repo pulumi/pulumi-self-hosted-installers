@@ -11,6 +11,7 @@ Version ID | Date | Note
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 04/15/2022 | Golang application now supports Pulumi Service operating in a private, no public internet access environment. This configuration, which is disabled by default, can be enabled by setting the `enablePrivateLoadBalancerAndLimitEgress` configuration value in both the `application` and `dns` stack configurations.
 3 | 05/03/2022 | README.md split into Golang and Typescript specific versions
+4 | 05/10/2022 | Optional configuration parameter `imagePrefix` added for the Application project.
 
 ## User Guides:
 
@@ -185,6 +186,8 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     logType - Type of logs to be used. Default is no logging.
     logArgs - Arguments provided to log configuration. See Logging section below.
+
+    imagePrefix - Prefix which will be prepended to the Pulumi images. Eg- pulumi/service:some-tag will become imagePrefixpulumi/Service:some-tag.
     ```
 
     **Note: below configuration values are examples. Provide your own.**

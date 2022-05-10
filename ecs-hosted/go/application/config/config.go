@@ -39,6 +39,9 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	resource.LicenseKey = appConfig.Require("licenseKey")
 	resource.ImageTag = appConfig.Require("imageTag")
 
+	// allows user defined prefix to be prepended to the images. eg- upstream/pulumi/service:image:tag
+	resource.ImagePrefix = appConfig.Get("imagePrefix")
+
 	// if not present, we assume ECR repo is present in our "current" AWS account
 	resource.EcrRepoAccountId = appConfig.Get("ecrRepoAccountId")
 
@@ -224,6 +227,7 @@ type ConfigArgs struct {
 	EndpointSecurityGroup pulumi.StringOutput
 	PrefixListId          pulumi.StringOutput
 
+	ImagePrefix        string
 	ImageTag           string
 	RecaptchaSiteKey   string
 	RecaptchaSecretKey string

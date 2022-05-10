@@ -99,9 +99,15 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 		return nil, err
 	}
 
-	image := fmt.Sprintf("pulumi/migrations:%s", args.ImageTag)
+	ecrAccountId := args.AccountId
+	if args.EcrRepoAccountId != "" {
+		ecrAccountId = args.EcrRepoAccountId
+	}
 
-	containerDef, err := newContainerDefinitions(ctx, " migrations-task", args, image, options...)
+	imageName := fmt.Sprintf("pulumi/migrations:%s", args.ImageTag)
+	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
+
+	containerDef, err := newContainerDefinitions(ctx, " migrations-task", args, fullQualifiedImage, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -209,11 +215,6 @@ func newContainerDefinitions(ctx *pulumi.Context, name string, args *MigrationsC
 		return pulumi.StringOutput{}, err
 	}
 
-	ecrAccountId := args.AccountId
-	if args.EcrRepoAccountId != "" {
-		ecrAccountId = args.EcrRepoAccountId
-	}
-
 	taskDef, _ := pulumi.All(
 		args.DatabaseArgs.ClusterEndpoint,
 		args.DatabaseArgs.Port,
@@ -228,7 +229,7 @@ func newContainerDefinitions(ctx *pulumi.Context, name string, args *MigrationsC
 		containerJson, err := json.Marshal([]interface{}{
 			map[string]interface{}{
 				"name":              "pulumi-migration",
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, image),
+				"image":             image,
 				"cpu":               cpu,
 				"memoryReservation": memoryReservation,
 				"environment": []map[string]interface{}{
@@ -265,6 +266,7 @@ type MigrationsContainerServiceArgs struct {
 	EcrRepoAccountId         string
 	ExecuteMigrations        bool
 	ImageTag                 string
+	ImagePrefix              string
 	SecurityGroupEgressRules ec2.SecurityGroupEgressArray
 }
 

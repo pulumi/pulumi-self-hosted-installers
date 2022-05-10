@@ -1,0 +1,9 @@
+build/
+*.license
+*-config.yaml
+Pulumi.*.yaml
+Pulumi.*.yaml.*
+*kubeconfig*
+*.cert
+*.key
+node_modules
