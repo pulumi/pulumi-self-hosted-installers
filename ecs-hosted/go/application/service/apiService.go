@@ -240,6 +240,7 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 		DatabaseArgs:             args.DatabaseArgs,
 		EcrRepoAccountId:         args.EcrRepoAccountId,
 		ImageTag:                 args.ImageTag,
+		ImagePrefix:              args.ImagePrefix,
 		ExecuteMigrations:        args.ExecuteMigrations,
 		SecurityGroupEgressRules: dbSgEgressRules,
 	}, options...)
@@ -284,6 +285,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	}
 
 	imageName := fmt.Sprintf("pulumi/service:%s", args.ImageTag)
+	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
 
 	inputs := []interface{}{
 		args.DatabaseArgs.ClusterEndpoint,
@@ -319,7 +321,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 			map[string]interface{}{
 				"cpu":               containerCpu,
 				"environment":       newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket, samlCertPublicKey),
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
+				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
 				"name":              apiContainerName,
@@ -470,6 +472,7 @@ type ApiContainerServiceArgs struct {
 	ContainerMemoryReservation int
 	ContainerCpu               int
 	EcrRepoAccountId           string
+	ImagePrefix                string
 	ImageTag                   string
 	LicenseKey                 string
 	LogDriver                  log.LogDriver

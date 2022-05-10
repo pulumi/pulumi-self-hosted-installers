@@ -146,6 +146,7 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 	}
 
 	imageName := fmt.Sprintf("pulumi/console:%s", args.ImageTag)
+	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
 
 	// resolve all needed outputs to construct our container definition in JSON
 	conatinerDefinitions, _ := pulumi.All(
@@ -159,7 +160,7 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 			map[string]interface{}{
 				"cpu":               containerCpu,
 				"environment":       newConsoleEnvironmentVariables(args, dnsName),
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
+				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
 				"name":              consoleContainerName,
@@ -235,6 +236,7 @@ type ConsoleContainerServiceArgs struct {
 	HideEmailSignup            bool
 	HideEmailLogin             bool
 	ImageTag                   string
+	ImagePrefix                string
 	LogDriver                  log.LogDriver
 	RecaptchaSiteKey           string
 	RootDomain                 string
