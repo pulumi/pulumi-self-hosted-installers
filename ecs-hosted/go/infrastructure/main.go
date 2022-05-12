@@ -20,6 +20,15 @@ func main() {
 			return err
 		}
 
+		// retrieve VPC to populate the CIDR block of the VPCE SG ingress
+		vpc, err := ec2.LookupVpc(ctx, &ec2.LookupVpcArgs{
+			Id: &config.vpcId,
+		})
+
+		if err != nil {
+			return err
+		}
+
 		name := config.commonName
 
 		database, err := NewDatabase(ctx, getCommonName(name, "database"), &DatabaseArgs{
@@ -41,7 +50,7 @@ func main() {
 					Protocol:   pulumi.String("-1"),
 					FromPort:   pulumi.Int(0),
 					ToPort:     pulumi.Int(0),
-					CidrBlocks: pulumi.StringArray{pulumi.String("0.0.0.0/0")},
+					CidrBlocks: pulumi.StringArray{pulumi.String(vpc.CidrBlock)},
 				},
 			},
 		})
