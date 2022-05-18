@@ -188,7 +188,7 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 
 func newContainerDefinitions(ctx *pulumi.Context, name string, args *MigrationsContainerServiceArgs, image string, options ...pulumi.ResourceOption) (pulumi.StringOutput, error) {
 	logGroup, err := cloudwatch.NewLogGroup(ctx, fmt.Sprintf("%s-log-group", name), &cloudwatch.LogGroupArgs{
-		Name:            pulumi.String("pulumi-migration-logs"),
+		NamePrefix:      pulumi.String(fmt.Sprintf("%s-pulumi-migration-logs", name)),
 		RetentionInDays: pulumi.Int(1),
 	}, options...)
 

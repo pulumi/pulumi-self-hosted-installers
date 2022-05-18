@@ -8,7 +8,7 @@ import (
 
 func NewAwsLogs(ctx *pulumi.Context, name string, args *AwsArgs, opts ...pulumi.ResourceOption) (*AwsLogs, error) {
 	lg, err := cloudwatch.NewLogGroup(ctx, fmt.Sprintf("awslogs-%s", name), &cloudwatch.LogGroupArgs{
-		Name:            pulumi.String(fmt.Sprintf("cloudwatch-%s-logs", name)),
+		NamePrefix:      pulumi.String(fmt.Sprintf("cloudwatch-%s-logs", name)),
 		RetentionInDays: pulumi.Int(args.RetentionDays),
 	}, opts...)
 
