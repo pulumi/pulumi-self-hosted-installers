@@ -1,6 +1,11 @@
 # Deploying Pulumi Self Hosted to Azure
 
-This folder and sub folders contain the three Pulumi programs to build the infrastructure and deploy the containers necessary to run Pulumi' self hosted backend onto Azure Kubernetes Service (AKS).
+This folder and sub folders contain the three Pulumi programs to build the infrastructure and deploy the containers necessary to run Pulumi' self hosted backend onto Azure Kubernetes Service (AKS). 
+
+Relevant Documentation:
+* [Self-Hosted Pulumi Service](https://www.pulumi.com/docs/guides/self-hosted/)
+* [AKS-Hosted Install](https://www.pulumi.com/docs/guides/self-hosted/aks-hosted/)
+
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
 
