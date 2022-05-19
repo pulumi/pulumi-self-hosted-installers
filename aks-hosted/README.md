@@ -16,13 +16,17 @@ Relevant Documentation:
   * api.{domain} - e.g. api.pulumi.example.com
   * app.{domain} - e.g. app.pulumi.example.com
 * TLS certificates for each domain endpoint.  
-You can use the following to create self-signed certs:
+You can use the following to create self-signed certs: 
   ```
   openssl \
   req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem \
   -days { days_until_expiration } -nodes -subj "/CN={ common_name }" \
-  -addext "subjectAltName = DNS:{ common name }"
+  -addext "subjectAltName = DNS:{ common_name }"
   ```
+  Where `{ days_until_expiration }` is set to a number of days for the cert (e.g. 365).  
+  And, `{ common_name }` is set to `api.{domain}` for the api cert and key and set to `app.{domain}` for the console cert and key (e.g. api.example.com and app.example.com, respectively).
+
+  > ⚠️ If using self-signed certificates, you will need to load the cert into your workstation (e.g. MacOS Keychain Access) so that browser and `pulumi` CLI access work correctly.
 
 ## What does each Pulumi program do?
 
@@ -73,10 +77,14 @@ To deploy entire stack, run the following in your terminal:
 1. `pulumi config set consoleDomain {domain for console}`
 1. `pulumi config set licenseKey {licenseKey} --secret`
 1. `pulumi config set imageTag {imageTag}`
+1. `pulumi config set samlEnabled {true | false}` - If not configuring SAML SSO initially, skip or set to false.
 1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine)
 1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine)
+
+The following settings are optional.  
+Note if not set, "forgot password" and email invites will not work but sign ups and general functionality will still work.
 1. `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
 1. `pulumi config set smtpUsername {smtp username}`
 1. `pulumi config set smtpPassword {smtp password} --secret`

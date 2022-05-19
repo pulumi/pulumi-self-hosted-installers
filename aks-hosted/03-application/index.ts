@@ -273,7 +273,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "SAML_SSO_ENABLED",
-                  value: "true"
+                  value: config.samlEnabled
                 },
                 {
                   name: "PULUMI_API",
