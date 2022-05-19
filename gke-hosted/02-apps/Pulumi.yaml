@@ -1,3 +1,0 @@
-name: pulumi-selfhosted-02-apps
-runtime: nodejs
-description: A minimal Google Cloud TypeScript Pulumi program

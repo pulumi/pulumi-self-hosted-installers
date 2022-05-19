@@ -1,7 +1,5 @@
-build/
-*.license
-*-config.yaml
-*kubeconfig*
-*.cert
-*.key
-node_modules
+/bin/
+/node_modules/
+temp
+Pulumi.*.yaml
+package-lock.json

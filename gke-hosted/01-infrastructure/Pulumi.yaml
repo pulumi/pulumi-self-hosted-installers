@@ -1,0 +1,3 @@
+name: 01-infrastructure-selfhosted-gke
+runtime: nodejs
+description: Infrastructure required for Pulumi self hosted
