@@ -107,7 +107,7 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 	imageName := fmt.Sprintf("pulumi/migrations:%s", args.ImageTag)
 	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
 
-	containerDef, err := newContainerDefinitions(ctx, " migrations-task", args, fullQualifiedImage, options...)
+	containerDef, err := newContainerDefinitions(ctx, "migrations-task", args, fullQualifiedImage, options...)
 	if err != nil {
 		return nil, err
 	}
