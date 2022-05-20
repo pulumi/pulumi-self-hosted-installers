@@ -15,6 +15,7 @@ export interface SecretsCollectionArgs {
         consoleTlsKey: Output<string>,
         consoleTlsCert: Output<string>,
         database: {
+            host: Input<string>,
             connectionString: Input<string>,
             login: Input<string>,
             password: Input<string>,
@@ -73,7 +74,8 @@ export class SecretsCollection extends ComponentResource {
                 namespace: args.namespace,
             },
             stringData: {
-              host: args.secretValues.database.connectionString,
+              host: args.secretValues.database.host,
+              connectionString: args.secretValues.database.connectionString,
               username: pulumi.interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
               password: args.secretValues.database.password,
             },

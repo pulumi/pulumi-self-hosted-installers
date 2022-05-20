@@ -12,6 +12,7 @@ export interface DatabaseArgs {
 }
 
 export class Database extends pulumi.ComponentResource {
+    DatabaseHost: Output<string | undefined>;
     DatabaseConnectionString: Output<string | undefined>;
     DatabaseLogin: Output<string | undefined>;
     DatabasePassword: Output<string>;
@@ -51,7 +52,8 @@ export class Database extends pulumi.ComponentResource {
             name: "pulumi", // Must be named "pulumi".
         }, {parent: dbInstance, protect: true});
 
-        this.DatabaseConnectionString = dbInstance.firstIpAddress;
+        this.DatabaseHost = dbInstance.firstIpAddress
+        this.DatabaseConnectionString = pulumi.interpolate`${dbInstance.firstIpAddress}:3306`;
         this.DatabaseLogin = user.name;
         this.DatabasePassword = password;
         this.DatabaseName = db.name;

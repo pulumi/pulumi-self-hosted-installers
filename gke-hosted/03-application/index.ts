@@ -45,6 +45,7 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
     consoleTlsCert: config.consoleTlsCert,
     consoleTlsKey: config.consoleTlsKey,
     database: {
+      host: config.database.host,
       connectionString: config.database.connectionString,
       login: config.database.login,
       password:config.database.password,
@@ -156,48 +157,16 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("privatekey")
                 },
                 {
-                  name: "AZURE_CLIENT_ID",
-                  value: config.clientId 
-                },
-                {
-                  name: "AZURE_CLIENT_SECRET",
-                  value: config.clientSecret
-                },
-                {
-                  name: "AZURE_TENANT_ID",
-                  value: config.tenantId
-                },
-                {
-                  name: "AZURE_SUBSCRIPTION_ID",
-                  value: config.subscriptionId
-                },
-                {
-                  name: "AZURE_STORAGE_KEY",
-                  value: config.storageKey
+                  name: "AWS_REGION",
+                  value: "us-east-1" // this is a dummy value needed to appease the bucket access code.
                 },
                 {
                   name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
-                  value: pulumi.interpolate`azblob://${config.policyBlobName}`
+                  value: pulumi.interpolate`s3://${config.policyBlobName}`
                 },
                 {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
-                  value: pulumi.interpolate`azblob://${config.checkpointBlobName}`
-                },
-                {
-                  name: "AZURE_STORAGE_ACCOUNT",
-                  value: config.storageAccountName
-                },
-                {
-                  name: "PULUMI_AZURE_KV_URI",
-                  value: config.keyvaultUri
-                },
-                {
-                  name: "PULUMI_AZURE_KV_KEY_NAME",
-                  value: config.keyvaultKeyName
-                },
-                {
-                  name: "PULUMI_AZURE_KV_KEY_VERSION",
-                  value: config.keyvaultKeyVersion
+                  value: pulumi.interpolate`s3://${config.checkpointBlobName}`
                 },
                 {
                   name: "SMTP_SERVER",
