@@ -89,7 +89,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               env: [
                   {
                       name: "PULUMI_DATABASE_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                      valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
                   },
                   {
                       name: "MYSQL_ROOT_USERNAME",
@@ -134,7 +134,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_DATABASE_ENDPOINT",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                  valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_NAME",

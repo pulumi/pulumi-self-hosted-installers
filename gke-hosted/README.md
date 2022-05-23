@@ -52,31 +52,40 @@ To deploy entire stack, run the following in your terminal:
 1. `cd 01-infrastructure`
 1. `npm install`
 1. `pulumi stack init {stackName1}` 
-1. `pulumi config set azure-native:location {azure region}`
-1. `pulumi config set networkCidr 10.2.0.0/16` - this should be set to what you want your VNet cidr block to be
-1. `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
-1. `pulumi up`
+1. `pulumi config set gcp:project {GCP project name}`
+1. `pulumi config set gcp:region {GCP region}` - e.g. us-east1
+1. `pulumi config set gcp:zone {GCP zone}` - e.g. us-east1-a
+Optional settings (will use default values if not set)
+1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
+1. `pulumi config set dbInstanceType {GCP SQL DB instance type}` - uses "db-g1-small" if not set
+1. `pulumi config set dbUser {user name for SQL DB}` - uses "pulumiadmin" if not set
+1. `pulumi up` - Wait to complete before proceeding.
 1. `cd ../02-kubernetes`
 1. `npm install`
 1. `pulumi stack init {stackName2}` 
-1. `pulumi config set stackName1 {stackName1}`
-1. `pulumi up`
+1. `pulumi config set gcp:project {GCP project name}`
+1. `pulumi config set gcp:region {GCP region}` - e.g. us-east1
+1. `pulumi config set gcp:zone {GCP zone}` - e.g. us-east1-a
+1. `pulumi config set stackName1 {stackName1}` - the full stack name for the "01-infrastructure" stack.
+Optional settings (will use default values if not set)
+1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
+1. `pulumi config set clusterVersion {Kubernetes cluster version to use}` - defaults to latest version currently supported by the installer.
+1. `pulumi up` - Wait to complete before proceeding.
 1. `cd ../03-application`
 1. `npm install`
 1. `pulumi stack init {stackName3}` 
-1. `pulumi config set stackName1 {stackName1}`
-1. `pulumi config set stackName2 {stackName2}`
-1. `pulumi config set apiDomain {domain for api}`
-1. `pulumi config set consoleDomain {domain for console}`
+1. `pulumi config set stackName1 {stackName1}` - the full stack name for the "01-infrastructure" stack.
+1. `pulumi config set stackName2 {stackName2}` - the full stack name for the "02-kubernetes" stack.
+1. `pulumi config set apiDomain {domain for api}` - e.g. api.pulumi.example.com (must start with "api")
+1. `pulumi config set consoleDomain {domain for console}` - e.g. app.pulumi.example.com (must start with "app")
 1. `pulumi config set licenseKey {licenseKey} --secret`
-1. `pulumi config set imageTag {imageTag}`
+1. `pulumi config set imageTag {imageTag}` - use "latest" or find the latest tag to pin to here: https://hub.docker.com/r/pulumi/service
 1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine)
 1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine)
-
-The following settings are optional for testing.  
-Note if not set, "forgot password" and email invites will not work but sign ups and general functionality will still work.
+Semi-optional settings.
+If not set, "forgot password" and email invites will not work but direct sign ups and general functionality will still work.
 1. `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
 1. `pulumi config set smtpUsername {smtp username}`
 1. `pulumi config set smtpPassword {smtp password} --secret`
