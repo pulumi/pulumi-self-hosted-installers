@@ -3,6 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import {config} from "./config";
 import {SecretsCollection} from "./secrets";
 import {SsoCertificate} from "./sso-cert";
+import {EncryptionService} from "./encryption-service";
 
 /**
  * Check pre-requisites.
@@ -75,6 +76,12 @@ const ssoSecret = new SsoCertificate(`${commonName}-sso-certificate`, {
   provider: provider
 });
 
+const pulumiLocalKeySecret = new EncryptionService(`${commonName}-local-key`, {
+  commonName: commonName,
+  namespace: appsNamespace.metadata.name,
+  provider: provider
+});
+
 const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
     metadata: {
       namespace: appsNamespace.metadata.name,
@@ -113,13 +120,20 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
           //         }
           //     ]
           // }],
+          volumes: [
+            pulumiLocalKeySecret.pulumiLocalKeysVolumeSpec
+          ],
           containers: [
             {
               name: apiName,
               image: config.serviceImageName,
               resources: apiResources,
               ports: [{ containerPort: config.servicePort, name: "http" }],
+              volumeMounts: [
+                pulumiLocalKeySecret.pulumiLocalKeysVolumeMountSpec
+              ],
               env: [
+                pulumiLocalKeySecret.encryptionServiceEnv,
                 {
                   name: "PULUMI_LICENSE_KEY",
                   valueFrom: secrets.LicenseKeySecret.asEnvValue("key"),
