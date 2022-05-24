@@ -51,6 +51,10 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
       password:config.database.password,
       serverName: config.database.serverName
     },
+    storage: {
+      accessKeyId: config.storageServiceAccountAccessKeyId,
+      secretAccessKey: config.storageServiceAccountSecretAccessKey
+    },
     licenseKey: config.licenseKey,
     smtpDetails: {
       smtpServer: config.smtpServer,
@@ -82,33 +86,33 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
       template: {
         metadata: { labels: apiAppLabel },
         spec: {
-          initContainers: [{
-              name: "pulumi-migration",
-              image: config.migrationImageName,
-              resources: migrationResources,
-              env: [
-                  {
-                      name: "PULUMI_DATABASE_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
-                  },
-                  {
-                      name: "MYSQL_ROOT_USERNAME",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("username"),
-                  },
-                  {
-                      name: "MYSQL_ROOT_PASSWORD",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("password"),
-                  },
-                  {
-                      name: "PULUMI_DATABASE_PING_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("host"),
-                  },
-                  {
-                      name: "RUN_MIGRATIONS_EXTERNALLY",
-                      value: "true"
-                  }
-              ]
-          }],
+          // initContainers: [{
+          //     name: "pulumi-migration",
+          //     image: config.migrationImageName,
+          //     resources: migrationResources,
+          //     env: [
+          //         {
+          //             name: "PULUMI_DATABASE_ENDPOINT",
+          //             valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
+          //         },
+          //         {
+          //             name: "MYSQL_ROOT_USERNAME",
+          //             valueFrom: secrets.DBConnSecret.asEnvValue("username"),
+          //         },
+          //         {
+          //             name: "MYSQL_ROOT_PASSWORD",
+          //             valueFrom: secrets.DBConnSecret.asEnvValue("password"),
+          //         },
+          //         {
+          //             name: "PULUMI_DATABASE_PING_ENDPOINT",
+          //             valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+          //         },
+          //         {
+          //             name: "RUN_MIGRATIONS_EXTERNALLY",
+          //             value: "true"
+          //         }
+          //     ]
+          // }],
           containers: [
             {
               name: apiName,
@@ -161,12 +165,20 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   value: "us-east-1" // this is a dummy value needed to appease the bucket access code.
                 },
                 {
+                  name: "AWS_ACCESS_KEY_ID",
+                  valueFrom: secrets.StorageSecret.asEnvValue("accessKeyId")
+                },
+                {
+                  name: "AWS_SECRET_ACCESS_KEY",
+                  valueFrom: secrets.StorageSecret.asEnvValue("secretAccessKey")
+                },
+                {
                   name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
-                  value: pulumi.interpolate`s3://${config.policyBlobName}`
+                  value: pulumi.interpolate`s3://${config.policyBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 },
                 {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
-                  value: pulumi.interpolate`s3://${config.checkpointBlobName}`
+                  value: pulumi.interpolate`s3://${config.checkpointBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 },
                 {
                   name: "SMTP_SERVER",
@@ -333,3 +345,5 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
 export const consoleUrl = pulumi.interpolate`https://${config.consoleDomain}`;
 export const apiUrl = pulumi.interpolate`https://${config.apiDomain}`;
 export const namespace = appsNamespace.metadata.name;
+
+export const dbStuff = config.database

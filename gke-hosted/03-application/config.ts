@@ -42,6 +42,8 @@ export const config = {
     policyBlobName: infrastructureStack.requireOutput("policyBucketName"),
     checkpointBlobId: infrastructureStack.requireOutput("checkpointBucketId"),
     checkpointBlobName: infrastructureStack.requireOutput("checkpointBucketName"),
+    storageServiceAccountAccessKeyId: infrastructureStack.requireOutput("storageServiceAccountAccessKeyId"),
+    storageServiceAccountSecretAccessKey: infrastructureStack.requireOutput("storageServiceAccountSecretAccessKey"),
     apiDomain: stackConfig.require("apiDomain"),
     consoleDomain: stackConfig.require("consoleDomain"),
     apiTlsKey: stackConfig.requireSecret("apiTlsKey"),
@@ -55,3 +57,4 @@ export const config = {
     recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
     recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey
 };
+

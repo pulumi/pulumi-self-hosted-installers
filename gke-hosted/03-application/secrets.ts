@@ -21,6 +21,10 @@ export interface SecretsCollectionArgs {
             password: Input<string>,
             serverName: Input<string>,
         },
+        storage: {
+            accessKeyId: Input<string>,
+            secretAccessKey: Input<string>,
+        },
         smtpDetails: {
             smtpServer: Input<string>,
             smtpUsername: Input<string>,
@@ -39,6 +43,7 @@ export class SecretsCollection extends ComponentResource {
     ApiCertificateSecret: kx.Secret;
     ConsoleCertificateSecret: kx.Secret;
     DBConnSecret: kx.Secret;
+    StorageSecret: kx.Secret;
     SmtpSecret: kx.Secret;
     RecaptchaSecret: kx.Secret;
     constructor(name: string, args: SecretsCollectionArgs, opts?: ComponentResourceOptions) {
@@ -80,7 +85,16 @@ export class SecretsCollection extends ComponentResource {
               password: args.secretValues.database.password,
             },
           }, { provider: args.provider, parent: this });
-        
+
+        this.StorageSecret = new kx.Secret(`${args.commonName}-storage-secret`, {
+            metadata: {
+                namespace: args.namespace,
+            },
+            stringData: {
+                accessKeyId: args.secretValues.storage.accessKeyId,
+                secretAccessKey: args.secretValues.storage.secretAccessKey,
+            }
+          }, { provider: args.provider, parent: this });
 
         this.SmtpSecret = new kx.Secret(`${args.commonName}-smtp-secret`, {
             metadata: {
@@ -109,6 +123,7 @@ export class SecretsCollection extends ComponentResource {
             ApiCertificateSecret: this.ApiCertificateSecret,
             ConsoleCertificateSecret: this.ConsoleCertificateSecret,
             DBConnSecret: this.DBConnSecret,
+            StorageSecret: this.StorageSecret,
             SmtpSecret: this.SmtpSecret,
             RecaptchaSecret: this.RecaptchaSecret
         })
