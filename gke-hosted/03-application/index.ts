@@ -93,33 +93,37 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
       template: {
         metadata: { labels: apiAppLabel },
         spec: {
-          // initContainers: [{
-          //     name: "pulumi-migration",
-          //     image: config.migrationImageName,
-          //     resources: migrationResources,
-          //     env: [
-          //         {
-          //             name: "PULUMI_DATABASE_ENDPOINT",
-          //             valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
-          //         },
-          //         {
-          //             name: "MYSQL_ROOT_USERNAME",
-          //             valueFrom: secrets.DBConnSecret.asEnvValue("username"),
-          //         },
-          //         {
-          //             name: "MYSQL_ROOT_PASSWORD",
-          //             valueFrom: secrets.DBConnSecret.asEnvValue("password"),
-          //         },
-          //         {
-          //             name: "PULUMI_DATABASE_PING_ENDPOINT",
-          //             valueFrom: secrets.DBConnSecret.asEnvValue("host"),
-          //         },
-          //         {
-          //             name: "RUN_MIGRATIONS_EXTERNALLY",
-          //             value: "true"
-          //         }
-          //     ]
-          // }],
+          initContainers: [{
+              name: "pulumi-migration",
+              image: config.migrationImageName,
+              resources: migrationResources,
+              env: [
+                  {
+                      name: "PULUMI_DATABASE_ENDPOINT",
+                      // value: config.database.connectionString
+                      valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
+                  },
+                  {
+                      name: "MYSQL_ROOT_USERNAME",
+                      // value: config.database.login,
+                      valueFrom: secrets.DBConnSecret.asEnvValue("username"),
+                  },
+                  {
+                      name: "MYSQL_ROOT_PASSWORD",
+                      // value: config.database.password,
+                      valueFrom: secrets.DBConnSecret.asEnvValue("password"),
+                  },
+                  {
+                      name: "PULUMI_DATABASE_PING_ENDPOINT",
+                      // value: config.database.host,
+                      valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                  },
+                  {
+                      name: "RUN_MIGRATIONS_EXTERNALLY",
+                      value: "true"
+                  }
+              ]
+          }],
           volumes: [
             pulumiLocalKeySecret.pulumiLocalKeysVolumeSpec
           ],
@@ -152,14 +156,17 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_DATABASE_ENDPOINT",
+                  // value: config.database.connectionString,
                   valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_NAME",
+                  // value: config.database.login, 
                   valueFrom: secrets.DBConnSecret.asEnvValue("username"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_PASSWORD",
+                  // value: config.database.password,
                   valueFrom: secrets.DBConnSecret.asEnvValue("password"),
                 },
                 {
@@ -238,8 +245,8 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
   }, { provider, parent: apiDeployment });
 
   const apiServiceEndpoint = k8s.core.v1.Endpoints.get("apiServiceEndpoints", apiService.id, {provider})
-  const apiServiceEndpointAddress = apiServiceEndpoint.subsets[0].addresses[0].ip
-  const apiServiceEndpointPort = apiServiceEndpoint.subsets[0].ports[0].port
+  export const apiServiceEndpointAddress = apiServiceEndpoint.subsets[0].addresses[0].ip
+  export const apiServiceEndpointPort = apiServiceEndpoint.subsets[0].ports[0].port
 
   const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleName}`, {
     metadata: {
@@ -268,7 +275,8 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "SAML_SSO_ENABLED",
-                  value: "true"
+                  value: "false"
+                  // value: "true"
                 },
                 {
                   name: "PULUMI_API",

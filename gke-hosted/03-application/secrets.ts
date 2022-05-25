@@ -81,7 +81,7 @@ export class SecretsCollection extends ComponentResource {
             stringData: {
               host: args.secretValues.database.host,
               connectionString: args.secretValues.database.connectionString,
-              username: pulumi.interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
+              username: args.secretValues.database.login,
               password: args.secretValues.database.password,
             },
           }, { provider: args.provider, parent: this });
