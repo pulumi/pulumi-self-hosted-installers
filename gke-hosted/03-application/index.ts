@@ -100,22 +100,18 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               env: [
                   {
                       name: "PULUMI_DATABASE_ENDPOINT",
-                      // value: config.database.connectionString
                       valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
                   },
                   {
                       name: "MYSQL_ROOT_USERNAME",
-                      // value: config.database.login,
                       valueFrom: secrets.DBConnSecret.asEnvValue("username"),
                   },
                   {
                       name: "MYSQL_ROOT_PASSWORD",
-                      // value: config.database.password,
                       valueFrom: secrets.DBConnSecret.asEnvValue("password"),
                   },
                   {
                       name: "PULUMI_DATABASE_PING_ENDPOINT",
-                      // value: config.database.host,
                       valueFrom: secrets.DBConnSecret.asEnvValue("host"),
                   },
                   {
@@ -156,17 +152,14 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_DATABASE_ENDPOINT",
-                  // value: config.database.connectionString,
                   valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_NAME",
-                  // value: config.database.login, 
                   valueFrom: secrets.DBConnSecret.asEnvValue("username"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_PASSWORD",
-                  // value: config.database.password,
                   valueFrom: secrets.DBConnSecret.asEnvValue("password"),
                 },
                 {
