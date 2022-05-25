@@ -1,15 +1,9 @@
 # WORK IN PROGRESS
-Status: Although the service is not fully operational, the various resources are created and key connections (e.g. to DB and Buckets) are working. However, service is not working yet - errors are thrown when trying to sign up.
+Status: Current code launches and works as per steps below.
 
 TODOs:
-- Get Console Service to API Service connectivity working: Devtools in browser show problems when signing up.
-  - Need to test and dig into the connectivity between the services.
-  - May be a CORs thing?
 - Remove public access to MySQL DB: Limit access for API pod.
 - Remove public access to Buckets (not actually sure it's enabled but need to make sure it is not): limit access to only for API pod
-
-
-
 
 # Deploying Pulumi Self Hosted to Azure
 
@@ -34,7 +28,7 @@ You can use the following to create self-signed certs:
   Where `{ days_until_expiration }` is set to a number of days for the cert (e.g. 365).  
   And, `{ common_name }` is set to `api.{domain}` for the api cert and key and set to `app.{domain}` for the console cert and key (e.g. api.example.com and app.example.com, respectively).
 
-  > ⚠️ If using self-signed certificates, you will need to load the cert into your workstation (e.g. MacOS Keychain Access) so that browser and `pulumi` CLI access work correctly.
+  > ⚠️ If using self-signed certificates, you will need to load both the `app.` and `app.` certs into your workstation (e.g. MacOS Keychain Access) so that browser and `pulumi` CLI access work correctly. See section at bottom for steps for MacOS.
 
 ## What does each Pulumi program do?
 
@@ -145,3 +139,16 @@ Due to the dependencies between the stacks, you'll need to reverse the order tha
 ## Notes
 
 * The SSO certificate has the `currentYear()` in the name. This means that it will get replaced during the first deployment of each calendar year. The expiry date on the certificate is set to 400 days so that although a deployment may not happen each year, it will be necessary to do so otherwise the certificate will expire.
+
+## Setting Up Self-Signed Certs on Workstation
+### MacOS
+1. Launch the system as described above.
+1. Point your browser at your `app.XXXXX` URL.
+1. Click the `Not Secure` indicator in the Browser address bar.
+1. Click on "Certificate is not valid" in the window that pops up.
+1. Click on the certificate icon that is displayed and slide it into a Finder window (say into your Downloads folder).
+1. Open "Keychain Access" on your Mac.
+1. Select the "System KeyChains" in the "Keychain Access" window.
+1. Click on the file that was copied to your Finder window and slide it into the "System Keychains" folder in"Keychain Access".
+1. Double-click the cert file in "Keychain Access" and select "Trust" and change the settings to "Always Trust" and exit the windows.
+1. Point your browser at you `api.XXXX` URL and repeat the process for it's certificate.
