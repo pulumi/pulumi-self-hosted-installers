@@ -1,3 +1,16 @@
+# WORK IN PROGRESS
+Status: Although the service is not fully operational, the various resources are created and key connections (e.g. to DB and Buckets) are working. However, service is not working yet - errors are thrown when trying to sign up.
+
+TODOs:
+- Get Console Service to API Service connectivity working: Devtools in browser show problems when signing up.
+  - Need to test and dig into the connectivity between the services.
+  - May be a CORs thing?
+- Remove public access to MySQL DB: Limit access for API pod.
+- Remove public access to Buckets (not actually sure it's enabled but need to make sure it is not): limit access to only for API pod
+
+
+
+
 # Deploying Pulumi Self Hosted to Azure
 
 This folder and sub folders contain the three Pulumi programs to build the infrastructure and deploy the containers necessary to run Pulumi' self hosted backend onto Google Kubernetes Engine (GKE).
