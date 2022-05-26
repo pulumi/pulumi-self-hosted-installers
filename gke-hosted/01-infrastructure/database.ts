@@ -31,7 +31,7 @@ export class Database extends pulumi.ComponentResource {
                     privateNetwork: args.vpcId,
                 },
             },
-            deletionProtection: false, //TESTING this makes it easier to spin up and down during testing. Final version will set it to true.
+            deletionProtection: true,
         }, {parent: this, protect: true});
   
         // Create a user with the configured credentials and generated password for API service to use.

@@ -139,7 +139,6 @@ pulumi login $(pulumi stack output apiUrl)
 Due to the dependencies between the stacks, you'll need to reverse the order that you deployed them in:
 
 1. `cd 03-application`
-1. `pulumi state unprotect --all`
 1. `pulumi destroy` 
 1. `cd ../02-kubernetes`
 1. `pulumi state unprotect --all`
