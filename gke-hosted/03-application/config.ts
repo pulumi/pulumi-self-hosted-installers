@@ -55,6 +55,7 @@ export const config = {
     smtpPassword: stackConfig.getSecret("smtpPassword") || "",
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
     recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
-    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey
+    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
+    samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false"
 };
 

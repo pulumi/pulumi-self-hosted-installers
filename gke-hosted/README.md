@@ -1,13 +1,3 @@
-# WORK IN PROGRESS
-Status: Current code launches and works as per steps below.
-
-TODOs:
-- Test the basic deployment
-- Test using service's secrets management using the local keys stuff that is set up.
-- Test using external secrets manager
-- Remove public access to MySQL DB: Limit access for API pod.
-- Remove public access to Buckets (not actually sure it's enabled but need to make sure it is not): limit access to only for API pod
-
 # Deploying Pulumi Self Hosted to Azure
 
 This folder and sub folders contain the three Pulumi programs to build the infrastructure and deploy the containers necessary to run Pulumi' self hosted backend onto Google Kubernetes Engine (GKE).
@@ -37,28 +27,38 @@ You can use the following to create self-signed certs:
 
 ### 01-infrastructure
 
-This contains the base infrastructure needed to run the cluster and application including: 
+This program deploys the following:
 
-* Networking
+* Networking 
 * MySQL server and database
 * Buckets for state and policy storage
 
 ### 02-kubernetes
 
-This program contains the program to deploy GKE cluster, alongside the ingress controller.
+This program deploys the following:
+
+* GKE Cluster
+* Ingress Controller
 
 ### 03-application
 
-This program is to deploy the applications to the GKE cluster and also apply the Ingress resource.
+This program creates and deploys the following:
 
-## Deployment
+* SAML/SSO Certificate used for SAML/SSO if set up in the service.
+* Encryption Services 
+  *Currently sets up a "Local keys" encryption service as per: https://www.pulumi.com/docs/guides/self-hosted/components/api/#encryption-services. 
+  * This service is used to encrypt Pulmi config values and outputs. This will be migrated to GCP Secrets Manager when this issue is closed: https://github.com/pulumi/pulumi-service/issues/8785
+* API and Console service containers that run the Pulumi service.
+
+## Deploying the System
+
+Pulumi is used to deploy Pulumi. To that end, you will need a state backend - see: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend. And specifically, you will likely use GCP storage for the state backend as per: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-google-cloud-storage-backend.
 
 ### Naming the stacks
 
 To ensure that the Pulumi program can access variables between the three deployments, you'll need to specify unique stack names. In the instructions below these are names `{stackName1}`, `{stackName2}` and `{stackName3}`. They can be whatever you want them to be, but they need to be consistent when asked for in the instructions.
 
-To deploy entire stack, run the following in your terminal:
-
+### Deploy 01-infrastructure
 1. `cd 01-infrastructure`
 1. `npm install`
 1. `pulumi stack init {stackName1}` 
@@ -70,6 +70,8 @@ Optional settings (will use default values if not set)
 1. `pulumi config set dbInstanceType {GCP SQL DB instance type}` - uses "db-g1-small" if not set
 1. `pulumi config set dbUser {user name for SQL DB}` - uses "pulumiadmin" if not set
 1. `pulumi up` - Wait to complete before proceeding.
+
+### Deploy 02-kubernetes
 1. `cd ../02-kubernetes`
 1. `npm install`
 1. `pulumi stack init {stackName2}` 
@@ -81,6 +83,8 @@ Optional settings (will use default values if not set)
 1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
 1. `pulumi config set clusterVersion {Kubernetes cluster version to use}` - defaults to latest version currently supported by the installer.
 1. `pulumi up` - Wait to complete before proceeding.
+
+### Deploy 03-application
 1. `cd ../03-application`
 1. `npm install`
 1. `pulumi stack init {stackName3}` 
@@ -95,13 +99,15 @@ Optional settings (will use default values if not set)
 1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine)
 Semi-optional settings.
-If not set, "forgot password" and email invites will not work but direct sign ups and general functionality will still work.
+If not set, "forgot password" and email invites will not work but direct sign ups and general functionality will still work. So you can skip these settings for basic testing.
 1. `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
 1. `pulumi config set smtpUsername {smtp username}`
 1. `pulumi config set smtpPassword {smtp password} --secret`
 1. `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
 1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
 1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
+Optional setting will use default value if not set.
+1. `pulumi config set samlSsoEnabled true` - set to false by default.
 1. `pulumi up`
 
 ### Configure DNS
@@ -133,10 +139,13 @@ pulumi login $(pulumi stack output apiUrl)
 Due to the dependencies between the stacks, you'll need to reverse the order that you deployed them in:
 
 1. `cd 03-application`
+1. `pulumi state unprotect --all`
 1. `pulumi destroy` 
 1. `cd ../02-kubernetes`
+1. `pulumi state unprotect --all`
 1. `pulumi destroy`
 1. `cd ../01-infrastructure`
+1. `pulumi state unprotect --all`
 1. `pulumi destroy`
 
 ## Notes

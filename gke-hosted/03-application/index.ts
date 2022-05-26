@@ -238,8 +238,8 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
   }, { provider, parent: apiDeployment });
 
   const apiServiceEndpoint = k8s.core.v1.Endpoints.get("apiServiceEndpoints", apiService.id, {provider})
-  export const apiServiceEndpointAddress = apiServiceEndpoint.subsets[0].addresses[0].ip
-  export const apiServiceEndpointPort = apiServiceEndpoint.subsets[0].ports[0].port
+  const apiServiceEndpointAddress = apiServiceEndpoint.subsets[0].addresses[0].ip
+  const apiServiceEndpointPort = apiServiceEndpoint.subsets[0].ports[0].port
 
   const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleName}`, {
     metadata: {
@@ -268,8 +268,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "SAML_SSO_ENABLED",
-                  value: "false"
-                  // value: "true"
+                  value: config.samlSsoEnabled
                 },
                 {
                   name: "PULUMI_API",
@@ -360,5 +359,3 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
 export const consoleUrl = pulumi.interpolate`https://${config.consoleDomain}`;
 export const apiUrl = pulumi.interpolate`https://${config.apiDomain}`;
 export const namespace = appsNamespace.metadata.name;
-
-export const dbStuff = config.database
