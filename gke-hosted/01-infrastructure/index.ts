@@ -15,6 +15,7 @@ const storageDetails = new storage.Storage(`${config.resourceNamePrefix}`, {
 });
 
 const database = new db.Database(`${config.resourceNamePrefix}`, {
+    vpcId: network.networkId,
     dbInstanceType: config.dbInstanceType,
     dbUser: config.dbUser,
     tags: config.baseTags,
