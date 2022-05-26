@@ -2,6 +2,9 @@
 Status: Current code launches and works as per steps below.
 
 TODOs:
+- Test the basic deployment
+- Test using service's secrets management using the local keys stuff that is set up.
+- Test using external secrets manager
 - Remove public access to MySQL DB: Limit access for API pod.
 - Remove public access to Buckets (not actually sure it's enabled but need to make sure it is not): limit access to only for API pod
 
