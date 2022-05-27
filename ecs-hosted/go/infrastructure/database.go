@@ -170,7 +170,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 			DbParameterGroupName: parameterGroup.Name,
 			MonitoringInterval:   pulumi.Int(5),
 			MonitoringRoleArn:    monitoringRole.Arn,
-		}, options...)
+		}, clusterOpts...)
 
 		if err != nil {
 			return nil, err

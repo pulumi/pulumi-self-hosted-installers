@@ -91,7 +91,7 @@ func NewConsoleContainerService(ctx *pulumi.Context, name string, args *ConsoleC
 		return nil, err
 	}
 
-	//sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
+	sgOptions := append(options, pulumi.DeleteBeforeReplace(true))
 	_, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-lb-to-ecs-rule", name), &ec2.SecurityGroupRuleArgs{
 		Type:                  pulumi.String("egress"),
 		SecurityGroupId:       args.TrafficManager.Public.SecurityGroup.ID(),
@@ -100,7 +100,7 @@ func NewConsoleContainerService(ctx *pulumi.Context, name string, args *ConsoleC
 		ToPort:                pulumi.Int(consolePort),
 		Protocol:              pulumi.String("TCP"),
 		Description:           pulumi.String("Allow access from UI LB to ecs service"),
-	}, options...)
+	}, sgOptions...)
 
 	if err != nil {
 		return nil, err
@@ -146,6 +146,7 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 	}
 
 	imageName := fmt.Sprintf("pulumi/console:%s", args.ImageTag)
+	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
 
 	// resolve all needed outputs to construct our container definition in JSON
 	conatinerDefinitions, _ := pulumi.All(
@@ -159,7 +160,7 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 			map[string]interface{}{
 				"cpu":               containerCpu,
 				"environment":       newConsoleEnvironmentVariables(args, dnsName),
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
+				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
 				"name":              consoleContainerName,
@@ -235,6 +236,7 @@ type ConsoleContainerServiceArgs struct {
 	HideEmailSignup            bool
 	HideEmailLogin             bool
 	ImageTag                   string
+	ImagePrefix                string
 	LogDriver                  log.LogDriver
 	RecaptchaSiteKey           string
 	RootDomain                 string

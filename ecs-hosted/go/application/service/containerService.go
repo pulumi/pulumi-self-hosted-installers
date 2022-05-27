@@ -52,36 +52,6 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		return nil, err
 	}
 
-	// // ECS tasks need to be able to communicate with VPCEs
-	// _, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-ecs-to-vpce-rule", name), &ec2.SecurityGroupRuleArgs{
-	// 	Type:                  pulumi.String("egress"),
-	// 	SecurityGroupId:       resource.SecurityGroup.ID(),
-	// 	SourceSecurityGroupId: args.VpcEndpointSecurityGroupId,
-	// 	FromPort:              pulumi.Int(443),
-	// 	ToPort:                pulumi.Int(443),
-	// 	Protocol:              pulumi.String("TCP"),
-	// 	Description:           pulumi.String("Allow access from ecs service to VPC Endpoint"),
-	// }, sgOptions...)
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // ECS tasks needs to be able to communicate with S3 VPCE
-	// _, err = ec2.NewSecurityGroupRule(ctx, fmt.Sprintf("%s-ecs-to-s3-prefix-rule", name), &ec2.SecurityGroupRuleArgs{
-	// 	Type:            pulumi.String("egress"),
-	// 	SecurityGroupId: resource.SecurityGroup.ID(),
-	// 	PrefixListIds:   pulumi.StringArray{args.PrefixListId},
-	// 	FromPort:        pulumi.Int(443),
-	// 	ToPort:          pulumi.Int(443),
-	// 	Protocol:        pulumi.String("TCP"),
-	// 	Description:     pulumi.String("Allow access from ecs service to S3 VPC Endpoint"),
-	// }, sgOptions...)
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	// execution role will be provided to ECS for things like pulling ECR images, sending Cloudwatch logs, etc
 	// this is not the role that will be provided to the actual application
 	executionRole, err := NewEcsRole(ctx, fmt.Sprintf("%s-exeuction", name), args.Region, args.TaskDefinitionArgs.ExecutionRolePolicyDocs, options...)

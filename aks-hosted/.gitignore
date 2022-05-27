@@ -3,3 +3,4 @@
 temp
 Pulumi.*.yaml
 package-lock.json
+*.pem

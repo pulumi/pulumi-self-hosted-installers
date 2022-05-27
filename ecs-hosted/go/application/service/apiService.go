@@ -73,7 +73,7 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 		})
 	}
 
-	if args.SamlArgs != nil {
+	if args.SamlArgs.Enabled {
 		ctx.Log.Debug("SAML SSO enabled", nil)
 		secretValues = append(secretValues, Secret{
 			Name:  "SAML_CERTIFICATE_PRIVATE_KEY",
@@ -132,11 +132,9 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 	}
 
 	// create listeners and target groups for NLB -> API
-
 	serviceOptions := append(options, pulumi.DependsOn([]pulumi.Resource{httpsListener, httpListener}))
 
 	if args.EnablePrivateLoadBalancerAndLimitEgress {
-		// do stuff here
 		// 2 new target groups
 		// 2 listeners (http and https)
 		// map tgs into ecs service for LB purposes
@@ -236,11 +234,13 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = NewMigrationsService(ctx, fmt.Sprintf("%s-migrations", name), &MigrationsContainerServiceArgs{
 		ContainerBaseArgs:        args.ContainerBaseArgs,
 		DatabaseArgs:             args.DatabaseArgs,
 		EcrRepoAccountId:         args.EcrRepoAccountId,
 		ImageTag:                 args.ImageTag,
+		ImagePrefix:              args.ImagePrefix,
 		ExecuteMigrations:        args.ExecuteMigrations,
 		SecurityGroupEgressRules: dbSgEgressRules,
 	}, options...)
@@ -285,32 +285,43 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	}
 
 	imageName := fmt.Sprintf("pulumi/service:%s", args.ImageTag)
+	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
+
+	inputs := []interface{}{
+		args.DatabaseArgs.ClusterEndpoint,
+		args.DatabaseArgs.Port,
+		secrets.Secrets,
+		args.CheckPointbucket.Bucket,
+		args.PolicyPacksBucket.Bucket,
+		args.LogDriver,
+	}
+
+	if args.SamlArgs.Enabled {
+		inputs = append(inputs, args.SamlArgs.CertPublicKey)
+	}
 
 	// resolve all needed outputs to construct our container definition in JSON
 	conatinerDefinitions, _ := pulumi.All(
-		args.DatabaseArgs.ClusterEndpoint, // 0
-		args.DatabaseArgs.Username,        // 1
-		args.DatabaseArgs.Password,        // 2
-		args.DatabaseArgs.Port,            // 3
-		secrets.Secrets,                   // 4
-		args.CheckPointbucket.Bucket,      // 5
-		args.PolicyPacksBucket.Bucket,     // 6
-		args.LogDriver,                    // 7
-		args.SamlArgs.CertPublicKey).ApplyT(func(applyArgs []interface{}) (string, error) {
+		inputs...,
+	).ApplyT(func(applyArgs []interface{}) (string, error) {
 
 		dbEndpoint := applyArgs[0].(string)
-		dbPort := applyArgs[3].(int)
-		checkpointBucket := applyArgs[5].(string)
-		policypackBucket := applyArgs[6].(string)
-		secretsOutput := applyArgs[4].([]map[string]interface{})
-		logDriver := applyArgs[7].(log.LogDriver)
-		publicKeyCert := applyArgs[8].(string)
+		dbPort := applyArgs[1].(int)
+		secretsOutput := applyArgs[2].([]map[string]interface{})
+		checkpointBucket := applyArgs[3].(string)
+		policypackBucket := applyArgs[4].(string)
+		logDriver := applyArgs[5].(log.LogDriver)
+
+		samlCertPublicKey := ""
+		if len(inputs) > 6 {
+			samlCertPublicKey = applyArgs[6].(string)
+		}
 
 		containerJson, err := json.Marshal([]interface{}{
 			map[string]interface{}{
 				"cpu":               containerCpu,
-				"environment":       newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket, publicKeyCert),
-				"image":             utils.NewEcrImageTag(ecrAccountId, args.Region, imageName),
+				"environment":       newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket, samlCertPublicKey),
+				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
 				"name":              apiContainerName,
@@ -441,7 +452,7 @@ func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string
 		env = append(env, CreateEnvVar("SMTP_GENERIC_SENDER", args.SmtpArgs.GenericSender))
 	}
 
-	if args.SamlArgs != nil && args.SamlArgs.Enabled {
+	if args.SamlArgs.Enabled && samlPublicKey != "" {
 		env = append(env, CreateEnvVar("SAML_CERTIFICATE_PUBLIC_KEY", samlPublicKey))
 	}
 
@@ -458,9 +469,10 @@ func CreateEnvVar(name string, value string) map[string]interface{} {
 type ApiContainerServiceArgs struct {
 	ContainerBaseArgs
 
-	ContainerMemoryReservation int // 0 check
-	ContainerCpu               int // 0 check
+	ContainerMemoryReservation int
+	ContainerCpu               int
 	EcrRepoAccountId           string
+	ImagePrefix                string
 	ImageTag                   string
 	LicenseKey                 string
 	LogDriver                  log.LogDriver
