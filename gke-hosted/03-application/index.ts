@@ -304,17 +304,17 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
     },
   }, { provider, parent: consoleDeployment });
 
-  const ingress = new k8s.networking.v1beta1.Ingress(`${commonName}-ingress`, {
+  const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
     kind: "Ingress",
     metadata: {
       name: "pulumi-service-ingress",
       namespace: appsNamespace.metadata.name,
       annotations: {
-        "kubernetes.io/ingress.class": "nginx",
-        "nginx.ingress.kubernetes.io/proxy-body-size": "50m"
+        "nginx.ingress.kubernetes.io/ssl-redirect": "true"
       }
     },
     spec: {
+      ingressClassName: "nginx",
       tls: [
         {
           hosts: [config.consoleDomain],
@@ -329,27 +329,35 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
         {
           host: config.apiDomain,
           http: {
-            paths: [
-              {
-                backend: {
-                  serviceName: apiService.metadata.name,
-                  servicePort: 80,
-                },
-              },
-            ],
+            paths: [{
+              pathType: "Prefix",
+              path: "/",
+              backend: {
+                service: {
+                  name: apiService.metadata.name,
+                  port: {
+                    number: 80,
+                  }
+                }
+              }             
+            }],
           },
         },
         {
           host: config.consoleDomain,
           http: {
-            paths: [
-              {
-                backend: {
-                  serviceName: consoleService.metadata.name,
-                  servicePort: 80
+            paths: [{
+              pathType: "Prefix",
+              path: "/",
+              backend: {
+                service: {
+                  name: consoleService.metadata.name,
+                  port: {
+                    number: 80
+                  }
                 }
               }
-            ]
+            }]
           }
         }
       ],

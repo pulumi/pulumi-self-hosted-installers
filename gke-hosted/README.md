@@ -58,6 +58,12 @@ Pulumi is used to deploy Pulumi. To that end, you will need a state backend - se
 
 To ensure that the Pulumi program can access variables between the three deployments, you'll need to specify unique stack names. In the instructions below these are names `{stackName1}`, `{stackName2}` and `{stackName3}`. They can be whatever you want them to be, but they need to be consistent when asked for in the instructions.
 
+### Google Cloud Platform Authentication
+
+Since the installer uses Pulumi to deploy the service into Google Cloud Platform (GCP), you do need to be able to deploy resources to GCP. To this end, you will likely need to run these two `gcloud auth` commands:
+* `gcloud auth login` - see https://cloud.google.com/sdk/docs/authorizing#authorize_with_a_user_account 
+* `gcloud auth application-default login` - see https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login
+
 ### Deploy 01-infrastructure
 1. `cd 01-infrastructure`
 1. `npm install`

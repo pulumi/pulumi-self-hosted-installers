@@ -24,11 +24,10 @@ export class SsoCertificate extends ComponentResource {
         
         const ssoCert = new SelfSignedCert(`ssoCert-${currentYear}`, {
             allowedUses: ["cert_signing"],
-            keyAlgorithm: "RSA",
             privateKeyPem: ssoPrivateKey.privateKeyPem,
-            subjects: [
-                {commonName: `${args.apiDomain}`}
-            ],
+            subject: {
+                commonName: `${args.apiDomain}`
+            },
             validityPeriodHours: (400*24)
         }, { parent: this })
 
