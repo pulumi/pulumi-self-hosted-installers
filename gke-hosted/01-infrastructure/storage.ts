@@ -1,6 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
-import * as random from "@pulumi/random";
 import { Output } from "@pulumi/pulumi";
 
 export interface StorageArgs {

@@ -1,7 +1,7 @@
 {
-    "name": "k8s-azure-01-infrastructure",
+    "name": "k8s-gke-01-infrastructure",
     "devDependencies": {
-        "@types/node": "^10.0.0"
+        "@types/node": "^10.17.59"
     },
     "dependencies": {
         "@pulumi/gcp": "^6.24.0",

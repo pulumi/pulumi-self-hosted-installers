@@ -1,14 +1,13 @@
 {
-    "name": "k8s-azure-02-kubernetes-cluster",
+    "name": "k8s-gke-02-kubernetes-cluster",
     "devDependencies": {
-        "@types/node": "^10.0.0"
+        "@types/node": "^10.17.59"
     },
     "dependencies": {
-        "@pulumi/azure-native": "^1.2.0",
-        "@pulumi/azuread": "^4.0.0",
+        "@pulumi/gcp": "^6.24.0",
         "@pulumi/kubernetes": "^3.0.0",
-        "@pulumi/pulumi": "^3.1.0",
-        "@pulumi/random": "^4.0.0",
-        "@pulumi/tls": "^4.0.0"
+        "@pulumi/pulumi": "^3.32.1",
+        "@pulumi/random": "^4.7.0",
+        "@pulumi/tls": "^4.6.0"
     }
 }

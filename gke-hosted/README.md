@@ -1,4 +1,4 @@
-# Deploying Pulumi Self Hosted to Azure
+# Deploying Pulumi Self Hosted to Google Cloud Platform
 
 This folder and sub folders contain the three Pulumi programs to build the infrastructure and deploy the containers necessary to run Pulumi' self hosted backend onto Google Kubernetes Engine (GKE).
 
@@ -21,7 +21,7 @@ You can use the following to create self-signed certs:
   Where `{ days_until_expiration }` is set to a number of days for the cert (e.g. 365).  
   And, `{ common_name }` is set to `api.{domain}` for the api cert and key and set to `app.{domain}` for the console cert and key (e.g. api.example.com and app.example.com, respectively).
 
-  > ⚠️ If using self-signed certificates, you will need to load both the `app.` and `app.` certs into your workstation (e.g. MacOS Keychain Access) so that browser and `pulumi` CLI access work correctly. See section at bottom for steps for MacOS.
+  > ⚠️ If using self-signed certificates, you will need to load both the `app.` and `api.` certs into your workstation (e.g. MacOS Keychain Access) so that browser and `pulumi` CLI access work correctly. See section at bottom for steps for MacOS.
 
 ## What does each Pulumi program do?
 
@@ -92,13 +92,13 @@ Optional settings (will use default values if not set)
 1. `pulumi config set stackName2 {stackName2}` - the full stack name for the "02-kubernetes" stack.
 1. `pulumi config set apiDomain {domain for api}` - e.g. api.pulumi.example.com (must start with "api")
 1. `pulumi config set consoleDomain {domain for console}` - e.g. app.pulumi.example.com (must start with "app")
-1. `pulumi config set licenseKey {licenseKey} --secret`
+1. `pulumi config set licenseKey {licenseKey} --secret` - the license key is available from your Pulumi contact.
 1. `pulumi config set imageTag {imageTag}` - use "latest" or find the latest tag to pin to here: https://hub.docker.com/r/pulumi/service
 1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine)
 1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine)
-Semi-optional settings.
+Optional settings, but highly recommended for production.
 If not set, "forgot password" and email invites will not work but direct sign ups and general functionality will still work. So you can skip these settings for basic testing.
 1. `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
 1. `pulumi config set smtpUsername {smtp username}`
@@ -135,6 +135,8 @@ pulumi login $(pulumi stack output apiUrl)
 ```
 
 ## Destroying the stacks
+
+> ⚠️ Note that this will destroy all state and data for stacks deployed via the self-hosted service. So, be sure to take any backups you feel are necessary.
 
 Due to the dependencies between the stacks, you'll need to reverse the order that you deployed them in:
 

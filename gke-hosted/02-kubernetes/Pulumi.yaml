@@ -1,3 +1,3 @@
 name: 02-kubernetes-selfhosted-gke
 runtime: nodejs
-description: Set up kubernetes cluster
+description: Kubernetes cluster for Pulumi GKE self-hosted installation.
