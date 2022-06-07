@@ -11,17 +11,9 @@ This folder and sub folders contain the three Pulumi programs to build the infra
   * api.{domain} - e.g. api.pulumi.example.com
   * app.{domain} - e.g. app.pulumi.example.com
 * TLS certificates for each domain endpoint.  
-You can use the following to create self-signed certs:
-  ```
-  openssl \
-  req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem \
-  -days { days_until_expiration } -nodes -subj "/CN={ common_name }" \
-  -addext "subjectAltName = DNS:{ common_name }"
-  ```
-  Where `{ days_until_expiration }` is set to a number of days for the cert (e.g. 365).  
-  And, `{ common_name }` is set to `api.{domain}` for the api cert and key and set to `app.{domain}` for the console cert and key (e.g. api.example.com and app.example.com, respectively).
-
-  > ⚠️ If using self-signed certificates, you will need to load both the `app.` and `api.` certs into your workstation (e.g. MacOS Keychain Access) so that browser and `pulumi` CLI access work correctly. See section at bottom for steps for MacOS.
+  * See [Creating and Using Self-Signed Certificates](#creating-and-using-self-signed-certificates) below if you wish to use self-signed certificates. 
+* SMTP Server
+  * Not needed for testing, but required to enable invitation and "forgot-password" workflows.
 
 ## What does each Pulumi program do?
 
@@ -159,8 +151,35 @@ Due to the dependencies between the stacks, you'll need to reverse the order tha
 
 * The SSO certificate has the `currentYear()` in the name. This means that it will get replaced during the first deployment of each calendar year. The expiry date on the certificate is set to 400 days so that although a deployment may not happen each year, it will be necessary to do so otherwise the certificate will expire.
 
-## Setting Up Self-Signed Certs on Workstation
-### MacOS
+## Creating and Using Self-Signed Certificates
+### Creating Self-Signed Certificates
+You can use the following to create self-signed certs:
+  ```
+  openssl \
+  req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem \
+  -days { days_until_expiration } -nodes -subj "/CN={ common_name }" \
+  -addext "subjectAltName = DNS:{ common_name }"
+  ```
+  Where `{ days_until_expiration }` is set to a number of days for the cert (e.g. 365).  
+  And, `{ common_name }` is set to `api.{domain}` for the api cert and key and set to `app.{domain}` for the console cert and key (e.g. api.example.com and app.example.com, respectively).
+
+For example, if creating certs for names using the `pulumi.example.com` domain:
+```
+openssl \
+  req -x509 -newkey rsa:4096 -keyout app.key.pem -out app.cert.pem \
+  -days 365 -nodes -subj "/CN=app.pulumi.example.com" \
+  -addext "subjectAltName = DNS:app.pulumi.example.com"
+
+openssl \
+  req -x509 -newkey rsa:4096 -keyout api.key.pem -out api.cert.pem \
+  -days 365 -nodes -subj "/CN=app.pulumi.example.com" \
+  -addext "subjectAltName = DNS:app.pulumi.example.com"
+```
+The resultant X.key.pem and X.cert.pem files will be used when configuring the `03-application` stack.
+
+### Configuring Self-Signed Certificates on Workstation
+  > ⚠️ If using self-signed certificates, you will need to load both the `app.` and `api.` certs into your workstation (e.g. MacOS Keychain Access) so that browser access and the `pulumi` CLI work correctly. 
+#### MacOS
 1. Launch the system as described above.
 1. Point your browser at your `app.XXXXX` URL.
 1. Click the `Not Secure` indicator in the Browser address bar.
