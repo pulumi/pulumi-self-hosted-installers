@@ -7,7 +7,7 @@ The following guides are currently available:
 * AWS ([EKS](./eks-hosted) or [ECS](./ecs-hosted))
 * Azure ([AKS](./aks-hosted))
 * Docker ([Docker Engine](./local-docker))
-* Google Cloud (Coming soon!)
+* Google Cloud (([GKE](./gke-hosted))
 * VMware (Coming soon!)
 
 Learn more about how to self-host Pulumi for your organization [here](https://www.pulumi.com/docs/guides/self-hosted/).
