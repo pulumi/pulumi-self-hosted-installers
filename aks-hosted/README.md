@@ -67,6 +67,7 @@ To deploy entire stack, run the following in your terminal:
 1. `npm install`
 1. `pulumi stack init {stackName2}` - see note above about NO NUMBERS in stack name
 1. `pulumi config set stackName1 {stackName1}`
+1. `pulumi config set kubernetesVersion "1.23.5"` - optional if you want to use different kubernetes version; default 1.23.5
 1. `pulumi up`
 1. `cd ../03-application`
 1. `npm install`

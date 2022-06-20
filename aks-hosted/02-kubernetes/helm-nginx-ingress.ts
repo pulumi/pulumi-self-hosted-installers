@@ -23,7 +23,7 @@ export class NginxIngress extends pulumi.ComponentResource {
                 repo: "https://kubernetes.github.io/ingress-nginx"
             },
             chart: "ingress-nginx",
-            version: "3.31.0",
+            version: "4.1.4",
             namespace: ingressNamespace.metadata.name,
             values: {
                 controller: {

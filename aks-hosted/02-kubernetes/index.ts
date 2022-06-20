@@ -9,6 +9,7 @@ const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
     ADApplicationId: config.adApplicationId,
     ADApplicationSecret: config.adApplicationSecret,
     ResourceGroupName: config.resourceGroupName,
+    KubernetesVersion: config.kubernetesVersion,
     tags: config.baseTags,
 });
 

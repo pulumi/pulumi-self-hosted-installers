@@ -11,11 +11,13 @@ const stackName = pulumi.getStack();
 
 const commonName = "pulumi-selfhosted" || stackConfig.get("commonName");
 const resourceNamePrefix = `${commonName}-${stackName}`;
+const kubernetesVersion = "1.23.5" || stackConfig.get("kubernetesVersion");
 
 export const config = {
     projectName,
     stackName,
     resourceNamePrefix,
+    kubernetesVersion,
 
     baseTags: {
         project: projectName,

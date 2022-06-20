@@ -9,6 +9,7 @@ interface KubernetesClusterArgs {
   ADApplicationId: Output<string>;
   ADApplicationSecret: Output<string>;
   ADAdminGroupId: Output<string>;
+  KubernetesVersion: string,
   tags?: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
   }>,
@@ -64,7 +65,7 @@ export class KubernetesCluster extends pulumi.ComponentResource {
             ],
           },
         },
-        kubernetesVersion: "1.21.9",
+        kubernetesVersion: args.KubernetesVersion,
         nodeResourceGroup: `${name}-aks-nodes-rg`,
 
         tags: args.tags,

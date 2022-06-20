@@ -336,11 +336,17 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
           http: {
             paths: [
               {
+                pathType: "Prefix",
+                path: "/",
                 backend: {
-                  serviceName: apiService.metadata.name,
-                  servicePort: 80,
-                },
-              },
+                  service: {
+                    name: apiService.metadata.name,
+                    port: {
+                      number: 80
+                    }
+                  }
+                }
+              }
             ],
           },
         },
@@ -349,9 +355,15 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
           http: {
             paths: [
               {
+                pathType: "Prefix",
+                path: "/",
                 backend: {
-                  serviceName: consoleService.metadata.name,
-                  servicePort: 80
+                  service: {
+                    name: consoleService.metadata.name,
+                    port: {
+                      number: 80
+                    }
+                  }
                 }
               }
             ]
