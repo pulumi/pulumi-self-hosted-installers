@@ -24,7 +24,6 @@ export class Storage extends pulumi.ComponentResource {
         // Uses a different resource name because of Azure's 24 character limit and global unique name requirements
         const storageAccount = new azure.storage.StorageAccount("pulumi", {
             resourceGroupName: args.resourceGroupName,
-            
             sku: {
                 name: azure.storage.v20190601.SkuName.Standard_LRS,
             },
