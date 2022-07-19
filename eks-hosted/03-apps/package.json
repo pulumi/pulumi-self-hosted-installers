@@ -5,12 +5,11 @@
     "typescript": "^3.0.0"
   },
   "dependencies": {
-    "@pulumi/aws": "5.2.0",
-    "@pulumi/eks": "0.37.1",
-    "@pulumi/kubernetes": "3.18.2",
+    "@pulumi/aws": "5.10.0",
+    "@pulumi/kubernetes": "3.20.0",
     "@pulumi/kubernetesx": "0.1.6",
-    "@pulumi/pulumi": "3.30.0",
-    "@pulumi/random": "4.4.2",
-    "@pulumi/tls": "4.2.2"
+    "@pulumi/pulumi": "3.36.0",
+    "@pulumi/random": "4.8.0",
+    "@pulumi/tls": "4.6.0"
   }
 }
