@@ -73,9 +73,9 @@ const ssoPrivateKey = new tls.PrivateKey("ssoPrivateKey", { algorithm: "RSA", rs
 const ssoCert = new tls.SelfSignedCert("ssoCert", {
     allowedUses: ["cert_signing"],
     privateKeyPem: ssoPrivateKey.privateKeyPem,
-    subjects: [
-        {commonName: `api.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`}
-    ],
+    subject: {
+        commonName: `api.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
+    },
     validityPeriodHours: (365*24)
 })
 const samlSsoSecret = new kx.Secret("saml-sso",

@@ -13,6 +13,7 @@ Version ID | Date | K8s Version Supported | Note
 2.0 | December 7, 2021 | 1.21 | Changes Ingress controller deployment code.
 2.1 | January 10, 2022 | 1.21 | Implements email-login disablement options. Changes default SAML-SSO behavior to be DISABLED. NOTE: if you are currently using SAML SSO, be sure to update your config file to explicitly enable SAML SSO.
 2.2 | April 25, 2022 | 1.22 | Updated and pinned package versions. 
+2.3 | July 19, 2022 | 1.22 | Updated and pinned package versions to address deprecation of earlier alpha version.
 
 
 > ℹ️ See the **Updates and Upgrades** section below for how to upgrade from earlier versions of the installer and k8s and Pulumi service images.
