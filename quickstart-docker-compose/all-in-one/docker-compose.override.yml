@@ -27,7 +27,7 @@ services:
       - 3000:3000
     image: "pulumi/console:scratch"
     build:
-      context: ../../../cmd/console
+      context: ../../../cmd/console2
       args:
         - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
 
