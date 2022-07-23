@@ -38,7 +38,7 @@ services:
       - 3443:3443
     image: "pulumi/console:scratch"
     build:
-      context: ../../cmd/console
+      context: ../../cmd/console2
       args:
         - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
     environment:
