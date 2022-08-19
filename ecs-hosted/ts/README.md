@@ -1,4 +1,4 @@
-# Self-Hosted Pulumi on AWS ECS Fargate - Typescript
+# Self-Hosted Pulumi on AWS ECS Fargate - TypeScript
 This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
@@ -9,7 +9,7 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
-2 | 05/03/2022 | README.md split into Golang and Typescript specific versions
+2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
 
 ## User Guides:
 
@@ -33,7 +33,7 @@ Version ID | Date | Note
 - [Route53][route53] hosted zone which conincides with the above ACM certificate.
 - [KMS][kms] key to be used by Pulumi service for encryption/decryption purposes.
 
-## Services used
+## Services Used
 
 - [ECS][ecs] - Managed ECS Cluster.
 - [Fargate][fargate] - Managed Container Service.
@@ -62,7 +62,7 @@ Version ID | Date | Note
 The architecture is split up by functional responsibilities in separate
 Pulumi projects to decouple the database, its required services, and the Pulumi service from each other.
 
-### Design considerations
+### Design Considerations
 
 The Pulumi services operate in Kubernetes with the following app properties.
 
@@ -245,7 +245,7 @@ To enable logging configurations for your ECS services, you must specify at leas
   pulumi config set logArgs '{"name": "your_log_base_name", "retentionDays": 3}' # NOTE: retentionDays defaults to 7 (days)
   ```
 
-## Use self-hosted Pulumi
+## Use Self-hosted Pulumi
 
 ### Organization Setup
 
@@ -265,7 +265,7 @@ pulumi login https://api.pulumi.example.com
 
 See the [pulumi login][pulumi-login-docs] docs for more details.
 
-### Create an example
+### Create an Example
 
 [Get started][aws-ts-get-started] with a simple and new AWS Typescript project.
 
