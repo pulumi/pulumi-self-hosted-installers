@@ -12,6 +12,14 @@ Version ID | Date | K8s Version Supported | Note
 0.1 | September 12, 2022 | 1.22 | Initial version. This version is based on the GKE installer and keeps the different projects even though 01-infrastructure and 02-kubernetes are for the most part just passing through config values.
 
 ## Prerequisites
+* K8s Cluster
+* MySQL 5.6 database
+  * At least 20GB SSD storage space
+  * A databaser user that has the following grants:
+    * `GRANT ALL PRIVILEGES ON 'pulumi'.* TO 'pulumi'@'%'`
+    * `GRANT CREATE USER ON *.* TO 'pulumi'@'%' WITH GRANT OPTION`
+* S3-compatible Object storage (for example, Minio)
+  * At least 200GB SSD storage space
 * Domain name and access to create two endpoints:
   * api.{domain} - e.g. api.pulumi.example.com
   * app.{domain} - e.g. app.pulumi.example.com
