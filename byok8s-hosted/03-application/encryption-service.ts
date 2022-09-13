@@ -11,12 +11,9 @@ export interface EncryptionServiceArgs {
     provider: k8s.Provider,
 }
 
-// Until this issue is addressed: https://github.com/pulumi/pulumi-service/issues/8785
-// We will use locally mounted key as per https://www.pulumi.com/docs/guides/self-hosted/components/api/#local-keys
+// We use a locally mounted key as per https://www.pulumi.com/docs/guides/self-hosted/components/api/#local-keys
 // To this end, this component creates a secret containing the key value and then constructs volume and volume mount specs
 // to be added to the api service pod.
-// When the above issue is addressed, this code can be modified to set things up using the GCP key service and 
-// just return empty volume specs with no need to update the index.ts program.
 export class EncryptionService extends ComponentResource {
     pulumiLocalKeysVolumeSpec: k8s.types.input.core.v1.Volume;
     pulumiLocalKeysVolumeMountSpec: k8s.types.input.core.v1.VolumeMount;
