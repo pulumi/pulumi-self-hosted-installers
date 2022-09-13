@@ -15,6 +15,8 @@ interface secretsIntegrationPoints {
 export function configurePulumiSecretProvider(config: any, provider: any): secretsIntegrationPoints {
     // If this stack's configuration specified an AWS KMS key, use that for
     // managing the Pulumi Service's secrets.
+
+    // TODO: kms key needs to allow appropriate IAM permissions to k8s sa role
     if (config.awsKMSKeyArn) {
         return {
             envVarName: "PULUMI_KMS_KEY",

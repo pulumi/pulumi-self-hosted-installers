@@ -160,9 +160,11 @@ const serviceEnv = pulumi
 
 // Create IAM and ServiceAccount for S3 access.
 const s3Role = rbac.createIAM(apiName, config.appsNamespaceName,
-    config.clusterOidcProviderArn, config.clusterOidcProviderUrl);
+    config.clusterOidcProviderArn, config.clusterOidcProviderUrl, policyPacksBucket.bucket, checkpointsBucket.bucket);
+
 const serviceAccount = rbac.createServiceAccount(apiName,
     provider, s3Role.arn, config.appsNamespaceName);
+
 const serviceAccountName = serviceAccount.metadata.name;
 
 // Minimum System Requirements (per replica):

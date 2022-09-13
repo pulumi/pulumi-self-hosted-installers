@@ -32,38 +32,36 @@ export function createIAM(
         assumeRolePolicy: saAssumeRolePolicy.json,
     });
 
-    // Attach the policy to the role for the service account.
-    const rpa = new aws.iam.RolePolicyAttachment(name, {
-        policyArn: "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-        role: saRole,
-    });
-
     // only give the sa full access to the checkpoints and policy pack buckets nothing else
     // this could probably be restricted more, but it's probably futile
-    // const s3PolicyDoc = pulumi.all([policyPackBucket, checkpointBucket]).apply(([pBucket, cBucket]) => {
-    //     return JSON.stringify({
-    //         Version: "2012-10-17",
-    //         Statements: [{
-    //             Effect: "Allow",
-    //             Action: ["s3:*"],
-    //             Resource: [
-    //                 pBucket,
-    //                 `${pBucket}/*`,
-    //                 cBucket,
-    //                 `${cBucket}/*`
-    //             ]
-    //         }]
-    //     })
-    // });
+    const s3PolicyDoc = pulumi.all([policyPackBucket, checkpointBucket]).apply(([pBucket, cBucket]) => {
+        const checkpoint = `arn:aws:s3:::${cBucket}`;
+        const policyPack = `arn:aws:s3:::${pBucket}`;
 
-    // const policy = new aws.iam.Policy(name, {
-    //     policy: s3PolicyDoc
-    // });
+        return JSON.stringify({
+            Version: "2012-10-17",
+            Statement: [{
+                Effect: "Allow",
+                Action: ["s3:*"],
+                Resource: [
+                    policyPack,
+                    `${policyPack}/*`,
+                    checkpoint,
+                    `${checkpoint}/*`
+                ]
+            }]
+        })
+    });
 
-    // new aws.iam.RolePolicyAttachment(name, {
-    //     role: saRole,
-    //     policyArn: policy.arn
-    // });
+    const policy = new aws.iam.Policy(name, {
+        description: "Allow API access to checkpoints and policy pack bucket",
+        policy: s3PolicyDoc
+    });
+
+    new aws.iam.RolePolicyAttachment(name, {
+        role: saRole,
+        policyArn: policy.arn
+    });
 
     return saRole;
 }

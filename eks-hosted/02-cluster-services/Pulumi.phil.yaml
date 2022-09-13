@@ -1,5 +1,0 @@
-config:
-  aws:profile: pulumi-ce
-  aws:region: us-west-2
-  pulumi-selfhosted-02-cluster-services:clusterStackRef: team-ce/pulumi-selfhosted-01-cluster-configuration/phil
-  pulumi-selfhosted-02-cluster-services:hostedZoneDomainName: pulumi-ce.team
