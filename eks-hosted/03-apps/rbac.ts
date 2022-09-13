@@ -1,14 +1,16 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import * as aws from "@pulumi/aws";
+import { assumeRoleWithWebIdentity } from "@pulumi/aws/config";
 
 // Create the AWS IAM policy and role.
 export function createIAM(
     name: string,
     namespace: pulumi.Input<string>,
     clusterOidcProviderArn: pulumi.Input<string>,
-    clusterOidcProviderUrl: pulumi.Input<string>): aws.iam.Role
-{
+    clusterOidcProviderUrl: pulumi.Input<string>,
+    policyPackBucket: pulumi.Output<string>,
+    checkpointBucket: pulumi.Output<string>): aws.iam.Role {
     // Create the IAM target policy and role for the Service Account.
     const saAssumeRolePolicy = pulumi.all([clusterOidcProviderUrl, clusterOidcProviderArn, namespace]).apply(([url, arn, namespaceName]) => aws.iam.getPolicyDocument({
         statements: [{
@@ -29,12 +31,39 @@ export function createIAM(
     const saRole = new aws.iam.Role(name, {
         assumeRolePolicy: saAssumeRolePolicy.json,
     });
-    
+
     // Attach the policy to the role for the service account.
     const rpa = new aws.iam.RolePolicyAttachment(name, {
         policyArn: "arn:aws:iam::aws:policy/AmazonS3FullAccess",
         role: saRole,
     });
+
+    // only give the sa full access to the checkpoints and policy pack buckets nothing else
+    // this could probably be restricted more, but it's probably futile
+    // const s3PolicyDoc = pulumi.all([policyPackBucket, checkpointBucket]).apply(([pBucket, cBucket]) => {
+    //     return JSON.stringify({
+    //         Version: "2012-10-17",
+    //         Statements: [{
+    //             Effect: "Allow",
+    //             Action: ["s3:*"],
+    //             Resource: [
+    //                 pBucket,
+    //                 `${pBucket}/*`,
+    //                 cBucket,
+    //                 `${cBucket}/*`
+    //             ]
+    //         }]
+    //     })
+    // });
+
+    // const policy = new aws.iam.Policy(name, {
+    //     policy: s3PolicyDoc
+    // });
+
+    // new aws.iam.RolePolicyAttachment(name, {
+    //     role: saRole,
+    //     policyArn: policy.arn
+    // });
 
     return saRole;
 }
@@ -44,8 +73,7 @@ export function createServiceAccount(
     name: string,
     provider: k8s.Provider,
     roleArn: pulumi.Input<aws.ARN>,
-    namespace: pulumi.Input<string>): k8s.core.v1.ServiceAccount
-{
+    namespace: pulumi.Input<string>): k8s.core.v1.ServiceAccount {
     return new k8s.core.v1.ServiceAccount(name, {
         metadata: {
             namespace: namespace,

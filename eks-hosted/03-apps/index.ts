@@ -51,16 +51,16 @@ const dbConnSecret = new kx.Secret("aurora-db-conn",
 let smtpConfig = {}
 if (config.smtpServer) {
     const smtpSecret = new kx.Secret("smtp-conn",
-    {
-        metadata: { namespace: config.appsNamespaceName },
-        stringData: {
-            server: config.smtpServer,
-            username: config.smtpUsername,
-            password: config.smtpPassword,
-            genericsender: config.smtpGenericSender
-        },
+        {
+            metadata: { namespace: config.appsNamespaceName },
+            stringData: {
+                server: config.smtpServer,
+                username: config.smtpUsername!,
+                password: config.smtpPassword!,
+                genericsender: config.smtpGenericSender!
+            },
 
-    }, { provider })
+        }, { provider })
     smtpConfig = {
         "SMTP_SERVER": smtpSecret.asEnvValue("server"),
         "SMTP_USERNAME": smtpSecret.asEnvValue("username"),
@@ -76,31 +76,31 @@ const ssoCert = new tls.SelfSignedCert("ssoCert", {
     subject: {
         commonName: `api.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
     },
-    validityPeriodHours: (365*24)
+    validityPeriodHours: (365 * 24)
 })
 const samlSsoSecret = new kx.Secret("saml-sso",
-{
-    metadata: { namespace: config.appsNamespaceName },
-    stringData: {
-        pubkey: ssoCert.certPem,
-        privatekey: ssoPrivateKey.privateKeyPem,
-    },
+    {
+        metadata: { namespace: config.appsNamespaceName },
+        stringData: {
+            pubkey: ssoCert.certPem,
+            privatekey: ssoPrivateKey.privateKeyPem,
+        },
 
-}, { provider })
+    }, { provider })
 const samlSsoConfig = {
     "SAML_CERTIFICATE_PUBLIC_KEY": samlSsoSecret.asEnvValue("pubkey"),
     "SAML_CERTIFICATE_PRIVATE_KEY": samlSsoSecret.asEnvValue("privatekey"),
 }
 
-const recaptchaSecret = new kx.Secret("recaptcha", 
-{
-    metadata: { namespace: config.appsNamespaceName },
-    stringData: {
-        siteKey: config.recaptchaSiteKey,
-        secretKey: config.recaptchaSecretKey
-    },
+const recaptchaSecret = new kx.Secret("recaptcha",
+    {
+        metadata: { namespace: config.appsNamespaceName },
+        stringData: {
+            siteKey: config.recaptchaSiteKey,
+            secretKey: config.recaptchaSecretKey
+        },
 
-}, { provider })
+    }, { provider })
 const recaptchaServiceConfig = {
     "RECAPTCHA_SECRET_KEY": recaptchaSecret.asEnvValue("secretKey"),
     "LOGIN_RECAPTCHA_SECRET_KEY": recaptchaSecret.asEnvValue("secretKey"),
@@ -124,8 +124,8 @@ const consoleEmailLoginConfig = {
 }
 
 // Create S3 Buckets for the service checkpoints and policy packs.
-const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, { protect: true});
-const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true});
+const checkpointsBucket = new aws.s3.Bucket("pulumi-checkpoints", {}, { protect: true });
+const policyPacksBucket = new aws.s3.Bucket("pulumi-policypacks", {}, { protect: true });
 export const checkpointsS3BucketName = checkpointsBucket.id;
 export const policyPacksS3BucketName = policyPacksBucket.id;
 
@@ -151,8 +151,6 @@ const serviceEnv = pulumi
             ...recaptchaServiceConfig,
             ...apiEmailLoginConfig,
         } as EnvMap;
-
-
 
         // Add env vars specific to managing secrets.
         envVars[secretsIntegration.envVarName] = secretsIntegration.envVarValue;
@@ -318,14 +316,14 @@ const consolePodBuilder = new kx.PodBuilder({
         image: consoleImage,
         ports: { console: consolePort },
         env: {
-            "PULUMI_CONSOLE_DOMAIN": `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_HOMEPAGE_DOMAIN": `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_API": `https://${apiSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_API_INTERNAL_ENDPOINT": pulumi.interpolate`http://${apiService.metadata.name}:${apiPort}`,
-            "SAML_SSO_ENABLED": `${config.samlSsoEnabled}`,
+            PULUMI_CONSOLE_DOMAIN: `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
+            PULUMI_HOMEPAGE_DOMAIN: `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
+            PULUMI_API: `https://${apiSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
+            PULUMI_API_INTERNAL_ENDPOINT: pulumi.interpolate`http://${apiService.metadata.name}:${apiPort}`,
+            SAML_SSO_ENABLED: `${config.samlSsoEnabled}`,
             ...recaptchaConsoleConfig,
             ...consoleEmailLoginConfig
-        },
+        } as EnvMap,
         resources: consoleResources,
     }],
 });
