@@ -1,6 +1,6 @@
 # Using Your Own Infrasturcture to Deploy Pulumi Self Hosted 
 
-This folder and sub folders contain the three Pulumi programs to use and deploy the containers necessary to run Pulumi' self hosted backend onto one's own infrastructure. Specifically, whereas the other "self-hosted installers" deploy the base infrastucture (e.g. S3, SQL, K8s) and then deployes the Pulumi service on that infrastructure, this installer assumes you have built your own S3(compatible) storage, your own MySQL server, and your own K8s cluster. And the bulk of this installer is then to deploy the Pulumi service onto that existing infrastructure.
+This folder and sub folders contain the three Pulumi programs to use and deploy the containers necessary to run Pulumi' self hosted backend onto one's own infrastructure. Specifically, whereas the other "self-hosted installers" deploy the base infrastucture (e.g. S3, SQL, K8s) and then deploys the Pulumi service on that infrastructure, this installer assumes you have built your own S3(compatible) storage, your own MySQL server, and your own K8s cluster. And the bulk of this installer is then to deploy the Pulumi service onto that existing infrastructure.
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
 
@@ -32,14 +32,16 @@ Version ID | Date | K8s Version Supported | Note
 
 ### 01-infrastructure
 This program DOES NOT DEPLOY any infrastructure.
-Instead, this project is simply used to set config values that are then passed as stack outputs for other stacks to consume.
-See [Deploying the System](#deploying_the_system)
+Instead, this project is simply used to set config values that are then passed as stack outputs for other stacks to consume. This allows the installer to follow the same pattern as the other installers. 
+See [Deploy 01-infrastructure](#deploy_01_infrastructure)
 
 ### 02-kubernetes
 
 This program deploys the following:
 
 * Ingress Controller
+
+See [Deploy 02-kubernetes](#deploy_02_kuberenetes)
 
 ### 03-application
 
@@ -51,7 +53,8 @@ This program creates and deploys the following:
   * This service is used to encrypt Pulmi config values and outputs. This will be migrated to GCP Secrets Manager when this issue is closed: https://github.com/pulumi/pulumi-service/issues/8785
 * API and Console service containers that run the Pulumi service.
 
-<a id="deploying_the_system"></a>
+See [Deploy 03-application](#deploy_03_application)
+
 ## Deploying the System
 
 Pulumi is used to deploy Pulumi. To that end, you will need a state backend - see: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend. And specifically, you will likely use GCP storage for the state backend as per: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-google-cloud-storage-backend.
@@ -60,6 +63,7 @@ Pulumi is used to deploy Pulumi. To that end, you will need a state backend - se
 
 To ensure that the Pulumi program can access variables between the three deployments, you'll need to specify unique stack names. In the instructions below these are names `{stackName1}`, `{stackName2}` and `{stackName3}`. They can be whatever you want them to be, but they need to be consistent when asked for in the instructions.
 
+<a id="deploy_01_infrastructure"></a>
 ### Deploy 01-infrastructure
 1. `cd 01-infrastructure`
 1. `npm install`
@@ -67,8 +71,8 @@ To ensure that the Pulumi program can access variables between the three deploym
 1. `pulumi config set storageAccessKey {storage access key}`
 1. `pulumi config set storageSecretKey --secret {storage secret key}`
 1. `pulumi config set storageCheckpointBucket {storage checkpoint bucket}`
-    - e.g. `s3://pulumi-checkpoints?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
-    - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
+    - e.g. `"s3://pulumi-checkpoints?endpoint=192.168.1.47:9000&s3ForcePathStyle=true&region=us-east-1"`
+    - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage (vs using S3 itself).
 1. `pulumi config set storagePolicyPackBucket {storage policypack bucket}`
     - e.g. `s3://pulumi-policypacks?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
     - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
@@ -79,6 +83,7 @@ To ensure that the Pulumi program can access variables between the three deploym
 1. `pulumi config set dbUserPassword --secret {db password}`
 1. `pulumi up` - Wait to complete before proceeding.
 
+<a id="deploy_02_kubernetes"></a>
 ### Deploy 02-kubernetes
 1. `cd ../02-kubernetes`
 1. `npm install`
@@ -89,6 +94,7 @@ Optional settings (will use default values if not set)
 1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
 1. `pulumi up` - Wait to complete before proceeding.
 
+<a id="deploy_03_application"></a>
 ### Deploy 03-application
 1. `cd ../03-application`
 1. `npm install`
