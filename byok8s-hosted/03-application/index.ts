@@ -188,11 +188,11 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
-                  value: pulumi.interpolate`s3://${config.policyBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
+                  value: config.policyBucketConnectionString
                 },
                 {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
-                  value: pulumi.interpolate`s3://${config.checkpointBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
+                  value: config.checkpointBucketConnectionString 
                 },
                 {
                   name: "SMTP_SERVER",

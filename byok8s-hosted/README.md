@@ -9,7 +9,7 @@ This folder and sub folders contain the three Pulumi programs to use and deploy 
 ## Installer Revision History
 Version ID | Date | K8s Version Supported | Note
 ---|---|---|--
-0.1 | September 12, 2022 | 1.22 | Initial version. This version is based on the GKE installer and keeps the different projects even though 01-infrastructure and 02-kubernetes are for the most part just passing through config values.
+0.1 | September 12, 2022 | 1.24.1 | Initial version. This version is based on the GKE installer and keeps the different projects even though 01-infrastructure and 02-kubernetes are for the most part just passing through config values.
 
 ## Prerequisites
 * K8s Cluster
