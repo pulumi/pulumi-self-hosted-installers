@@ -76,9 +76,9 @@ To ensure that the Pulumi program can access variables between the three deploym
 1. `npm install`
 1. `pulumi stack init {stackName2}` 
 1. `pulumi config set stackName1 {stackName1}` - the full stack name for the "01-infrastructure" stack.
+1. `pulumi config set kubeconfig --secret {kubeconfig}` - the kubeconfig for accessing the K8s cluster
 Optional settings (will use default values if not set)
 1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
-1. `pulumi config set kubeconfig --secret {kubeconfig}` - the kubeconfig for accessing the K8s cluster
 1. `pulumi up` - Wait to complete before proceeding.
 
 ### Deploy 03-application
