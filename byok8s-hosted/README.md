@@ -13,11 +13,13 @@ Version ID | Date | K8s Version Supported | Note
 
 ## Prerequisites
 * K8s Cluster
-* MySQL 5.6 database
+* MySQL 5.6 database server
   * At least 20GB SSD storage space
   * A databaser user that has the following grants:
     * `GRANT ALL PRIVILEGES ON 'pulumi'.* TO 'pulumi'@'%'`
     * `GRANT CREATE USER ON *.* TO 'pulumi'@'%' WITH GRANT OPTION`
+  * Create a database named `pulumi` on the server.
+  * The MySQL server must have inbount ICMP (ping) enabled.
 * S3-compatible Object storage (for example, Minio)
   * At least 200GB SSD storage space
 * Domain name and access to create two endpoints:
