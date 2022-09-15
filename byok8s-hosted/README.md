@@ -187,8 +187,8 @@ openssl \
 
 openssl \
   req -x509 -newkey rsa:4096 -keyout api.key.pem -out api.cert.pem \
-  -days 365 -nodes -subj "/CN=app.pulumi.example.com" \
-  -addext "subjectAltName = DNS:app.pulumi.example.com"
+  -days 365 -nodes -subj "/CN=api.pulumi.example.com" \
+  -addext "subjectAltName = DNS:api.pulumi.example.com"
 ```
 The resultant X.key.pem and X.cert.pem files will be used when configuring the `03-application` stack.
 
