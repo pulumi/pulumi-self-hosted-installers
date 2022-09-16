@@ -196,12 +196,5 @@ The resultant X.key.pem and X.cert.pem files will be used when configuring the `
   > ⚠️ If using self-signed certificates, you will need to load both the `app.` and `api.` certs into your workstation (e.g. MacOS Keychain Access) so that browser access and the `pulumi` CLI work correctly. 
 #### MacOS
 1. Launch the system as described above.
-1. Point your browser at your `app.XXXXX` URL.
-1. Click the `Not Secure` indicator in the Browser address bar.
-1. Click on "Certificate is not valid" in the window that pops up.
-1. Click on the certificate icon that is displayed and slide it into a Finder window (say into your Downloads folder).
-1. Open "Keychain Access" on your Mac.
-1. Select the "System KeyChains" in the "Keychain Access" window.
-1. Click on the file that was copied to your Finder window and slide it into the "System Keychains" folder in"Keychain Access".
-1. Double-click the cert file in "Keychain Access" and select "Trust" and change the settings to "Always Trust" and exit the windows.
-1. Point your browser at you `api.XXXX` URL and repeat the process for it's certificate.
+1. `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain <APP-CERT-PEM-FILE>`
+1. `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain <API-CERT-PEM-FILE>`
