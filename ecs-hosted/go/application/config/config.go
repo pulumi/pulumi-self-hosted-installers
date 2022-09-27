@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/log"
 )
 
 func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {

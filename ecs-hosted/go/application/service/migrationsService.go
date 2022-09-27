@@ -9,10 +9,10 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ecs"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/utils"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/config"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/utils"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/common"
 )
 
 const cpu = 256
