@@ -167,6 +167,8 @@ github.com/pulumi/pulumi-aws/sdk/v4 v4.30.0 h1:mp11nW+Qx7wyvPRbLeQH+3OlLooSN9T6N
 github.com/pulumi/pulumi-aws/sdk/v4 v4.30.0/go.mod h1:cmji+08wmrwoWheCupYXaBQSLeibCNr4zXaqS6iYAys=
 github.com/pulumi/pulumi-random/sdk/v4 v4.3.1 h1:cAealv+SyjLhzlRSlb+rt81PJUJ6n85MIuYiflU4MQo=
 github.com/pulumi/pulumi-random/sdk/v4 v4.3.1/go.mod h1:E1FZfxGMnD67wo8ZROVFbaNvQ6ae3Om1uNeQr0fj1Rw=
+github.com/pulumi/pulumi-self-hosted-installers v1.15.0 h1:oS9FWJysFapRY0QIXcrk8Ko0TW8vLw5vLbZwhj/baU0=
+github.com/pulumi/pulumi-self-hosted-installers v1.15.0/go.mod h1:sTW5Lt4dQODUtJFqJ2vy1oktlftZNUbWKQ+Gb+/bs34=
 github.com/pulumi/pulumi/sdk/v3 v3.14.0/go.mod h1:aT7YmFdR6/T7tp2tMIZ68WRD1Xyv5a6Y4BhsuaCNpW0=
 github.com/pulumi/pulumi/sdk/v3 v3.22.1 h1:xmoxh08lhgQKgFkp8HcQ4NdFuetA5WgvwmY2yBW5wpM=
 github.com/pulumi/pulumi/sdk/v3 v3.22.1/go.mod h1:WHOQB00iuHZyXhwrymxpKXhpOahSguJIpRjVokmM11w=
