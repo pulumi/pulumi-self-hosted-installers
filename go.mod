@@ -1,4 +1,4 @@
-module github.com/pulumi/pulumi-self-hosted-installers
+module github.com/pulumi/pulumi-self-hosted-installers/quickstart-docker-compose
 
 go 1.17
 
