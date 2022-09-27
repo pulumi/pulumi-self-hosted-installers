@@ -6,10 +6,10 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/lb"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/utils"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/log"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/network"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/utils"
 )
 
 const consolePort = 3000

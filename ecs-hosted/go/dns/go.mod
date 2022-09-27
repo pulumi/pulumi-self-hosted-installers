@@ -1,4 +1,4 @@
-module github.com/pulumi/self-hosted/fully-managed-aws-ecs/dns
+module github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/dns
 
 go 1.14
 

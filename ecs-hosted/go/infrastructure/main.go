@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/common"
 )
 
 func getCommonName(first string, second string) string {

@@ -8,12 +8,12 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/kms"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/lb"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/s3"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/utils"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/config"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/log"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/network"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/utils"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/common"
 )
 
 const apiPort = 8080
