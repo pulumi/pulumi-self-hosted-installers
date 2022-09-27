@@ -33,7 +33,7 @@ func GetEnpointAddress(region string, endpoint string) string {
 	if strings.HasPrefix(regionLower, "cn-") {
 		// china enpoints all follow the {service}.{region}.amazonaws.com.cn
 		// we append "cn" to allow this to function
-		endpointAddress = fmt.Sprintf("cn.%s", endpoint)
+		endpointAddress = fmt.Sprintf("%s.cn", endpoint)
 	}
 
 	return endpointAddress
