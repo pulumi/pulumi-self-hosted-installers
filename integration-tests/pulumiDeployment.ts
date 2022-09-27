@@ -27,7 +27,6 @@ export class PulumiDeployment {
             if (!fs.existsSync(args.workDir)) {
                 throw new Error(`provided work dir '${args.workDir}' does not exist`);
             }
-
             this.localArgs = {
                 workDir: args.workDir,
                 stackName: args.stackName

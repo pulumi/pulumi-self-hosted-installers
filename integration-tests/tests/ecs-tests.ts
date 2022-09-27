@@ -42,6 +42,14 @@ if (licenseKey === "") {
 const domain = "pulumi-ce.team";
 const subDomain = "ecsintegration";
 
+const licenseKey = process.env["PULUMI_LICENSE_KEY"] || "";
+if (licenseKey === "") {
+    throw new Error("PULUMI_LICENSE_KEY not detected and is required");
+}
+
+const domain = "pulumi-ce.team";
+const subDomain = "ecsintegration";
+
 before(async () => {
     const helperStack = await ecsHelper.update({
         ...awsConfig,
@@ -72,6 +80,18 @@ before(async () => {
         ...awsConfig,
         "appStackReference": {value: `${org}/application-go/${stackName}`}
     });
+});
+
+after(async () => {
+    await dns.destroy();
+
+    await app.unprotectStateAll();
+    await app.destroy();
+
+    await infra.unprotectStateAll();
+    await infra.destroy();
+    
+    await ecsHelper.destroy();
 });
 
 after(async () => {
