@@ -59,8 +59,6 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		return nil, err
 	}
 
-	dbEngine := "aurora-mysql"
-	dbEngineVersion := "5.7.mysql_aurora.2.10.2"
 	clusterOpts := append(options, pulumi.Protect(true))
 	cluster, err := rds.NewCluster(ctx, ToCommonName(name, "aurora-cluster"), &rds.ClusterArgs{
 		ApplyImmediately:        pulumi.BoolPtr(true),
@@ -69,8 +67,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		DatabaseName:            pulumi.String("pulumi"),
 		DbSubnetGroupName:       subnetGroup.ID(), // misleading ... its ID not name
 		DeletionProtection:      pulumi.BoolPtr(false),
-		Engine:                  pulumi.String(dbEngine),
-		EngineVersion:           pulumi.String(dbEngineVersion),
+		Engine:                  pulumi.String("aurora"),
 		FinalSnapshotIdentifier: finalSnapshotId.Hex,
 		MasterUsername:          pulumi.String("pulumi"),
 		MasterPassword:          dbPassword.Result,
@@ -84,7 +81,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 
 	// Enable the general and slow query logs and write them to files on the RDS instance.
 	parameterGroup, err := rds.NewParameterGroup(ctx, ToCommonName(name, "instance-options"), &rds.ParameterGroupArgs{
-		Family: pulumi.String("aurora-mysql5.7"),
+		Family: pulumi.String("aurora5.6"),
 		Parameters: rds.ParameterGroupParameterArray{
 			&rds.ParameterGroupParameterArgs{
 				Name:  pulumi.String("slow_query_log"),
@@ -173,8 +170,6 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 			DbParameterGroupName: parameterGroup.Name,
 			MonitoringInterval:   pulumi.Int(5),
 			MonitoringRoleArn:    monitoringRole.Arn,
-			Engine:               pulumi.String(dbEngine),
-			EngineVersion:        pulumi.String(dbEngineVersion),
 		}, clusterOpts...)
 
 		if err != nil {
