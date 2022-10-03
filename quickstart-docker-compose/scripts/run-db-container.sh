@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # This script sets up a docker bridge network called pulumi-self-hosted-installers,
-# then starts a MySQL v5.6 container in that network.
+# then starts a MySQL v5.7 container in that network.
 # Lastly, it runs migrations against the MySQL instance running in the container.
 
 set -e
 
 # The docker image used for the database.
 if [ -z "${DEFAULT_DB_IMAGE:-}" ]; then
-  DEFAULT_DB_IMAGE=mysql:5.6
+  DEFAULT_DB_IMAGE=mysql:5.7
 fi
 
 # The port which the database is exposed.
@@ -47,7 +47,7 @@ fi
 MYSQL_CONT=$(docker ps --filter "name=pulumi-db" --format "{{.ID}}")
 
 if [ -z "${MYSQL_CONT:-}" ]; then
-    # Boot up a MySQL 5.6 database.
+    # Boot up a MySQL 5.7 database.
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p ${MYSQL_PORT}:3306 --rm -d \
         --network pulumi-self-hosted-installers \
