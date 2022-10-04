@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@pulumi/awsx": "^0.40.1",
+    "@pulumi/pulumi": "^3.40.2",
+    "@types/mocha": "^10.0.0",
+    "@types/superagent": "^4.1.15",
+    "mocha": "^10.0.0",
+    "superagent": "^8.0.2"
+  }
+}
