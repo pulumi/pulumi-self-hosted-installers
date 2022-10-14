@@ -13,7 +13,7 @@ Version ID | Date | K8s Version Supported | Note
 
 ## Prerequisites
 * K8s Cluster
-* MySQL 5.6 database server
+* MySQL 5.7 database server
   * At least 20GB SSD storage space
   * A databaser user that has the following grants:
     * `GRANT ALL PRIVILEGES ON 'pulumi'.* TO 'pulumi'@'%'`
@@ -44,6 +44,8 @@ This program deploys the following:
 * Ingress Controller
 
 See [Deploy 02-kubernetes](#deploy_02_kuberenetes)
+
+> ℹ️  If your infrastructure already has an ingress controller configured, modify the `02-kubernetes/index.ts` to export the ingress controller namespace and ingress controller service IP for use by `03-application`.
 
 ### 03-application
 
