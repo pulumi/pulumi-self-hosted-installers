@@ -1,0 +1,12 @@
+{
+    "name": "k8s-gke-02-kubernetes-cluster",
+    "devDependencies": {
+        "@types/node": "10.17.60"
+    },
+    "dependencies": {
+        "@pulumi/kubernetes": "3.19.2",
+        "@pulumi/pulumi": "3.33.2",
+        "@pulumi/random": "4.7.0",
+        "@pulumi/tls": "4.6.0"
+    }
+}

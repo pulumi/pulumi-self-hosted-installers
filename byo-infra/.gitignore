@@ -1,0 +1,6 @@
+/bin/
+/node_modules/
+temp
+Pulumi.*.yaml
+package-lock.json
+*.pem

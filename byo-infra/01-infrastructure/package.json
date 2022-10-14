@@ -1,0 +1,9 @@
+{
+    "name": "k8s-gke-01-infrastructure",
+    "devDependencies": {
+        "@types/node": "10.17.60"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "3.33.2"
+    }
+}
