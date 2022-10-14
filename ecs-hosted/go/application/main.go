@@ -5,12 +5,12 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/s3"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/service"
 	tls "github.com/pulumi/pulumi-tls/sdk/v4/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/config"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/log"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/network"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/application/service"
 )
 
 func main() {

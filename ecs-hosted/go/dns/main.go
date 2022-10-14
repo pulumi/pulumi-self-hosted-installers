@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/dns/config"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/self-hosted/fully-managed-aws-ecs/dns/config"
 	"strings"
 )
 
