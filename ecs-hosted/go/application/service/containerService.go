@@ -121,7 +121,7 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 			SecurityGroups: pulumi.StringArray{resource.SecurityGroup.ID()},
 		},
 		TaskDefinition:     taskDefinition.Arn,
-		WaitForSteadyState: pulumi.Bool(false),
+		WaitForSteadyState: pulumi.Bool(true),
 	}, options...)
 
 	if err != nil {

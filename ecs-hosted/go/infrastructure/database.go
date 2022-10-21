@@ -169,9 +169,9 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 	for i := 0; i < numberInstances; i++ {
 		instanceId := fmt.Sprintf("instance-%d", i)
 		_, err := rds.NewClusterInstance(ctx, ToCommonName(name, instanceId), &rds.ClusterInstanceArgs{
-			ClusterIdentifier:    cluster.ID(),
 			Engine:               pulumi.String(engine),
 			EngineVersion:        pulumi.String(engineVersion),
+			ClusterIdentifier:    cluster.ID(),
 			InstanceClass:        args.instanceType,
 			DbParameterGroupName: parameterGroup.Name,
 			MonitoringInterval:   pulumi.Int(5),

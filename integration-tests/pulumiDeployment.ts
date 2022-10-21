@@ -1,5 +1,6 @@
 
 import { OutputMap, LocalWorkspace, LocalProgramArgs, InlineProgramArgs, ConfigMap, Stack, PulumiFn } from "@pulumi/pulumi/automation";
+import * as fs from "fs";
 
 export interface PulumiDeploymentArgs {
     stackName: string;
@@ -14,11 +15,16 @@ export class PulumiDeployment {
     readonly inlineArgs?: InlineProgramArgs;
 
     constructor(args: PulumiDeploymentArgs) {
+
         if (args.workDir && (args.pulumiProgram || args.projectName)) {
             throw new Error("program and projectName must be empty if workdir is specified");    
         }
 
         if (args.workDir) {
+            if (!fs.existsSync(args.workDir)) {
+                throw new Error(`provided work dir '${args.workDir}' does not exist`);
+            }
+            
             this.localArgs = {
                 workDir: args.workDir,
                 stackName: args.stackName
