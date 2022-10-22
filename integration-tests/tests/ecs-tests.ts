@@ -34,8 +34,6 @@ const dns = new PulumiDeployment({
     workDir: upath.joinSafe(baseDir, "dns")
 });
 
-let deployments: PulumiDeployment[];
-
 const licenseKey = process.env["PULUMI_LICENSE_KEY"] || "";
 if (licenseKey === "") {
     throw new Error("PULUMI_LICENSE_KEY not detected and is required");
@@ -74,20 +72,18 @@ before(async () => {
         ...awsConfig,
         "appStackReference": {value: `${org}/application-go/${stackName}`}
     });
-
-    // add deployments in reverse order they were created, FIFO, so they are destroyed post test run
-    deployments = [
-        dns,
-        app,
-        infra,
-        ecsHelper
-    ];
 });
 
 after(async () => {
-    // for (const deployment of deployments) {
-    //     await deployment.destroy();
-    // }
+    await dns.destroy();
+
+    await app.unprotectStateAll();
+    await app.destroy();
+
+    await infra.unprotectStateAll();
+    await infra.destroy();
+    
+    await ecsHelper.destroy();
 });
 
 describe("Pulumi on AWS ECS Tests", () => {

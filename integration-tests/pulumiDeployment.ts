@@ -17,14 +17,14 @@ export class PulumiDeployment {
     constructor(args: PulumiDeploymentArgs) {
 
         if (args.workDir && (args.pulumiProgram || args.projectName)) {
-            throw new Error("program and projectName must be empty if workdir is specified");    
+            throw new Error("program and projectName must be empty if workdir is specified");
         }
 
         if (args.workDir) {
             if (!fs.existsSync(args.workDir)) {
                 throw new Error(`provided work dir '${args.workDir}' does not exist`);
             }
-            
+
             this.localArgs = {
                 workDir: args.workDir,
                 stackName: args.stackName
@@ -60,12 +60,23 @@ export class PulumiDeployment {
 
         console.info(`destroying stack ${this.args.stackName}...`)
 
-        await stack.destroy();
+        await stack.destroy({ onOutput: console.info });
     }
 
     async getOutputs(): Promise<OutputMap> {
         const stack = await this.createOrSelectStack();
         return stack.outputs();
+    }
+
+    async unprotectStateAll(): Promise<void> {
+        const stack = await this.createOrSelectStack();
+
+        const state = await stack.exportStack();
+        for (const resource of state.deployment.resources) {
+            resource.protect = false;
+        }
+
+        await stack.importStack(state);
     }
 
     private async createOrSelectStack(): Promise<Stack> {
