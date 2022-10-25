@@ -9,6 +9,9 @@ export interface PulumiDeploymentArgs {
     workDir?: string
 }
 
+/**
+ * Wrapper which simplifies stack actions allowing inline and local projects to be orchestrated through Pulumi's lifecycle (up/destroy/outputs/etc)
+ */
 export class PulumiDeployment {
     readonly args: PulumiDeploymentArgs;
     readonly localArgs?: LocalProgramArgs;
@@ -44,6 +47,11 @@ export class PulumiDeployment {
         this.args = args;
     }
 
+    /**
+     * Update the stack associated with this instance
+     * @param map Pulumi config to be set for stack
+     * @returns Outputs from stack
+     */
     async update(map: ConfigMap): Promise<OutputMap> {
         const stack = await this.createOrSelectStack();
 
@@ -55,6 +63,9 @@ export class PulumiDeployment {
         return result.outputs;
     }
 
+    /**
+     * Destroy the stack associated with this instance
+     */
     async destroy() {
         const stack = await this.createOrSelectStack();
 
@@ -63,11 +74,18 @@ export class PulumiDeployment {
         await stack.destroy({ onOutput: console.info });
     }
 
+    /**
+     * 
+     * @returns Retrieve the outputs associated with this stack
+     */
     async getOutputs(): Promise<OutputMap> {
         const stack = await this.createOrSelectStack();
         return stack.outputs();
     }
 
+    /**
+     * Unprotect all resources within the stack
+     */
     async unprotectStateAll(): Promise<void> {
         const stack = await this.createOrSelectStack();
 
@@ -79,6 +97,10 @@ export class PulumiDeployment {
         await stack.importStack(state);
     }
 
+    /**
+     * 
+     * @returns Create or select an existing stack based on the args passed to the constructor. Only one of inline/local should be populated
+     */
     private async createOrSelectStack(): Promise<Stack> {
         if (this.inlineArgs) {
             return await LocalWorkspace.createOrSelectStack(this.inlineArgs);
