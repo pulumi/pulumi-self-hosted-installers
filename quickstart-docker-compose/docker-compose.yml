@@ -45,11 +45,6 @@ services:
       # Policy pack object storage (configure one)
       PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:
       PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:
-
-      # SAML SSO Settings
-      SAML_CERTIFICATE_PUBLIC_KEY:
-      SAML_CERTIFICATE_PRIVATE_KEY:
-
       # AWS env vars
       AWS_REGION:
       AWS_PROFILE:
