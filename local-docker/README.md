@@ -22,7 +22,7 @@ The following are requirements of this deployment option:
 - Virtual machine or physical server with Docker Engine installed
     - At least 2 CPU cores w/ 8 GB memory
     - At least 20GB SSD storage space
-- MySQL 5.7 database
+- MySQL 8.0 database
     - At least 20GB SSD storage space
     - A databaser user that has the following grants:
         - `GRANT ALL PRIVILEGES ON 'pulumi'.* TO 'pulumi'@'%'`
