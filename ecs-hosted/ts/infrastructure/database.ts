@@ -7,7 +7,8 @@ import * as random from "@pulumi/random";
 import { getIamPolicyArn } from "../common/utils";
 
 const namespace = "pulumi:auroraDatabase";
-const engine = "aurora";
+const engine = "aurora-mysql";
+const engineVersion = "8.0.mysql_aurora.3.02.2";
 
 // standard mysql
 const databasePort = 3306;
@@ -62,6 +63,7 @@ export class Database extends pulumi.ComponentResource {
             dbSubnetGroupName: subnetGroup.id, // misleading...its ID not name
             deletionProtection: false,
             engine: engine,
+            engineVersion: engineVersion,
             finalSnapshotIdentifier: finalSnapshotIdentifier.hex,
             masterUsername: "pulumi",
             masterPassword: dbPassword.result,
@@ -70,7 +72,7 @@ export class Database extends pulumi.ComponentResource {
         }, pulumi.mergeOptions(options, { protect: true }));
 
         const databaseInstanceOptions = new rds.ParameterGroup(`${name}-instance-options`, {
-            family: "aurora5.6",
+            family: "aurora-mysql8.0",
             parameters: [
                 // Enable the general and slow query logs and write them to files on the RDS instance.
                 { name: "slow_query_log", value: "1" },
@@ -118,6 +120,8 @@ export class Database extends pulumi.ComponentResource {
 
             new rds.ClusterInstance(`${name}-instance-${i}`, {
                 clusterIdentifier: cluster.id,
+                engine: engine,
+                engineVersion: engineVersion,
                 instanceClass: args.instanceType,
                 dbParameterGroupName: databaseInstanceOptions.name,
                 monitoringInterval: 5,
