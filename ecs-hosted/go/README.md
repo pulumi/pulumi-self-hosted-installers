@@ -12,6 +12,7 @@ Version ID | Date | Note
 2 | 04/15/2022 | Golang application now supports Pulumi Service operating in a private, no public internet access environment. This configuration, which is disabled by default, can be enabled by setting the `enablePrivateLoadBalancerAndLimitEgress` configuration value in both the `application` and `dns` stack configurations.
 3 | 05/03/2022 | README.md split into Golang and Typescript specific versions
 4 | 05/10/2022 | Optional configuration parameter `imagePrefix` added for the Application project.
+5 | 01/20/2023 | MySQL 8 support.
 
 ## User Guides:
 
