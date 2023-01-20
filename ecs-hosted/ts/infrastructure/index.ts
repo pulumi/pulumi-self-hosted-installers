@@ -36,7 +36,7 @@ const s3Endpoint = new ec2.VpcEndpoint(`${config.commonName}-s3-endpoint`, {
 
 // retrieve the prefix id and export for downstream SGs to use
 const s3PrivatePrefixList = ec2.getPrefixListOutput({
-    name: s3Endpoint.prefixListId
+    prefixListId: s3Endpoint.prefixListId
 });
 
 new ec2.VpcEndpoint(`${config.commonName}-ecr-dkr-endpoint`, {

@@ -45,13 +45,17 @@ export class RdsDatabase extends pulumi.ComponentResource {
             byteLength: 6,
         });
 
+        const engine = "aurora-mysql";
+        const engineVersion = "8.0.mysql_aurora.3.02.2";
+
         let engineMode: aws.rds.EngineMode | undefined;
         this.db = new aws.rds.Cluster(`${name}-cluster`, {
             backupRetentionPeriod: 7,  // days
             databaseName: "pulumi",
             copyTagsToSnapshot: true,
             dbSubnetGroupName: this.dbSubnets.id,
-            engine: "aurora",
+            engine: engine,
+            engineVersion,
             engineMode: engineMode,
             masterUsername: "pulumi",
             masterPassword: this.password,
@@ -62,7 +66,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
         }, { protect: true, });
 
         let databaseInstanceOptions = new aws.rds.ParameterGroup("database-instance-options", {
-            family: "aurora5.6",
+            family: "aurora-mysql8.0",
             parameters: [
                 // Enable the general and slow query logs and write them to files on the RDS instance.
                 { name: "slow_query_log", value: "1" },
@@ -79,6 +83,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
             assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "monitoring.rds.amazonaws.com" }),
             tags,
         });
+
         let databaseMonitoringRolePolicy = new aws.iam.RolePolicyAttachment("databaseInstanceMonitoringRolePolicy", {
             role: databaseMonitoringRole,
             // value is not found: policyArn: aws.iam.AmazonRDSEnhancedMonitoringRole,
@@ -96,10 +101,12 @@ export class RdsDatabase extends pulumi.ComponentResource {
             instancesToCreate.push(`databaseInstance-${i}`);
         }
         for (const name of instancesToCreate) {
-            let databaseInstance = new aws.rds.ClusterInstance(
+            new aws.rds.ClusterInstance(
                 name,
                 {
                     clusterIdentifier: this.db.id,
+                    engine,
+                    engineVersion,
                     instanceClass: args.instanceType,
                     dbParameterGroupName: databaseInstanceOptions.name,
                     monitoringInterval: 5,

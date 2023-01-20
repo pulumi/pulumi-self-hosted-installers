@@ -56,7 +56,7 @@ func NewConfig(ctx *pulumi.Context) (*ConfigValues, error) {
 
 	configValues.dbInstanceType = appConfig.Get("dbInstanceType")
 	if configValues.dbInstanceType == "" {
-		configValues.dbInstanceType = "db.t3.small"
+		configValues.dbInstanceType = "db.t3.medium"
 	}
 
 	return &configValues, nil
