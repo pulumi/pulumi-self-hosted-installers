@@ -172,6 +172,8 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 			Engine:               pulumi.String(engine),
 			EngineVersion:        pulumi.String(engineVersion),
 			ClusterIdentifier:    cluster.ID(),
+			Engine:               pulumi.String(engine),
+			EngineVersion:        pulumi.String(engineVersion),
 			InstanceClass:        args.instanceType,
 			DbParameterGroupName: parameterGroup.Name,
 			MonitoringInterval:   pulumi.Int(5),
