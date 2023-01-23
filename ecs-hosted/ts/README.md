@@ -10,6 +10,7 @@ Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
+3 | 01/20/2023 | MySQL 8 support
 
 ## User Guides:
 
