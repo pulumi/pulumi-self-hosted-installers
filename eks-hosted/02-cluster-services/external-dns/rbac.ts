@@ -117,6 +117,16 @@ export function createClusterRole(
                     resources: ["nodes"],
                     verbs: ["list"],
                 },
+                {
+                    apiGroups: ["networking","networking.k8s.io"],
+                    resources: ["ingresses"],
+                    verbs: ["get","watch","list"]
+                },
+                {
+                    apiGroups: [""],
+                    resources: ["endpoints"],
+                    verbs: ["get","watch","list"]
+                },
             ],
         },
         { provider },

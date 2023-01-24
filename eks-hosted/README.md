@@ -413,6 +413,10 @@ Each update will take about 30-45 minutes but the service will be accessible dur
     5 changes. 84 unchanged
   Duration: 27m32s
 ```
+
+## Upgrading to MySQL 8 from MySQL 5.x
+Please contact Pulumi support (support@pulumi.com).
+
 # Clean up
 
 Run the following command to destroy and delete all of the stacks and resources
