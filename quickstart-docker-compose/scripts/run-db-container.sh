@@ -8,7 +8,7 @@ set -e
 
 # The docker image used for the database.
 if [ -z "${DEFAULT_DB_IMAGE:-}" ]; then
-  DEFAULT_DB_IMAGE=mysql:5.7
+  DEFAULT_DB_IMAGE=mysql:8.0
 fi
 
 # The port which the database is exposed.
@@ -47,7 +47,7 @@ fi
 MYSQL_CONT=$(docker ps --filter "name=pulumi-db" --format "{{.ID}}")
 
 if [ -z "${MYSQL_CONT:-}" ]; then
-    # Boot up a MySQL 5.7 database.
+    # Boot up a MySQL 8.0 database.
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p ${MYSQL_PORT}:3306 --rm -d \
         --network pulumi-self-hosted-installers \

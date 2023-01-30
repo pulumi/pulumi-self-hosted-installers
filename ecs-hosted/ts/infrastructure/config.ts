@@ -16,7 +16,7 @@ const publicSubnetIds: string[] = stackConfig.requireObject("publicSubnetIds");
 const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
 const isolatedSubnetIds: string[] = stackConfig.requireObject("isolatedSubnetIds");
 const numberDbReplicas = stackConfig.getNumber("numberDbReplicas") || 0;
-const dbInstanceType = stackConfig.get("dbInstanceType") || "db.t3.small";
+const dbInstanceType = stackConfig.get("dbInstanceType") || "db.t3.medium";
 
 export const config = {
     region,
