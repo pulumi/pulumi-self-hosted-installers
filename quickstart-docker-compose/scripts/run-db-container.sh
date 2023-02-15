@@ -52,7 +52,7 @@ if [ -z "${MYSQL_CONT:-}" ]; then
         --name pulumi-db -p ${MYSQL_PORT}:3306 --rm -d \
         --network pulumi-self-hosted-installers \
         -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
-        -e MYSQL_DATABASE=pulumi \
+        -e MYSQL_DATABASE="${PULUMI_DATABASE_NAME:-pulumi}" \
         -v "${MYSQL_DATA_PATH}":/var/lib/mysql \
        ${DEFAULT_DB_IMAGE})
 fi

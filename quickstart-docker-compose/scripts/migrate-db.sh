@@ -76,7 +76,7 @@ fi
 URL_ENCODED_DB_PASSWORD=$(python3 -c "import sys, urllib.parse as ul; \
     print (ul.quote_plus(sys.argv[1]))" "${DB_PASSWORD}")
 
-DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/pulumi${DB_QUERY_STRING}"
+DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/${PULUMI_LOCAL_DATABASE_NAME}${DB_QUERY_STRING}"
 
 if [ -z "${MIGRATIONS_DIR:-}" ]; then
     MIGRATIONS_DIR=migrations
