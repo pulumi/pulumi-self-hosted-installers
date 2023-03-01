@@ -55,15 +55,15 @@ else
     docker network create pulumi-self-hosted-installers
 fi
 
-if [ -z "${PULUMI_LOCAL_DATABASE_NAME:-}" ]; then
-    PULUMI_LOCAL_DATABASE_NAME=pulumi-db
+if [ -z "${PULUMI_LOCAL_DATABASE_HOST:-}" ]; then
+    PULUMI_LOCAL_DATABASE_HOST=pulumi-db
 fi
 
 if [ -z "${PULUMI_LOCAL_DATABASE_PORT:-}" ]; then
     PULUMI_LOCAL_DATABASE_PORT=3306
 fi
 
-export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_NAME}:${PULUMI_LOCAL_DATABASE_PORT}"
+export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_HOST}:${PULUMI_LOCAL_DATABASE_PORT}"
 
 if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" ]]; then
     echo "Checkpoint object storage configuration not found. Defaulting to local path..."
