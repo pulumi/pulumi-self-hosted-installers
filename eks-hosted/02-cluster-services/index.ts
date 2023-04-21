@@ -48,6 +48,7 @@ const extDns = new ExternalDns("external-dns", {
     provider: provider,
     namespace: config.clusterSvcsNamespaceName,
     commandArgs: [
+        "--source=service",
         "--source=ingress",
         "--domain-filter=" + config.hostedZoneDomainName, // will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
         "--provider=aws",
