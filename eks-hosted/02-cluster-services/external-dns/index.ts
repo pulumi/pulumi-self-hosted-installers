@@ -63,7 +63,7 @@ export function createDeployment(
     const podBuilder = new kx.PodBuilder({
         serviceAccountName: serviceAccountName,
         containers: [{
-            image: "us.gcr.io/k8s-artifacts-prod/external-dns/external-dns:v0.7.0",
+            image: "us.gcr.io/k8s-artifacts-prod/external-dns/external-dns:v0.13.2",
             args: commandArgs,
             resources: {requests: {cpu: "256m", memory: "256Mi"}},
             securityContext: {
