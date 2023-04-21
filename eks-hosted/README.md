@@ -15,6 +15,7 @@ Version ID | Date | K8s Version Supported | Note
 2.2 | April 25, 2022 | 1.22 | Updated and pinned package versions. 
 2.3 | July 19, 2022 | 1.22 | Updated and pinned package versions to address deprecation of earlier alpha version.
 3.0 | January 20, 2023 | 1.22 | MySQL 8 support and version updates for external-dns service.
+3.1 | April 20, 2023 | 1.22+ | Updated external-dns config and added note about using legacy stack naming for S3 backend.
 
 
 > ℹ️ See the **Updates and Upgrades** section below for how to upgrade from earlier versions of the installer and k8s and Pulumi service images.
@@ -101,6 +102,11 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     ```bash
     pulumi login s3://<bucket-name>
+    ```
+
+1. Enable legacy self managed stack naming to avoid using `org/project/stack` format before running the installer.
+    ```bash
+    export PULUMI_SELF_MANAGED_STATE_LEGACY_LAYOUT=1
     ```
 
 ## Using the Self-Hosted Installer
