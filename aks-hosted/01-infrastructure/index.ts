@@ -1,4 +1,4 @@
-import * as azure from "@pulumi/azure-native";
+import { resources } from "@pulumi/azure-native";
 import * as ad from "./activedirectory";
 import * as networking from "./network"
 import * as storage from "./storage";
@@ -6,10 +6,10 @@ import * as db from "./database";
 import * as key from "./keyStorage";
 import { config } from "./config";
 
-const resourceGroup = new azure.resources.ResourceGroup(`${config.resourceNamePrefix}-rg`, {
-    resourceGroupName: config.disableAutoNaming ? `${config.resourceNamePrefix}-rg`: undefined,
+const resourceGroup = new resources.ResourceGroup(`${config.resourceNamePrefix}-rg`, {
+    resourceGroupName: config.disableAutoNaming ? `${config.resourceNamePrefix}-rg` : undefined,
     tags: config.baseTags,
-}, {protect: true});
+}, { protect: true });
 
 const adApplication = new ad.ActiveDirectoryApplication(`${config.resourceNamePrefix}`);
 

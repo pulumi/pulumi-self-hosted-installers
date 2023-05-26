@@ -1,8 +1,8 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as k8s from "@pulumi/kubernetes"; 
-import {config} from "./config";
-import {KubernetesCluster} from "./cluster";
-import {NginxIngress} from "./helm-nginx-ingress";
+import { secret } from "@pulumi/pulumi";
+import { Provider } from "@pulumi/kubernetes";
+import { config } from "./config";
+import { KubernetesCluster } from "./cluster";
+import { NginxIngress } from "./helm-nginx-ingress";
 
 const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
     ADAdminGroupId: config.adGroupId,
@@ -12,15 +12,16 @@ const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
     tags: config.baseTags,
 });
 
-export const kubeconfig = pulumi.secret(cluster.Kubeconfig);
+export const kubeconfig = secret(cluster.Kubeconfig);
 
-const provider = new k8s.Provider("k8s-provider", {
+const provider = new Provider("k8s-provider", {
     kubeconfig,
-}, {dependsOn: cluster});
+    deleteUnreachable: true,
+}, { dependsOn: cluster });
 
 const ingress = new NginxIngress("pulumi-selfhosted", {
     provider,
-}, {dependsOn: cluster});
+}, { dependsOn: cluster });
 
 export const ingressNamespace = ingress.IngressNamespace;
 export const ingressServiceIp = ingress.IngressServiceIp;

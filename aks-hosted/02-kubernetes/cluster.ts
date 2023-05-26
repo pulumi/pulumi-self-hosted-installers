@@ -1,79 +1,75 @@
-import * as native from "@pulumi/azure-native";
-import * as pulumi from "@pulumi/pulumi";
-import * as tls from "@pulumi/tls";
+import { containerservice }  from "@pulumi/azure-native";
+import { PrivateKey } from "@pulumi/tls";
 import { config } from "./config";
-import { ComponentResourceOptions, Output } from "@pulumi/pulumi";
+import { Input, ComponentResource, ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
 
 interface KubernetesClusterArgs {
   ResourceGroupName: Output<string>;
   ADApplicationId: Output<string>;
   ADApplicationSecret: Output<string>;
   ADAdminGroupId: Output<string>;
-  tags?: pulumi.Input<{
-    [key: string]: pulumi.Input<string>;
+  tags?: Input<{
+    [key: string]: Input<string>;
   }>,
 }
 
-export class KubernetesCluster extends pulumi.ComponentResource {
+export class KubernetesCluster extends ComponentResource {
   public readonly Kubeconfig: Output<string>;
   public readonly Name: Output<string>;
   constructor(name: string, args: KubernetesClusterArgs, opts?: ComponentResourceOptions) {
     super("x:kubernetes:cluster", name, opts);
 
-    const sshPublicKey = new tls.PrivateKey(`${name}-sshKey`, {
-        algorithm: "RSA",
-        rsaBits: 4096,
-      },
+    const sshPublicKey = new PrivateKey(`${name}-sshKey`, {
+      algorithm: "RSA",
+      rsaBits: 4096,
+    },
       { additionalSecretOutputs: ["publicKeyOpenssh"], parent: this }
     ).publicKeyOpenssh;
 
     // Must use a shorter name due to https://aka.ms/aks-naming-rules.
-    const cluster = new native.containerservice.ManagedCluster(`${name}-aks`, {
-        resourceGroupName: args.ResourceGroupName,
-
-        servicePrincipalProfile: {
-          clientId: args.ADApplicationId,
-          secret: args.ADApplicationSecret,
+    const cluster = new containerservice.ManagedCluster(`${name}-aks`, {
+      resourceGroupName: args.ResourceGroupName,
+      servicePrincipalProfile: {
+        clientId: args.ADApplicationId,
+        secret: args.ADApplicationSecret,
+      },
+      enableRBAC: true,
+      aadProfile: {
+        managed: true,
+        adminGroupObjectIDs: [args.ADAdminGroupId],
+      },
+      agentPoolProfiles: [
+        {
+          count: 2,
+          mode: "System",
+          name: "agentpool",
+          nodeLabels: {},
+          osDiskSizeGB: 30,
+          osType: "Linux",
+          type: "VirtualMachineScaleSets",
+          vmSize: "Standard_DS3_v2",
+          vnetSubnetID: config.subnetId,
         },
-        enableRBAC: true,
-        aadProfile: {
-          managed: true,
-          adminGroupObjectIDs: [args.ADAdminGroupId],
+      ],
+      dnsPrefix: `${name}`,
+      linuxProfile: {
+        adminUsername: "adminpulumi",
+        ssh: {
+          publicKeys: [
+            {
+              keyData: sshPublicKey,
+            },
+          ],
         },
-        agentPoolProfiles: [
-          {
-            count: 2,
-            mode: "System",
-            name: "agentpool",
-            nodeLabels: {},
-            osDiskSizeGB: 30,
-            osType: "Linux",
-            type: "VirtualMachineScaleSets",
-            vmSize: "Standard_DS3_v2",
-            vnetSubnetID: config.subnetId,
-          },
-        ],
-        dnsPrefix: `${name}`,
-        linuxProfile: {
-          adminUsername: "adminpulumi",
-          ssh: {
-            publicKeys: [
-              {
-                keyData: sshPublicKey,
-              },
-            ],
-          },
-        },
-        kubernetesVersion: "1.21.9",
-        nodeResourceGroup: `${name}-aks-nodes-rg`,
+      },
+      kubernetesVersion: "1.26.3",
+      nodeResourceGroup: `${name}-aks-nodes-rg`,
+      tags: args.tags,
+    }, { parent: this, protect: true });
 
-        tags: args.tags,
-      }, {parent: this, protect: true});
-
-    const credentials = pulumi
-      .all([cluster.name, args.ResourceGroupName])
+    const credentials = all([cluster.name, args.ResourceGroupName])
       .apply(([clusterName, resourceGroupName]) => {
-        return native.containerservice.listManagedClusterAdminCredentials(
+        return containerservice.listManagedClusterAdminCredentials(
           {
             resourceGroupName: resourceGroupName,
             resourceName: clusterName,
