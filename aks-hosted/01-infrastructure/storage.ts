@@ -1,15 +1,14 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as azure from "@pulumi/azure-native";
-import { Output } from "@pulumi/pulumi";
+import { storage } from "@pulumi/azure-native";
+import { Input, Output, ComponentResource, ComponentResourceOptions, secret, all } from "@pulumi/pulumi";
 
 export interface StorageArgs {
     resourceGroupName: Output<string>,
-    tags?: pulumi.Input<{
-        [key: string]: pulumi.Input<string>;
+    tags?: Input<{
+        [key: string]: Input<string>;
     }>,
 };
 
-export class Storage extends pulumi.ComponentResource {
+export class Storage extends ComponentResource {
     public readonly storageAccountId: Output<string>;
     public readonly storageAccountName: Output<string>;
     public readonly storageAccountKey1: Output<string>;
@@ -22,33 +21,32 @@ export class Storage extends pulumi.ComponentResource {
         super("x:infrastructure:storage", name);
 
         // Uses a different resource name because of Azure's 24 character limit and global unique name requirements
-        const storageAccount = new azure.storage.StorageAccount("pulumi", {
+        const storageAccount = new storage.StorageAccount("pulumi", {
             resourceGroupName: args.resourceGroupName,
             sku: {
-                name: azure.storage.v20190601.SkuName.Standard_LRS,
+                name: storage.v20190601.SkuName.Standard_LRS,
             },
-            kind: azure.storage.v20190601.Kind.StorageV2,
+            kind: storage.v20190601.Kind.StorageV2,
             tags: args.tags,
         }, {parent: this, protect: true});
 
-        const checkpointBlob = new azure.storage.BlobContainer(`pulumicheckpoints`, {
+        const checkpointBlob = new storage.BlobContainer(`pulumicheckpoints`, {
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
         }, {parent: storageAccount, protect: true});
         
-        const policyBlob = new azure.storage.BlobContainer(`pulumipolicypacks`, {
+        const policyBlob = new storage.BlobContainer(`pulumipolicypacks`, {
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
         }, {parent: storageAccount, protect: true});
 
-        const storageAccountKeys = pulumi
-            .all([args.resourceGroupName, storageAccount.name])
+        const storageAccountKeys = all([args.resourceGroupName, storageAccount.name])
             .apply(([resourceGroupName, accountName]) =>
-                azure.storage.v20190601.listStorageAccountKeys({ resourceGroupName, accountName })
+                storage.v20190601.listStorageAccountKeys({ resourceGroupName, accountName })
             );
 
-        this.storageAccountKey1 = pulumi.secret(storageAccountKeys.keys[0].value);
-        this.storageAccountKey2 = pulumi.secret(storageAccountKeys.keys[1].value);
+        this.storageAccountKey1 = secret(storageAccountKeys.keys[0].value);
+        this.storageAccountKey2 = secret(storageAccountKeys.keys[1].value);
         this.checkpointBlobId = checkpointBlob.id;
         this.policyBlobId = policyBlob.id;
         this.storageAccountId = storageAccount.id

@@ -1,5 +1,5 @@
-import * as azuread from "@pulumi/azuread";
-import * as random from "@pulumi/random";
+import { Application, Group, ServicePrincipal, ServicePrincipalPassword } from "@pulumi/azuread";
+import { RandomPassword } from "@pulumi/random";
 import * as pulumi from "@pulumi/pulumi";
 import * as azure from "@pulumi/azure-native";
 import { Output, ComponentResourceOptions } from "@pulumi/pulumi";
@@ -22,29 +22,29 @@ export class ActiveDirectoryApplication extends pulumi.ComponentResource {
     const currentTenantId = clientConfig.then(x => x.tenantId);
     const currentSubscriptionId = clientConfig.then(x => x.subscriptionId);
 
-    const applicationServer = new azuread.Application(`${name}-app-server`, {
+    const applicationServer = new Application(`${name}-app-server`, {
       displayName: `${name}-app-server`,
-    }, {parent: this});
+    }, { parent: this });
 
-    const principalServer = new azuread.ServicePrincipal(`${name}-sp-server`, {
+    const principalServer = new ServicePrincipal(`${name}-sp-server`, {
       applicationId: applicationServer.applicationId,
-    }, {parent: applicationServer});
+    }, { parent: applicationServer });
 
-    const adminGroup = new azuread.Group(`${name}-ad-admingroup`, {
-        displayName: `${name}-ad-admingroup`,
-        members: [currentPrincipal, principalServer.objectId],
-      }, {parent: this});
+    const adminGroup = new Group(`${name}-ad-admingroup`, {
+      displayName: `${name}-ad-admingroup`,
+      members: [currentPrincipal, principalServer.objectId],
+    }, { parent: this });
 
-    const passwordServer = new random.RandomPassword(`${name}-pwd-server`, {
+    const passwordServer = new RandomPassword(`${name}-pwd-server`, {
       length: 20,
       special: true
-    }, {additionalSecretOutputs: ["result"], parent: this}).result;
+    }, { additionalSecretOutputs: ["result"], parent: this }).result;
 
-    const spPasswordServer = new azuread.ServicePrincipalPassword(`${name}-sppwd-server`,{
-        servicePrincipalId: principalServer.id,
-        value: passwordServer,
-        endDate: "2099-01-01T00:00:00Z",
-      }, {parent: principalServer});
+    const spPasswordServer = new ServicePrincipalPassword(`${name}-sppwd-server`, {
+      servicePrincipalId: principalServer.id,
+      value: passwordServer,
+      endDate: "2099-01-01T00:00:00Z",
+    }, { parent: principalServer });
 
     this.GroupId = adminGroup.id;
     this.ApplicationId = applicationServer.applicationId;
@@ -55,13 +55,13 @@ export class ActiveDirectoryApplication extends pulumi.ComponentResource {
     this.PrincipalServerObjectId = principalServer.objectId;
 
     this.registerOutputs({
-        GroupId: this.GroupId,
-        ApplicationId: this.ApplicationId,
-        ApplicationSecret: this.ApplicationSecret,
-        TenantId: this.TenantId,
-        SubscriptionId: this.SubscriptionId,
-        ApplicationObjectId: this.ApplicationObjectId,
-        PrincipalServerObjectId: this.PrincipalServerObjectId
+      GroupId: this.GroupId,
+      ApplicationId: this.ApplicationId,
+      ApplicationSecret: this.ApplicationSecret,
+      TenantId: this.TenantId,
+      SubscriptionId: this.SubscriptionId,
+      ApplicationObjectId: this.ApplicationObjectId,
+      PrincipalServerObjectId: this.PrincipalServerObjectId
     });
   }
 }

@@ -1,12 +1,11 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as k8s from "@pulumi/kubernetes";
-import * as kx from "@pulumi/kubernetesx";
-import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
+import { Provider } from "@pulumi/kubernetes";
+import { Secret } from "@pulumi/kubernetesx";
+import { Input, Output, ComponentResource, ComponentResourceOptions, interpolate } from "@pulumi/pulumi";
 
 export interface SecretsCollectionArgs {
     namespace: Input<string>,
     commonName: string,
-    provider: k8s.Provider,
+    provider: Provider,
     apiDomain: Input<string>
     secretValues: {
         licenseKey: Input<string>,
@@ -34,21 +33,21 @@ export interface SecretsCollectionArgs {
 }
 
 export class SecretsCollection extends ComponentResource {
-    LicenseKeySecret: kx.Secret;
-    ApiCertificateSecret: kx.Secret;
-    ConsoleCertificateSecret: kx.Secret;
-    DBConnSecret: kx.Secret;
-    SmtpSecret: kx.Secret;
-    RecaptchaSecret: kx.Secret;
+    LicenseKeySecret: Secret;
+    ApiCertificateSecret: Secret;
+    ConsoleCertificateSecret: Secret;
+    DBConnSecret: Secret;
+    SmtpSecret: Secret;
+    RecaptchaSecret: Secret;
     constructor(name: string, args: SecretsCollectionArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:secrets", name, opts);
 
-        this.LicenseKeySecret = new kx.Secret(`${args.commonName}-license-key`, {
+        this.LicenseKeySecret = new Secret(`${args.commonName}-license-key`, {
             metadata: { namespace: args.namespace },
             stringData: { key: args.secretValues.licenseKey },
         }, { provider: args.provider, parent: this });
 
-        this.ApiCertificateSecret = new kx.Secret(`${args.commonName}-api-tls`, {
+        this.ApiCertificateSecret = new Secret(`${args.commonName}-api-tls`, {
             metadata: {
                 namespace: args.namespace
             },
@@ -58,7 +57,7 @@ export class SecretsCollection extends ComponentResource {
             },
         }, { provider: args.provider, parent: this });
 
-        this.ConsoleCertificateSecret = new kx.Secret(`${args.commonName}-console-tls`, {
+        this.ConsoleCertificateSecret = new Secret(`${args.commonName}-console-tls`, {
             metadata: {
                 namespace: args.namespace
             },
@@ -68,19 +67,19 @@ export class SecretsCollection extends ComponentResource {
             },
         }, { provider: args.provider, parent: this });
         
-        this.DBConnSecret = new kx.Secret(`${args.commonName}-mysql-db-conn`, {
+        this.DBConnSecret = new Secret(`${args.commonName}-mysql-db-conn`, {
             metadata: {
                 namespace: args.namespace,
             },
             stringData: {
               host: args.secretValues.database.connectionString,
-              username: pulumi.interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
+              username: interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
               password: args.secretValues.database.password,
             },
           }, { provider: args.provider, parent: this });
         
 
-        this.SmtpSecret = new kx.Secret(`${args.commonName}-smtp-secret`, {
+        this.SmtpSecret = new Secret(`${args.commonName}-smtp-secret`, {
             metadata: {
                 namespace: args.namespace,
             },
@@ -92,7 +91,7 @@ export class SecretsCollection extends ComponentResource {
             }
         }, {provider: args.provider, parent: this});
 
-        this.RecaptchaSecret = new kx.Secret(`${args.commonName}-recaptcha-secret`, {
+        this.RecaptchaSecret = new Secret(`${args.commonName}-recaptcha-secret`, {
             metadata: {
                 namespace: args.namespace
             },

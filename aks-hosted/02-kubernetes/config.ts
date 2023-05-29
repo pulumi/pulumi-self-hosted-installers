@@ -1,13 +1,12 @@
-import * as pulumi from "@pulumi/pulumi";
-import { Output } from "@pulumi/pulumi";
+import { Config, Output, StackReference, getProject, getStack } from "@pulumi/pulumi";
 
-const stackConfig = new pulumi.Config();
+const stackConfig = new Config();
 
 const stackName1 = stackConfig.require("stackName1");
-const infrastructureStack = new pulumi.StackReference(stackName1);
+const infrastructureStack = new StackReference(stackName1);
 
-const projectName = pulumi.getProject();
-const stackName = pulumi.getStack();
+const projectName = getProject();
+const stackName = getStack();
 
 const commonName = "pulumi-selfhosted" || stackConfig.get("commonName");
 const resourceNamePrefix = `${commonName}-${stackName}`;

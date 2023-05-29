@@ -1,10 +1,10 @@
-import * as pulumi from "@pulumi/pulumi";
+import { Config, StackReference, getStack, getProject } from "@pulumi/pulumi";
 
-const stackConfig = new pulumi.Config();
+const stackConfig = new Config();
 
 const commonName = "pulumi-selfhosted" || stackConfig.get("commonName");
-const projectName = pulumi.getProject();
-const stackName = pulumi.getStack();
+const projectName = getProject();
+const stackName = getStack();
 
 const resourceNamePrefix = `${commonName}-${stackName}`;
 
@@ -13,8 +13,8 @@ const imageTag = stackConfig.require("imageTag");
 const stackName1 = stackConfig.require("stackName1");
 const stackName2 = stackConfig.require("stackName2");
 
-const infrastructureStack = new pulumi.StackReference(stackName1);
-const clusterStack = new pulumi.StackReference(stackName2);
+const infrastructureStack = new StackReference(stackName1);
+const clusterStack = new StackReference(stackName2);
 
 const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
