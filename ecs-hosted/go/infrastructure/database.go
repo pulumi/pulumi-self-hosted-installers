@@ -89,7 +89,11 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		Parameters: rds.ParameterGroupParameterArray{
 			&rds.ParameterGroupParameterArgs{
 				Name:  pulumi.String("slow_query_log"),
+				Value: pulumi.String("1"),
 			},
+			&rds.ParameterGroupParameterArgs{
+				Name:  pulumi.String("long_query_time"),
+				Value: pulumi.String("4.9"),
 			},
 			&rds.ParameterGroupParameterArgs{
 				Name:  pulumi.String("log_queries_not_using_indexes"),
@@ -165,8 +169,6 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 	for i := 0; i < numberInstances; i++ {
 		instanceId := fmt.Sprintf("instance-%d", i)
 		_, err := rds.NewClusterInstance(ctx, ToCommonName(name, instanceId), &rds.ClusterInstanceArgs{
-			Engine:               pulumi.String(engine),
-			EngineVersion:        pulumi.String(engineVersion),
 			ClusterIdentifier:    cluster.ID(),
 			Engine:               pulumi.String(engine),
 			EngineVersion:        pulumi.String(engineVersion),

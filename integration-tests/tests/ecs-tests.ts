@@ -3,6 +3,7 @@ import { pulumiProgram } from "../helpers/ecs-helper";
 import { expect } from "chai";
 import * as upath from "upath";
 import * as superagent from "superagent";
+import { SSM } from "@aws-sdk/client-ssm";
 
 const stackName = "integration";
 const awsConfig = {
@@ -34,23 +35,13 @@ const dns = new PulumiDeployment({
     workDir: upath.joinSafe(baseDir, "dns")
 });
 
-const licenseKey = process.env["PULUMI_LICENSE_KEY"] || "";
-if (licenseKey === "") {
-    throw new Error("PULUMI_LICENSE_KEY not detected and is required");
-}
-
-const domain = "pulumi-ce.team";
-const subDomain = "ecsintegration";
-
-const licenseKey = process.env["PULUMI_LICENSE_KEY"] || "";
-if (licenseKey === "") {
-    throw new Error("PULUMI_LICENSE_KEY not detected and is required");
-}
-
 const domain = "pulumi-ce.team";
 const subDomain = "ecsintegration";
 
 before(async () => {
+    const ssm = new SSM({ region: "us-west-2" });
+    const key = await ssm.getParameter({ Name: "ce-selfhosted-test-license-key", WithDecryption: true });
+    
     const helperStack = await ecsHelper.update({
         ...awsConfig,
         "domainName": { value: `${subDomain}.${domain}` },
@@ -70,7 +61,7 @@ before(async () => {
         "baseStackReference": { value: `${org}/infrastructure-go/${stackName}` },
         "acmCertificateArn": { value: helperStack["acmCertificateArn"].value },
         "kmsServiceKeyId": { value: helperStack["kmsServiceKeyId"].value },
-        "licenseKey": { value: licenseKey },
+        "licenseKey": { value: key.Parameter?.Value! },
         "imageTag": { value: "latest" },
         "route53Subdomain": { value: "ecsintegration" },
         "route53ZoneName": { value: "pulumi-ce.team" },
@@ -78,7 +69,7 @@ before(async () => {
 
     await dns.update({
         ...awsConfig,
-        "appStackReference": {value: `${org}/application-go/${stackName}`}
+        "appStackReference": { value: `${org}/application-go/${stackName}` }
     });
 });
 
@@ -90,24 +81,12 @@ after(async () => {
 
     await infra.unprotectStateAll();
     await infra.destroy();
-    
-    await ecsHelper.destroy();
-});
 
-after(async () => {
-    await dns.destroy();
-
-    await app.unprotectStateAll();
-    await app.destroy();
-
-    await infra.unprotectStateAll();
-    await infra.destroy();
-    
     await ecsHelper.destroy();
 });
 
 describe("Pulumi on AWS ECS Tests", () => {
-    it("api status page should return a 200", async () => {
+    it("console home page should return a 200", async () => {
         const outputs = await dns.getOutputs();
         const url = outputs["consoleUrl"].value;
         expect(url).to.be.a("string");
@@ -116,7 +95,7 @@ describe("Pulumi on AWS ECS Tests", () => {
         expect(response.statusCode).to.be.eq(200);
     });
 
-    it("console should return a 200", async () => {
+    it("api status page should return a 200", async () => {
         const outputs = await dns.getOutputs();
         const url = outputs["apiUrl"].value;
         expect(url).to.be.a("string");
