@@ -1,6 +1,7 @@
-import { Config, interpolate } from "@pulumi/pulumi";
+import { Config } from "@pulumi/pulumi";
 import * as awsx from "@pulumi/awsx";
 import * as aws from "@pulumi/aws";
+import { acmCertificateCreate } from "./utils";
 
 /*
 Below defines an inline helper program which stands up a vpc and all required pieces, plus, acm/route53 and kms pieces required for the ECS Hosted solution.
@@ -16,29 +17,7 @@ export const pulumiProgram = async () => {
 
     const account = await aws.getCallerIdentity();
 
-    // create cert
-    const zone = await aws.route53.getZone({
-        name: zoneName
-    });
-
-    const cert = new aws.acm.Certificate("cert", {
-        domainName: `*.${domainName}`,
-        validationMethod: "DNS"
-    });
-
-    const { resourceRecordName, resourceRecordValue, resourceRecordType } = cert.domainValidationOptions[0];
-    const record = new aws.route53.Record("cert-record", {
-        name: resourceRecordName,
-        records: [resourceRecordValue],
-        type: resourceRecordType,
-        zoneId: zone.id,
-        ttl: 60
-    });
-
-    new aws.acm.CertificateValidation("cert-validation", {
-        certificateArn: cert.arn,
-        validationRecordFqdns: [record.fqdn]
-    });
+    const cert = await acmCertificateCreate(zoneName, domainName);
 
     const key = new aws.kms.Key("service-key", {
         policy: JSON.stringify({

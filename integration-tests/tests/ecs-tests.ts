@@ -3,11 +3,12 @@ import { pulumiProgram } from "../helpers/ecs-helper";
 import { expect } from "chai";
 import * as upath from "upath";
 import * as superagent from "superagent";
-import { SSM } from "@aws-sdk/client-ssm";
+import { getLicenseKey } from "../helpers/utils";
 
+const awsRegion = "us-west-2";
 const stackName = "integration";
 const awsConfig = {
-    "aws:region": { value: "us-west-2" },
+    "aws:region": { value: awsRegion },
     "aws:profile": { value: "pulumi-ce" }
 };
 
@@ -39,9 +40,8 @@ const domain = "pulumi-ce.team";
 const subDomain = "ecsintegration";
 
 before(async () => {
-    const ssm = new SSM({ region: "us-west-2" });
-    const key = await ssm.getParameter({ Name: "ce-selfhosted-test-license-key", WithDecryption: true });
     
+    const licenseKey = await getLicenseKey(awsRegion);
     const helperStack = await ecsHelper.update({
         ...awsConfig,
         "domainName": { value: `${subDomain}.${domain}` },
@@ -61,7 +61,7 @@ before(async () => {
         "baseStackReference": { value: `${org}/infrastructure-go/${stackName}` },
         "acmCertificateArn": { value: helperStack["acmCertificateArn"].value },
         "kmsServiceKeyId": { value: helperStack["kmsServiceKeyId"].value },
-        "licenseKey": { value: key.Parameter?.Value! },
+        "licenseKey": { value: licenseKey },
         "imageTag": { value: "latest" },
         "route53Subdomain": { value: "ecsintegration" },
         "route53ZoneName": { value: "pulumi-ce.team" },
