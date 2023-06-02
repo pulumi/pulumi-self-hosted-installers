@@ -32,6 +32,10 @@ export class Network extends ComponentResource {
       serviceEndpoints: [{
         service: "Microsoft.Sql"
       }],
+      delegations: [{
+        name: "mysqldelegation",
+        serviceName: "Microsoft.DBforMySQL/flexibleServers"
+      }]
     }, { parent: vnet });
 
     this.subnetId = subnet.id;

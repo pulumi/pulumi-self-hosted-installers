@@ -24,9 +24,9 @@ export class Storage extends ComponentResource {
         const storageAccount = new storage.StorageAccount("pulumi", {
             resourceGroupName: args.resourceGroupName,
             sku: {
-                name: storage.v20190601.SkuName.Standard_LRS,
+                name: storage.SkuName.Standard_LRS,
             },
-            kind: storage.v20190601.Kind.StorageV2,
+            kind: storage.Kind.StorageV2,
             tags: args.tags,
         }, {parent: this, protect: true});
 
