@@ -5,6 +5,7 @@ import { Input, ComponentResource, ComponentResourceOptions, Output, all } from 
 
 interface KubernetesClusterArgs {
   ResourceGroupName: Output<string>;
+  SubnetId: Output<string>;
   ADApplicationId: Output<string>;
   ADApplicationSecret: Output<string>;
   ADAdminGroupId: Output<string>;
@@ -48,7 +49,7 @@ export class KubernetesCluster extends ComponentResource {
           osType: "Linux",
           type: "VirtualMachineScaleSets",
           vmSize: "Standard_DS3_v2",
-          vnetSubnetID: config.subnetId,
+          vnetSubnetID: args.SubnetId,
         },
       ],
       dnsPrefix: `${name}`,
