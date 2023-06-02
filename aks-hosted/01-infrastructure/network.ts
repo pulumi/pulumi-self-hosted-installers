@@ -5,14 +5,16 @@ import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pul
 export interface NetworkArgs {
   resourceGroupName: Output<string>,
   networkCidr: string,
-  subnetCidr: string,
+  dbSubnetCidr: string,
+  aksSubnetCidr: string,
   tags?: Input<{
     [key: string]: Input<string>;
   }>,
 };
 
 export class Network extends ComponentResource {
-  public readonly subnetId: Output<string>;
+  public readonly dbSubnetId: Output<string>;
+  public readonly aksSubnetId: Output<string>;
   constructor(name: string, args: NetworkArgs) {
     super("x:infrastructure:networking", name);
 
@@ -24,23 +26,34 @@ export class Network extends ComponentResource {
       tags: args.tags,
     }, { parent: this, ignoreChanges: ["subnets", "etags"] }); // ignore changes due to https://github.com/pulumi/pulumi-azure-native/issues/611#issuecomment-721490800
 
-    const subnet = new network.Subnet(`${name}-snet`, {
+    const dbSubnet = new network.Subnet(`${name}-dbsnet`, {
       resourceGroupName: args.resourceGroupName,
 
       virtualNetworkName: vnet.name,
-      addressPrefix: args.subnetCidr,
-      serviceEndpoints: [{
-        service: "Microsoft.Sql"
-      }],
+      addressPrefix: args.dbSubnetCidr,
+      
       delegations: [{
         name: "mysqldelegation",
         serviceName: "Microsoft.DBforMySQL/flexibleServers"
       }]
     }, { parent: vnet });
 
-    this.subnetId = subnet.id;
+    const aksSubnet = new network.Subnet(`${name}-akssnet`, {
+      resourceGroupName: args.resourceGroupName,
+
+      virtualNetworkName: vnet.name,
+      addressPrefix: args.aksSubnetCidr,
+      serviceEndpoints: [{
+        service: "Microsoft.Sql"
+      }],
+      
+    }, { parent: vnet });
+
+    this.dbSubnetId = dbSubnet.id;
+    this.aksSubnetId = aksSubnet.id;
     this.registerOutputs({
-      SubnetId: this.subnetId,
+      DbSubnetId: this.dbSubnetId,
+      AksSubnetId: this.aksSubnetId,
     });
   }
 }
