@@ -9,7 +9,8 @@ const commonName = "pulumiselfhosted" || stackConfig.get("commonName");
 const resourceNamePrefix = `${commonName}-${stackName}`;
 const disableAutoNaming = stackConfig.getBoolean("disableAutoNaming");
 const networkCidr = stackConfig.require("networkCidr");
-const subnetCidr = stackConfig.require("subnetCidr");
+const dbSubnetCidr = stackConfig.require("dbSubnetCidr");
+const aksSubnetCidr = stackConfig.require("aksSubnetCidr");
 
 export const config = {
   projectName,
@@ -17,7 +18,8 @@ export const config = {
   resourceNamePrefix,
   disableAutoNaming,
   networkCidr,
-  subnetCidr,
+  dbSubnetCidr,
+  aksSubnetCidr,
 
   baseTags: {
     project: projectName,

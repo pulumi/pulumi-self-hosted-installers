@@ -25,5 +25,5 @@ export const config = {
     adGroupId: <Output<string>>infrastructureStack.requireOutput("adGroupId"),
     adApplicationId: <Output<string>>infrastructureStack.requireOutput("adApplicationId"),
     adApplicationSecret: <Output<string>>infrastructureStack.requireOutput("adApplicationSecret"),
-    subnetId: <Output<string>>infrastructureStack.requireOutput("networkSubnetId"),
+    aksSubnetId: <Output<string>>infrastructureStack.requireOutput("aksSubnetId"),
 };

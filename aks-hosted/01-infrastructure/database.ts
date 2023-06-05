@@ -31,26 +31,19 @@ export class Database extends ComponentResource {
 
         const server = new dbformysql.Server(`${name}-mysql`, {
             resourceGroupName: args.resourceGroupName,
-            properties: {
-                administratorLogin: "pulumiadmin",
-                administratorLoginPassword: dbPassword.result,
-                createMode: "Default",
-                infrastructureEncryption: "Disabled",
-                minimalTlsVersion: "TLSEnforcementDisabled",
-                publicNetworkAccess: "Enabled", // allow traffic from vnet (not public) based on firewall rule below;
-                sslEnforcement: "Disabled",
-                storageProfile: {
-                    backupRetentionDays: 7,
-                    geoRedundantBackup: "Disabled",
-                    storageAutogrow: "Enabled",
-                    storageMB: 51200,
-                },
-                version: "8.0",
+            administratorLogin: "pulumiadmin",
+            administratorLoginPassword: dbPassword.result,
+            createMode: "Default",
+            network: {
+                delegatedSubnetResourceId: args.subnetId
             },
+            storage: {
+                storageSizeGB: 50,
+                autoGrow: "Enabled",
+            },
+            version: "8.0.21",
             sku: {
-                capacity: 4,
-                family: "Gen5",
-                name: "GP_Gen5_4",
+                name: "Standard_D2ads_v5",
                 tier: "GeneralPurpose",
             },
             tags: args.tags,
@@ -68,14 +61,23 @@ export class Database extends ComponentResource {
             value: "ON",
         }, { parent: server });
 
-        // this ensures access from vnet -> db
-        const vnetRule = new dbformysql.VirtualNetworkRule(`${name}-dbvnetrule`, {
+        const secure_configuration = new dbformysql.Configuration(`${name}-secure-config`, {
             resourceGroupName: args.resourceGroupName,
             serverName: server.name,
-            virtualNetworkSubnetId: args.subnetId,
-        }, { parent: server });
+            source: "user-override",
+            configurationName: "require_secure_transport",
+            value: "OFF",
+        })
 
-        const db = new dbformysql.Database(`${name}-mysql`, {
+        // // this ensures access from vnet -> db
+        // const vnetRule = new dbformysql.VirtualNetworkRule(`${name}-dbvnetrule`, {
+        //     resourceGroupName: args.resourceGroupName,
+        //     serverName: server.name,
+        //     virtualNetworkSubnetId: args.subnetId,
+        //     virtualNetworkRuleName: "dbvnetrule",
+        // }, { parent: server });
+
+        const db = new dbformysql.Database(`${name}-mysql-db`, {
             databaseName: "pulumi", // Must be named "pulumi".
             resourceGroupName: args.resourceGroupName,
             serverName: server.name,

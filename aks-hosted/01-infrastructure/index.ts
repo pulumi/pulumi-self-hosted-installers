@@ -16,8 +16,9 @@ const adApplication = new ad.ActiveDirectoryApplication(`${config.resourceNamePr
 const network = new networking.Network(`${config.resourceNamePrefix}`, {
     resourceGroupName: resourceGroup.name,
     networkCidr: config.networkCidr,
-    subnetCidr: config.subnetCidr,
+    dbSubnetCidr: config.dbSubnetCidr,
     tags: config.baseTags,
+    aksSubnetCidr: config.aksSubnetCidr,
 });
 
 const storageDetails = new storage.Storage(`${config.resourceNamePrefix}`, {
@@ -27,7 +28,7 @@ const storageDetails = new storage.Storage(`${config.resourceNamePrefix}`, {
 
 const database = new db.Database(`${config.resourceNamePrefix}`, {
     resourceGroupName: resourceGroup.name,
-    subnetId: network.subnetId,
+    subnetId: network.dbSubnetId,
     tags: config.baseTags,
 });
 
@@ -44,7 +45,7 @@ export const adApplicationId = adApplication.ApplicationId;
 export const adApplicationSecret = adApplication.ApplicationSecret
 export const tenantId = adApplication.TenantId;
 export const subscriptionId = adApplication.SubscriptionId;
-export const networkSubnetId = network.subnetId;
+export const aksSubnetId = network.aksSubnetId;
 export const storageAccountId = storageDetails.storageAccountId;
 export const storagePrimaryKey = storageDetails.storageAccountKey1;
 export const checkpointBlobId = storageDetails.checkpointBlobId;

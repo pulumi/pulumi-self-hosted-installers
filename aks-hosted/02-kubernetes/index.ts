@@ -10,6 +10,7 @@ const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
     ADApplicationSecret: config.adApplicationSecret,
     ResourceGroupName: config.resourceGroupName,
     tags: config.baseTags,
+    SubnetId: config.aksSubnetId
 });
 
 export const kubeconfig = secret(cluster.Kubeconfig);
