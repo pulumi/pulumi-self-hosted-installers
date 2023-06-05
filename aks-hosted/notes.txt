@@ -1,0 +1,9 @@
+- look into the route table issue brought forth by Eric
+- can we make streamlining the DNS easier?
+- https://www.jfe.cloud/the-case-of-the-missing-aks-route-table-assignment/ (from Eric's note above)
+- bump worker nodes as 18.04 is going out of LTS
+- update to azure-native v2? (how does this impact users?) 
+- setup a stack transfer session with Louis to bring his SaaS stack(s) to self-hosted
+- without SMTP, how can we get around needing to verify a user's email address so he/she can send/create invites
+- azure ad setup - get timeline and support from engineering
+- aks setup is publicly reachable....this is  user problem but we should be cognizant of it.
