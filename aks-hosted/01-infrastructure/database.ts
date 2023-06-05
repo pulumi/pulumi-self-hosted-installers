@@ -61,6 +61,14 @@ export class Database extends ComponentResource {
             value: "ON",
         }, { parent: server });
 
+        const secure_configuration = new dbformysql.Configuration(`${name}-secure-config`, {
+            resourceGroupName: args.resourceGroupName,
+            serverName: server.name,
+            source: "user-override",
+            configurationName: "require_secure_transport",
+            value: "OFF",
+        })
+
         // // this ensures access from vnet -> db
         // const vnetRule = new dbformysql.VirtualNetworkRule(`${name}-dbvnetrule`, {
         //     resourceGroupName: args.resourceGroupName,
