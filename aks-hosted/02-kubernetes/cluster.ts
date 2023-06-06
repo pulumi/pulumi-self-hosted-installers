@@ -65,6 +65,9 @@ export class KubernetesCluster extends ComponentResource {
       kubernetesVersion: "1.26.3",
       nodeResourceGroup: `${name}-aks-nodes-rg`,
       tags: args.tags,
+      networkProfile: {
+        networkPlugin: "azure"
+      }
     }, { parent: this, protect: true });
 
     const credentials = all([cluster.name, args.ResourceGroupName])
