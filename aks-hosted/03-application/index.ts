@@ -1,4 +1,4 @@
-import { interpolate, all } from "@pulumi/pulumi";
+import { interpolate, all, Input } from "@pulumi/pulumi";
 import { Provider, core, apps, networking } from "@pulumi/kubernetes";
 import { config } from "./config";
 import { SecretsCollection } from "./secrets";
@@ -311,13 +311,21 @@ const consoleService = new core.v1.Service(`${commonName}-${consoleName}`, {
   },
 }, { provider, parent: consoleDeployment });
 
+let ingressAnnotations: Input<{
+  [key: string]: Input<string>;
+}> = {
+  "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
+};
+
+if(config.ingressAllowList.length > 0) {
+  ingressAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"] = config.ingressAllowList;
+}
+
 new networking.v1.Ingress(`${commonName}-ingress`, {
   metadata: {
     name: "pulumi-service-ingress",
     namespace: appsNamespace.metadata.name,
-    annotations: {
-      "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
-    },
+    annotations: ingressAnnotations,
   },
   spec: {
     ingressClassName: "nginx",
