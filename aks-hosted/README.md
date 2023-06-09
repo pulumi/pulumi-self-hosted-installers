@@ -60,8 +60,11 @@ To deploy entire stack, run the following in your terminal:
 1. `pulumi stack init {stackName1}` - see note above about NO NUMBERS in stack name
 1. `pulumi config set azure-native:location {azure region}`
 1. `pulumi config set networkCidr 10.2.0.0/16` - this should be set to what you want your VNet cidr block to be
+**Note** if you elect to provide an existing Azure VirtualNetwork, instead of `networkCidr` you'll be required to provide the following:
+1. `pulumi config set virtualNetworkId /subscriptions/0282681f-7a9e-424b-80b2-96babd57a8a1/resourceGroups/someRG/providers/Microsoft.Network/virtualNetworks/some-vnet`
+1. `pulumi config set virtualNetworkResourceGroup someRG` (the resource groupname from the existing vnet)
 1. `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
-1. `az login` (to avoid the following error: Could not create service principal: graphrbac.ServicePrincipalsClient#Create: Failure )
+1. `az login` (to avoid the following error: Could not create service principal: graphrbac.ServicePrincipalsClient#Create: Failure)
 1. `pulumi up`
 1. `cd ../02-kubernetes`
 1. `npm install`

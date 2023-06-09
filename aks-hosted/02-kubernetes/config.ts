@@ -15,12 +15,10 @@ export const config = {
     projectName,
     stackName,
     resourceNamePrefix,
-
     baseTags: {
         project: projectName,
         stack: stackName,
     },
-    
     resourceGroupName: <Output<string>>infrastructureStack.requireOutput("resourceGroupName"),
     adGroupId: <Output<string>>infrastructureStack.requireOutput("adGroupId"),
     adApplicationId: <Output<string>>infrastructureStack.requireOutput("adApplicationId"),
