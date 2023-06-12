@@ -64,6 +64,9 @@ export class KubernetesCluster extends ComponentResource {
       },
       kubernetesVersion: "1.26.3",
       nodeResourceGroup: `${name}-aks-nodes-rg`,
+      networkProfile: {
+        networkPlugin: "azure",
+      },
       tags: args.tags,
       networkProfile: {
         networkPlugin: "azure"

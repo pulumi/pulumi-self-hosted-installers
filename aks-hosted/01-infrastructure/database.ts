@@ -60,7 +60,7 @@ export class Database extends ComponentResource {
         });
 
         // https://docs.microsoft.com/en-us/azure/mysql/howto-troubleshoot-common-errors#error-1419-you-do-not-have-the-super-privilege-and-binary-logging-is-enabled-you-might-want-to-use-the-less-safe-log_bin_trust_function_creators-variable
-        const configuration = new dbformysql.Configuration(`${name}-config`, {
+        new dbformysql.Configuration(`${name}-config`, {
             resourceGroupName: args.resourceGroupName,
             serverName: server.name,
             source: "user-override",
@@ -97,4 +97,5 @@ export class Database extends ComponentResource {
             DatabaseServerName: this.DatabaseServerName,
         });
     }
+
 }

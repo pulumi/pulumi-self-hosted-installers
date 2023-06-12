@@ -1,12 +1,8 @@
 import { Application, Group, ServicePrincipal, ServicePrincipalPassword } from "@pulumi/azuread";
-import { RandomPassword } from "@pulumi/random";
-import * as pulumi from "@pulumi/pulumi";
-import * as azure from "@pulumi/azure-native";
-import { Output, ComponentResourceOptions } from "@pulumi/pulumi";
-import { tenantId } from "@pulumi/azure-native/config";
-import { subscription } from "@pulumi/azure-native/types/enums";
+import { Output, ComponentResource, ComponentResourceOptions, output } from "@pulumi/pulumi";
+import { authorization } from "@pulumi/azure-native";
 
-export class ActiveDirectoryApplication extends pulumi.ComponentResource {
+export class ActiveDirectoryApplication extends ComponentResource {
   public readonly GroupId: Output<string>;
   public readonly ApplicationId: Output<string>;
   public readonly ApplicationSecret: Output<string>;
@@ -17,7 +13,7 @@ export class ActiveDirectoryApplication extends pulumi.ComponentResource {
   constructor(name: string, opts?: ComponentResourceOptions) {
     super("x:infrastructure:activedirectoryapplication", name, opts);
 
-    const clientConfig = azure.authorization.getClientConfig();
+    const clientConfig = authorization.getClientConfig();
     const currentPrincipal = clientConfig.then((x) => x.objectId);
     const currentTenantId = clientConfig.then(x => x.tenantId);
     const currentSubscriptionId = clientConfig.then(x => x.subscriptionId);
@@ -35,22 +31,16 @@ export class ActiveDirectoryApplication extends pulumi.ComponentResource {
       members: [currentPrincipal, principalServer.objectId],
     }, { parent: this });
 
-    const passwordServer = new RandomPassword(`${name}-pwd-server`, {
-      length: 20,
-      special: true
-    }, { additionalSecretOutputs: ["result"], parent: this }).result;
-
     const spPasswordServer = new ServicePrincipalPassword(`${name}-sppwd-server`, {
       servicePrincipalId: principalServer.id,
-      value: passwordServer,
       endDate: "2099-01-01T00:00:00Z",
     }, { parent: principalServer });
 
     this.GroupId = adminGroup.id;
     this.ApplicationId = applicationServer.applicationId;
     this.ApplicationSecret = spPasswordServer.value;
-    this.TenantId = pulumi.output(currentTenantId);
-    this.SubscriptionId = pulumi.output(currentSubscriptionId);
+    this.TenantId = output(currentTenantId);
+    this.SubscriptionId = output(currentSubscriptionId);
     this.ApplicationObjectId = applicationServer.objectId;
     this.PrincipalServerObjectId = principalServer.objectId;
 
