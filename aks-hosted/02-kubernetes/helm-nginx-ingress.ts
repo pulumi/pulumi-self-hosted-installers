@@ -2,12 +2,12 @@ import { core, Provider, helm } from "@pulumi/kubernetes";
 import { ComponentResource, Input, ComponentResourceOptions, Output, interpolate } from "@pulumi/pulumi";
 
 export interface NginxIngressArgs {
-    provider: Provider
+    provider: Provider;
+    publicIpAddress: Output<string>;
 };
 
 export class NginxIngress extends ComponentResource {
     public readonly IngressNamespace: Output<string>;
-    public readonly IngressServiceIp: Output<string>;
     constructor(name: string, args: NginxIngressArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:nginxingress", name);
 
@@ -39,6 +39,7 @@ export class NginxIngress extends ComponentResource {
                     },
                     service: {
                         "externalTrafficPolicy":"Local", // https://github.com/MicrosoftDocs/azure-docs/issues/92179#issuecomment-1169809165
+                        "loadBalancerIP": args.publicIpAddress,
                     },
                 },
                 defaultBackend: {
@@ -50,12 +51,8 @@ export class NginxIngress extends ComponentResource {
         }, {provider: args.provider, dependsOn: opts?.dependsOn, parent: ingressNamespace})
 
         this.IngressNamespace = ingressNamespace.metadata.name;
-        const service = core.v1.Service.get("ingress-service", interpolate`${nginx.status.namespace}/${nginx.status.name}-ingress-nginx-controller`, {provider: args.provider});
-        this.IngressServiceIp = service.status.loadBalancer.ingress[0].ip;
-    
         this.registerOutputs({
             IngressNamespace: this.IngressNamespace,
-            IngressServiceIp: this.IngressServiceIp,
         });
     }
 }
