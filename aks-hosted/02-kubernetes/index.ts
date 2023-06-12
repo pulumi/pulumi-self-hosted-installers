@@ -21,8 +21,10 @@ const provider = new Provider("k8s-provider", {
 
 const ingress = new NginxIngress("pulumi-selfhosted", {
     provider,
+    publicIpAddress: cluster.PublicIp,
 }, { dependsOn: cluster });
 
+export const publicIp = cluster.PublicIp;
 export const ingressNamespace = ingress.IngressNamespace;
-export const ingressServiceIp = ingress.IngressServiceIp;
+//export const ingressServiceIp = ingress.IngressServiceIp;
 export const stackName2 = config.stackName;
