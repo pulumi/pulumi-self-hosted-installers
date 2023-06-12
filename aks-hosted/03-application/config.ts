@@ -64,4 +64,5 @@ export const config = {
     recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
     recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
     samlEnabled: stackConfig.get("samlEnabled") || "false",
+    ingressAllowList: stackConfig.get("ingressAllowList") || "",
 };
