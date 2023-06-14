@@ -3,8 +3,16 @@ import { SSM } from "@aws-sdk/client-ssm";
 import { route53, acm, } from "@pulumi/aws";
 
 export const getLicenseKey = async (region: string): Promise<string> => {
+    const keyFromEnv = process.env["PULUMI_LICENSE_KEY"];
+    if (keyFromEnv) {
+        console.log("retrieved self-hosted licnese key from environment\n");
+        return keyFromEnv;
+    }
+
     const ssm = new SSM({ region });
     const key = await ssm.getParameter({ Name: "ce-selfhosted-test-license-key", WithDecryption: true });
+    console.log("retrieved self-hosted license key from Pulumi CE AWS account\n");
+
     return key.Parameter?.Value!;
 };
 

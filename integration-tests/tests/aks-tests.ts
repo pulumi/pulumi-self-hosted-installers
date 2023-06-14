@@ -1,16 +1,22 @@
 import { PulumiDeployment } from "../pulumiDeployment";
-import { pulumiProgram } from "../helpers/ecs-helper";
 import { expect } from "chai";
 import * as upath from "upath";
 import * as superagent from "superagent";
 import { getLicenseKey } from "../helpers/utils";
+import { pulumiProgram } from "../helpers/aks-helper";
 
 const awsRegion = "us-west-2";
 const azureLocation = "WestUS";
 const stackName = "integration";
+
+const subId = process.env["AZURE_SUBSCRIPTION_ID"];
+if (!subId) {
+    throw new Error("AZURE_SUBSCRIPTION_ID environment variable must be present");
+}
+
 const azureConfig = {
     "azure-native:location": { value: azureLocation },
-    "azure-native:subscriptionId": { value: "" }
+    "azure-native:subscriptionId": { value: subId! }
 };
 
 const org = "team-ce";
@@ -31,8 +37,13 @@ const apps = new PulumiDeployment({
     workDir: upath.joinSafe(baseDir, "03-application")
 });
 
-const domain = "pulumi-ce.team";
-const subDomain = "ecsintegration";
+const dnsHelper = new PulumiDeployment({
+    stackName: stackName,
+    projectName: "aks-dns-helper",
+    pulumiProgram: pulumiProgram
+});
+
+const domain = "pulumi-dev.net";
 
 before(async () => {
 
@@ -42,23 +53,33 @@ before(async () => {
         ...azureConfig,
         "networkCidr": { value: "10.100.0.0/16" },
         "subnetCidr": { value: "10.100.0.0/24" },
-    });
+    }, true);
 
     await kubernetes.update({
         ...azureConfig,
-        "stackName1": { value: `${org}/01-infrastructure/${stackName}` },
-    });
+        "stackName1": { value: `${org}/k8s-azure-01-infrastructure/${stackName}` },
+    }, true);
+
+    const helper = await dnsHelper.update({
+        ...azureConfig,
+        "k8sStackRef": { value: `${org}/k8s-azure-02-kubernetes-cluster/${stackName}` },
+        "resourceGroup": { value: "pulumi-dev-shared" },
+        "zoneName": { value: domain }
+    }, true);
 
     await apps.update({
         ...azureConfig,
-        "stackName1": { value: `${org}/01-infrastructure/${stackName}` },
-        "stackName2": { value: `${org}/02-kubernetes/${stackName}` },
+        "stackName1": { value: `${org}/k8s-azure-01-infrastructure/${stackName}` },
+        "stackName2": { value: `${org}/k8s-azure-02-kubernetes-cluster/${stackName}` },
         "imageTag": { value: "latest" },
         "licenseKey": { value: licenseKey },
-        "apiDomain": { value: "apiaks.pulumi-ce.team" },
-        "consoleDomain": { value: "consoleaks.pulumi-ce.team" },
-
-    });
+        "apiDomain": { value: `api.aks.${domain}` },
+        "consoleDomain": { value: `app.aks.${domain}` },
+        "apiTlsKey": { value: helper["apiKey"].value },
+        "apiTlsCert": { value: helper["apiCert"].value },
+        "consoleTlsKey": { value: helper["consoleKey"].value },
+        "consoleTlsCert": { value: helper["consoleCert"].value },
+    }, true);    
 });
 
 after(async () => {
@@ -70,25 +91,17 @@ after(async () => {
     await infra.unprotectStateAll();
     await infra.destroy();
 
-    //await ecsHelper.destroy();
+    await dnsHelper.destroy();
 });
 
-describe("Pulumi on AWS ECS Tests", () => {
+describe("Pulumi on Azure AKS Tests", () => {
     it("console home page should return a 200", async () => {
-        const outputs = await dns.getOutputs();
-        const url = outputs["consoleUrl"].value;
-        expect(url).to.be.a("string");
-
-        const response = await superagent.get(url);
+        const response = await superagent.get(`https://app.aks.${domain}`).disableTLSCerts();
         expect(response.statusCode).to.be.eq(200);
     });
 
     it("api status page should return a 200", async () => {
-        const outputs = await dns.getOutputs();
-        const url = outputs["apiUrl"].value;
-        expect(url).to.be.a("string");
-
-        const response = await superagent.get(`${url}/api/status`);
+        const response = await superagent.get(`https://api.aks.${domain}/api/status`).disableTLSCerts();
         expect(response.statusCode).to.be.eq(200);
     });
 })

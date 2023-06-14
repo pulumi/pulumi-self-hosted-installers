@@ -16,9 +16,7 @@ export const pulumiProgram = async () => {
     });
 
     const account = await aws.getCallerIdentity();
-
     const cert = await acmCertificateCreate(zoneName, domainName);
-
     const key = new aws.kms.Key("service-key", {
         policy: JSON.stringify({
             Version: "2012-10-17",

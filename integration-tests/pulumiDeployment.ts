@@ -51,13 +51,16 @@ export class PulumiDeployment {
      * @param map Pulumi config to be set for stack
      * @returns Outputs from stack
      */
-    async update(map: ConfigMap): Promise<OutputMap> {
+    async update(map: ConfigMap, refresh?: boolean): Promise<OutputMap> {
         const stack = await this.createOrSelectStack();
 
         await stack.setAllConfig(map);
 
         console.info
 
+        if (refresh) {
+            await stack.refresh({ onOutput: console.info });
+        }
         const result = await stack.up({ onOutput: console.info });
         return result.outputs;
     }
