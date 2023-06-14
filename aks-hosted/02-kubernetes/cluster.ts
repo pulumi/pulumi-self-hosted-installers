@@ -70,9 +70,6 @@ export class KubernetesCluster extends ComponentResource {
         networkPlugin: "azure",
       },
       tags: args.tags,
-      networkProfile: {
-        networkPlugin: "azure"
-      }
     }, { parent: this, protect: true });
 
     const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
