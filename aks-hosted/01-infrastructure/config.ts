@@ -11,14 +11,14 @@ const subnetCidr = stackConfig.require("subnetCidr");
 const networkCidr = stackConfig.get("networkCidr");
 
 // if a user does elect to BYO vnet, they will be required to also supply the resource group name that houses the vnet
-const vnetId = stackConfig.get("virtualNetworkId");
+const vnetName = stackConfig.get("virtualNetworkName");
 
-if (!networkCidr && !vnetId) {
+if (!networkCidr && !vnetName) {
   throw new Error("Either networkCidr or virtualNetworkId must be present");
 }
 
 let vnetResourceGroup = "";
-if (vnetId) {
+if (vnetName) {
   vnetResourceGroup = stackConfig.require("virtualNetworkResourceGroup");
 }
 
@@ -29,7 +29,7 @@ export const config = {
   disableAutoNaming,
   networkCidr,
   subnetCidr,
-  vnetId,
+  vnetName,
   vnetResourceGroup,
   baseTags: {
     project: projectName,
