@@ -31,7 +31,7 @@ export class KubernetesCluster extends ComponentResource {
     ).publicKeyOpenssh;
 
     const nodeRgName = `${name}-aks-nodes-rg`;
-    const clusterArgs: containerservice.v20220302preview.ManagedClusterArgs = {
+    const clusterArgs: containerservice.v20230102preview.ManagedClusterArgs = {
       resourceGroupName: args.resourceGroupName,
       servicePrincipalProfile: {
         clientId: args.aDApplicationId,
@@ -91,7 +91,7 @@ export class KubernetesCluster extends ComponentResource {
     }
 
     // Must use a shorter name due to https://aka.ms/aks-naming-rules.
-    const cluster = new containerservice.v20220302preview.ManagedCluster(`${name}-aks`, clusterArgs, { parent: this, protect: true });
+    const cluster = new containerservice.v20230102preview.ManagedCluster(`${name}-aks`, clusterArgs, { parent: this, protect: true });
 
     const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
     const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {

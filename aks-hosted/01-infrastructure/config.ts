@@ -14,7 +14,7 @@ const networkCidr = stackConfig.get("networkCidr");
 const vnetName = stackConfig.get("virtualNetworkName");
 
 if (!networkCidr && !vnetName) {
-  throw new Error("Either networkCidr or virtualNetworkId must be present");
+  throw new Error("Either networkCidr or virtualNetworkName must be present");
 }
 
 let vnetResourceGroup = "";
