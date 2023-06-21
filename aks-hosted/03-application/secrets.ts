@@ -9,10 +9,10 @@ export interface SecretsCollectionArgs {
     apiDomain: Input<string>
     secretValues: {
         licenseKey: Input<string>,
-        apiTlsKey: Output<string>,
-        apiTlsCert: Output<string>,
-        consoleTlsKey: Output<string>,
-        consoleTlsCert: Output<string>,
+        apiTlsKey: Output<string> | undefined,
+        apiTlsCert: Output<string> | undefined,
+        consoleTlsKey: Output<string> | undefined,
+        consoleTlsCert: Output<string> | undefined,
         database: {
             connectionString: Input<string>,
             login: Input<string>,
@@ -34,8 +34,8 @@ export interface SecretsCollectionArgs {
 
 export class SecretsCollection extends ComponentResource {
     LicenseKeySecret: Secret;
-    ApiCertificateSecret: Secret;
-    ConsoleCertificateSecret: Secret;
+    ApiCertificateSecret: Secret | undefined;
+    ConsoleCertificateSecret: Secret | undefined;
     DBConnSecret: Secret;
     SmtpSecret: Secret;
     RecaptchaSecret: Secret;
@@ -47,37 +47,42 @@ export class SecretsCollection extends ComponentResource {
             stringData: { key: args.secretValues.licenseKey },
         }, { provider: args.provider, parent: this });
 
-        this.ApiCertificateSecret = new Secret(`${args.commonName}-api-tls`, {
-            metadata: {
-                namespace: args.namespace
-            },
-            data: {
-                "tls.key": args.secretValues.apiTlsKey.apply(it=>Buffer.from(it).toString("base64")),
-                "tls.crt": args.secretValues.apiTlsCert.apply(it=>Buffer.from(it).toString("base64")),
-            },
-        }, { provider: args.provider, parent: this });
+        // TODO: if cert-manager is enabled do not create api/console certs
+        if (args.secretValues.apiTlsCert && args.secretValues.apiTlsKey) {
+            this.ApiCertificateSecret = new Secret(`${args.commonName}-api-tls`, {
+                metadata: {
+                    namespace: args.namespace
+                },
+                data: {
+                    "tls.key": args.secretValues.apiTlsKey.apply(it => Buffer.from(it).toString("base64")),
+                    "tls.crt": args.secretValues.apiTlsCert.apply(it => Buffer.from(it).toString("base64")),
+                },
+            }, { provider: args.provider, parent: this });
+        }
 
-        this.ConsoleCertificateSecret = new Secret(`${args.commonName}-console-tls`, {
-            metadata: {
-                namespace: args.namespace
-            },
-            data: {
-                "tls.key": args.secretValues.consoleTlsKey.apply(it=>Buffer.from(it).toString("base64")),
-                "tls.crt": args.secretValues.consoleTlsCert.apply(it=>Buffer.from(it).toString("base64")),
-            },
-        }, { provider: args.provider, parent: this });
+        if (args.secretValues.consoleTlsCert && args.secretValues.consoleTlsKey) {
+            this.ConsoleCertificateSecret = new Secret(`${args.commonName}-console-tls`, {
+                metadata: {
+                    namespace: args.namespace
+                },
+                data: {
+                    "tls.key": args.secretValues.consoleTlsKey.apply(it => Buffer.from(it).toString("base64")),
+                    "tls.crt": args.secretValues.consoleTlsCert.apply(it => Buffer.from(it).toString("base64")),
+                },
+            }, { provider: args.provider, parent: this });
+        }
         
         this.DBConnSecret = new Secret(`${args.commonName}-mysql-db-conn`, {
             metadata: {
                 namespace: args.namespace,
             },
             stringData: {
-              host: args.secretValues.database.connectionString,
-              username: interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
-              password: args.secretValues.database.password,
+                host: args.secretValues.database.connectionString,
+                username: interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
+                password: args.secretValues.database.password,
             },
-          }, { provider: args.provider, parent: this });
-        
+        }, { provider: args.provider, parent: this });
+
 
         this.SmtpSecret = new Secret(`${args.commonName}-smtp-secret`, {
             metadata: {
@@ -89,7 +94,7 @@ export class SecretsCollection extends ComponentResource {
                 password: args.secretValues.smtpDetails.smtpPassword,
                 fromaddress: args.secretValues.smtpDetails.smtpFromAddress,
             }
-        }, {provider: args.provider, parent: this});
+        }, { provider: args.provider, parent: this });
 
         this.RecaptchaSecret = new Secret(`${args.commonName}-recaptcha-secret`, {
             metadata: {
@@ -99,8 +104,8 @@ export class SecretsCollection extends ComponentResource {
                 secretKey: args.secretValues.recaptcha.secretKey,
                 siteKey: args.secretValues.recaptcha.siteKey
             }
-        }, {provider: args.provider, parent: this});
-    
+        }, { provider: args.provider, parent: this });
+
         this.registerOutputs({
             LicenseKeySecret: this.LicenseKeySecret,
             ApiCertificateSecret: this.ApiCertificateSecret,

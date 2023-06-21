@@ -1,19 +1,22 @@
-import { secret } from "@pulumi/pulumi";
+import { secret, output, Output } from "@pulumi/pulumi";
 import { Provider } from "@pulumi/kubernetes";
 import { config } from "./config";
 import { KubernetesCluster } from "./cluster";
 import { NginxIngress } from "./helm-nginx-ingress";
+import { CertManager } from "./cert-manager";
+import { Identity } from "./identity";
 
+const certManagerNamespaceName = "pulumi-selfhosted-certmanager";
 const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
-    ADAdminGroupId: config.adGroupId,
-    ADApplicationId: config.adApplicationId,
-    ADApplicationSecret: config.adApplicationSecret,
-    ResourceGroupName: config.resourceGroupName,
+    aDAdminGroupId: config.adGroupId,
+    aDApplicationId: config.adApplicationId,
+    aDApplicationSecret: config.adApplicationSecret,
+    resourceGroupName: config.resourceGroupName,
     tags: config.baseTags,
+    enableAzureDnsCertManagement: config.enableAzureDnsCertManagement,
 });
 
 export const kubeconfig = secret(cluster.Kubeconfig);
-
 const provider = new Provider("k8s-provider", {
     kubeconfig,
     deleteUnreachable: true,
@@ -24,7 +27,41 @@ const ingress = new NginxIngress("pulumi-selfhosted", {
     publicIpAddress: cluster.PublicIp,
 }, { dependsOn: cluster });
 
+let clientId: Output<string> | undefined;
+let certManagerNs: Output<string> | undefined;
+
+// by enabling azure dns cert manager we will enable oidc and workload identity
+// this props will allow use to deploy cert-manager using azure managed identity
+// ultimately, the cert-manager pods will be able to use this ID to securely work with
+// azure DNS resources to ensure our certs are automatically verified.
+if (config.enableAzureDnsCertManagement) {
+    const certManager = new CertManager("pulumi-selfhosted", {
+        provider,
+        certManagerNamespaceName,
+    }, { dependsOn: cluster });
+
+    certManagerNs = certManager.CertManagerNamespace;
+
+    const identity = new Identity("pulumi-selfhosted", {
+        azureDnsZone: output(config.azureDnsZoneName!),
+        azureDnsZoneResourceGroup: output(config.azureDnsZoneResourceGroup!),
+        certManagerName: certManager.CertManagerName,
+        certManagerNamespaceName: certManager.CertManagerNamespace,
+        clusterOidcIssuerUrl: cluster.OidcClusterIssuerUrl,
+        nodeResourceGroupName: config.resourceGroupName,
+        tags: config.baseTags,
+    });
+
+    clientId = identity.ClientId;
+}
+
 export const publicIp = cluster.PublicIp;
 export const ingressNamespace = ingress.IngressNamespace;
-//export const ingressServiceIp = ingress.IngressServiceIp;
 export const stackName2 = config.stackName;
+
+// this will enable cert-manager deployments using letsencrypt in the 03 project
+export const enableAzureDnsCertManagement = config.enableAzureDnsCertManagement;
+export const certManagerNamespace = certManagerNs;
+export const azureDnsZone = config.azureDnsZoneName;
+export const azureDnsZoneResourceGroup = config.azureDnsZoneResourceGroup;
+export const managedClientId = clientId;

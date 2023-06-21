@@ -25,7 +25,7 @@ export = async () => {
         resourceGroupName: vnetResourceGroupName,
         networkCidr: config.networkCidr,
         subnetCidr: config.subnetCidr,
-        vnetId: config.vnetId,
+        vnetName: config.vnetName,
         tags: config.baseTags,
     });
     

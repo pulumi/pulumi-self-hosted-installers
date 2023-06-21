@@ -1,13 +1,14 @@
-import { containerservice, network } from "@pulumi/azure-native";
+import { authorization, containerservice, managedidentity, network } from "@pulumi/azure-native/";
 import { PrivateKey } from "@pulumi/tls";
 import { config } from "./config";
-import { Input, ComponentResource, ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
+import { Input, ComponentResource, ComponentResourceOptions, Output, all, interpolate } from "@pulumi/pulumi";
 
 interface KubernetesClusterArgs {
-  ResourceGroupName: Output<string>;
-  ADApplicationId: Output<string>;
-  ADApplicationSecret: Output<string>;
-  ADAdminGroupId: Output<string>;
+  resourceGroupName: Output<string>;
+  aDApplicationId: Output<string>;
+  aDApplicationSecret: Output<string>;
+  aDAdminGroupId: Output<string>;
+  enableAzureDnsCertManagement: boolean;
   tags?: Input<{
     [key: string]: Input<string>;
   }>,
@@ -17,6 +18,7 @@ export class KubernetesCluster extends ComponentResource {
   public readonly Kubeconfig: Output<string>;
   public readonly Name: Output<string>;
   public readonly PublicIp: Output<string>;
+  public readonly OidcClusterIssuerUrl: Output<string | undefined>;
 
   constructor(name: string, args: KubernetesClusterArgs, opts?: ComponentResourceOptions) {
     super("x:kubernetes:cluster", name, opts);
@@ -28,17 +30,17 @@ export class KubernetesCluster extends ComponentResource {
       { additionalSecretOutputs: ["publicKeyOpenssh"], parent: this }
     ).publicKeyOpenssh;
 
-    // Must use a shorter name due to https://aka.ms/aks-naming-rules.
-    const cluster = new containerservice.ManagedCluster(`${name}-aks`, {
-      resourceGroupName: args.ResourceGroupName,
+    const nodeRgName = `${name}-aks-nodes-rg`;
+    const clusterArgs: containerservice.v20220302preview.ManagedClusterArgs = {
+      resourceGroupName: args.resourceGroupName,
       servicePrincipalProfile: {
-        clientId: args.ADApplicationId,
-        secret: args.ADApplicationSecret,
+        clientId: args.aDApplicationId,
+        secret: args.aDApplicationSecret,
       },
       enableRBAC: true,
       aadProfile: {
         managed: true,
-        adminGroupObjectIDs: [args.ADAdminGroupId],
+        adminGroupObjectIDs: [args.aDAdminGroupId],
       },
       agentPoolProfiles: [
         {
@@ -65,33 +67,49 @@ export class KubernetesCluster extends ComponentResource {
         },
       },
       kubernetesVersion: "1.26.3",
-      nodeResourceGroup: `${name}-aks-nodes-rg`,
+      nodeResourceGroup: nodeRgName,
       networkProfile: {
         networkPlugin: "azure",
       },
       tags: args.tags,
-    }, { parent: this, protect: true });
+    };
 
+    // by enabling azure dns cert manager we will enable oidc and workload identity
+    // this props will allow use to deploy cert-manager using azure managed identity
+    // ultimately, the cert-manager pods will be able to use this ID to securely work with
+    // azure DNS resources to ensure our certs are automatically verified.
+    if (args.enableAzureDnsCertManagement) {
+      clusterArgs.oidcIssuerProfile = {
+        enabled: true
+      };
+
+      clusterArgs.securityProfile = {
+        workloadIdentity: {
+          enabled: true
+        }
+      };
+    }
+
+    // Must use a shorter name due to https://aka.ms/aks-naming-rules.
+    const cluster = new containerservice.v20220302preview.ManagedCluster(`${name}-aks`, clusterArgs, { parent: this, protect: true });
+
+    const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
     const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
-      resourceGroupName: cluster.nodeResourceGroup.apply(s => s!),
+      resourceGroupName: nodeResourceGroup,
       publicIPAllocationMethod: "Static",
       sku: {
         name: "Standard"
-      }
+      },
+      tags: args.tags,
     }, { parent: this, dependsOn: [cluster] });
 
-    const credentials = all([cluster.name, args.ResourceGroupName])
-      .apply(([clusterName, resourceGroupName]) => {
-        return containerservice.listManagedClusterAdminCredentials(
-          {
-            resourceGroupName: resourceGroupName,
-            resourceName: clusterName,
-          }
-        );
-      });
+    const credentials = containerservice.listManagedClusterAdminCredentialsOutput({
+      resourceGroupName: args.resourceGroupName,
+      resourceName: cluster.name
+    });
 
     const ip = network.getPublicIPAddressOutput({
-      resourceGroupName: cluster.nodeResourceGroup.apply(s => s!),
+      resourceGroupName: nodeResourceGroup,
       publicIpAddressName: publicIp.name,
     });
 
@@ -100,10 +118,13 @@ export class KubernetesCluster extends ComponentResource {
     this.Kubeconfig = credentials.kubeconfigs[0].value.apply((config) =>
       Buffer.from(config, "base64").toString()
     );
+
+    this.OidcClusterIssuerUrl = cluster.oidcIssuerProfile.apply(s => s?.issuerURL);
     this.registerOutputs({
       Name: this.Name,
       Kubeconfig: this.Kubeconfig,
-      PublicIp: this.PublicIp
+      PublicIp: this.PublicIp,
+      OidcClusterIssuerUrl: this.OidcClusterIssuerUrl,
     });
   }
 }

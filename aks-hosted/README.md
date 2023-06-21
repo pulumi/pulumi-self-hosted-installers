@@ -68,7 +68,10 @@ To deploy entire stack, run the following in your terminal:
 1. `cd ../02-kubernetes`
 1. `npm install`
 1. `pulumi stack init {stackName2}` - see note above about NO NUMBERS in stack name
-1. `pulumi config set stackName1 {stackName1}`
+1. `pulumi config set stackName1 {stackName1}` 
+1. **OPTIONAL** `pulumi config set enableAzureDnsCertManagement true` **NOTE** this requires both `azureDnsZoneName` and `azureDnsZoneResourceGroup` to be set
+1. **OPTIONAL** if `enableAzureDnsCertManagement` is set then: `pulumi config set azureDnsZoneName {zone_name}`
+1. **OPTIONAL** if `enableAzureDnsCertManagement` is set then: `pulumi config set azureDnsZoneResourceGroup {resource_group_name}`
 1. `pulumi up`
 1. `cd ../03-application`
 1. `npm install`
@@ -87,13 +90,18 @@ To deploy entire stack, run the following in your terminal:
 
 The following settings are optional.  
 Note if not set, "forgot password" and email invites will not work but sign ups and general functionality will still work.
+1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
 1. `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
 1. `pulumi config set smtpUsername {smtp username}`
 1. `pulumi config set smtpPassword {smtp password} --secret`
 1. `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
 1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
 1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
-1. `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the set up to be open to the internet). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range)
+1. `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the set up to be open to the internet). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range) 
+1. `pulumi config set certManagerEmail {email}` (email address that will be used for certificate expirations purposes from letsencrypt)
 1. `pulumi up`
 
 ### Configure DNS

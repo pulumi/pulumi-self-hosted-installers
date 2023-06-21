@@ -15,7 +15,7 @@ export class NginxIngress extends ComponentResource {
             metadata: {
                 name: `${name}-ingress`,
             },
-        }, {provider: args.provider, dependsOn: opts?.dependsOn, parent: this});
+        }, { provider: args.provider, dependsOn: opts?.dependsOn, parent: this });
 
         const nginx = new helm.v3.Release(`ingress`, {
             chart: "ingress-nginx",
@@ -38,7 +38,7 @@ export class NginxIngress extends ComponentResource {
                         }
                     },
                     service: {
-                        "externalTrafficPolicy":"Local", // https://github.com/MicrosoftDocs/azure-docs/issues/92179#issuecomment-1169809165
+                        "externalTrafficPolicy": "Local", // https://github.com/MicrosoftDocs/azure-docs/issues/92179#issuecomment-1169809165
                         "loadBalancerIP": args.publicIpAddress,
                     },
                 },
@@ -48,7 +48,7 @@ export class NginxIngress extends ComponentResource {
                     }
                 }
             },
-        }, {provider: args.provider, dependsOn: opts?.dependsOn, parent: ingressNamespace})
+        }, { provider: args.provider, dependsOn: opts?.dependsOn, parent: ingressNamespace })
 
         this.IngressNamespace = ingressNamespace.metadata.name;
         this.registerOutputs({
