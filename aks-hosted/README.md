@@ -60,9 +60,9 @@ To deploy entire stack, run the following in your terminal:
 1. `pulumi stack init {stackName1}` - see note above about NO NUMBERS in stack name
 1. `pulumi config set azure-native:location {azure region}`
 1. `pulumi config set networkCidr 10.2.0.0/16` - this should be set to what you want your VNet cidr block to be  
-1. **Note** if you elect to provide an existing Azure VirtualNetwork, instead of `networkCidr` you'll be required to provide the following:`pulumi config set virtualNetworkId /subscriptions/0282681f-7a9e-424b-80b2-96babd57a8a1/resourceGroups/someRG/providers/Microsoft.Network/virtualNetworks/some-vnet`
-1. `pulumi config set virtualNetworkResourceGroup someRG` (the resource groupname from the existing vnet)
+1. **Note** if you elect to provide an existing Azure VirtualNetwork, instead of `networkCidr` you'll be required to provide the following:`pulumi config set virtualNetworkName someVnet && pulumi config set virtualNetworkResourceGroup vnetResourceGroup`
 1. `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
+1. `pulumi config set dbSubnetCidr 10.2.2.0/24` - this should be set to what you want your DB subnet cidr block to be
 1. `az login` (to avoid the following error: Could not create service principal: graphrbac.ServicePrincipalsClient#Create: Failure)
 1. `pulumi up`
 1. `cd ../02-kubernetes`
@@ -83,10 +83,6 @@ To deploy entire stack, run the following in your terminal:
 1. `pulumi config set licenseKey {licenseKey} --secret`
 1. `pulumi config set imageTag {imageTag}`
 1. `pulumi config set samlEnabled {true | false}` - If not configuring SAML SSO initially, skip or set to false.
-1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine)
-1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine)
-1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine)
-1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine)
 
 The following settings are optional.  
 Note if not set, "forgot password" and email invites will not work but sign ups and general functionality will still work.

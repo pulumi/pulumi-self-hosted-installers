@@ -23,11 +23,9 @@ export class Database extends ComponentResource {
 
         // to allow us to limit DB access to our VNET only, we'll use PrivateDNS
         // we require a unique server zone name to tie a PrivateDNS Zone to our DB
-        const serverName = name;
-        // const serverZoneName = `${serverName}.private.mysql.database.azure.com`
         const privateZone = new network.PrivateZone(`${name}-private-zone`, {
             resourceGroupName: args.resourceGroupName,
-            privateZoneName: "private.mysql.database.azure.com",
+            privateZoneName: "pulumi.mysql.database.azure.com",
             location: "global",
         }, { parent: this });
 
@@ -80,13 +78,13 @@ export class Database extends ComponentResource {
             dependsOn: [vnetLink]
         });
 
-        // new dbformysql.Configuration(`${name}-disable-tls`, {
-        //     resourceGroupName: args.resourceGroupName,
-        //     serverName: server.name,  
-        //     source: "user-override",
-        //     configurationName: "require_secure_transport",
-        //     value: "OFF",
-        // }, { parent: server });
+        new dbformysql.Configuration(`${name}-disable-tls`, {
+            resourceGroupName: args.resourceGroupName,
+            serverName: server.name,  
+            source: "user-override",
+            configurationName: "require_secure_transport",
+            value: "OFF",
+        }, { parent: server });
 
         // https://docs.microsoft.com/en-us/azure/mysql/howto-troubleshoot-common-errors#error-1419-you-do-not-have-the-super-privilege-and-binary-logging-is-enabled-you-might-want-to-use-the-less-safe-log_bin_trust_function_creators-variable
         new dbformysql.Configuration(`${name}-config`, {
