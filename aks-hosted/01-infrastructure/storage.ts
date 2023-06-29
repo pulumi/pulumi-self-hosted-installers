@@ -24,26 +24,26 @@ export class Storage extends ComponentResource {
         const storageAccount = new storage.StorageAccount("pulumi", {
             resourceGroupName: args.resourceGroupName,
             sku: {
-                name: storage.v20190601.SkuName.Standard_LRS,
+                name: storage.SkuName.Standard_LRS,
             },
-            kind: storage.v20190601.Kind.StorageV2,
+            kind: storage.Kind.StorageV2,
             tags: args.tags,
-        }, {parent: this, protect: true});
+        }, { parent: this, protect: true });
 
         const checkpointBlob = new storage.BlobContainer(`pulumicheckpoints`, {
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
-        }, {parent: storageAccount, protect: true});
-        
+        }, { parent: storageAccount, protect: true });
+
         const policyBlob = new storage.BlobContainer(`pulumipolicypacks`, {
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
-        }, {parent: storageAccount, protect: true});
+        }, { parent: storageAccount, protect: true });
 
-        const storageAccountKeys = all([args.resourceGroupName, storageAccount.name])
-            .apply(([resourceGroupName, accountName]) =>
-                storage.v20190601.listStorageAccountKeys({ resourceGroupName, accountName })
-            );
+        const storageAccountKeys = storage.listStorageAccountKeysOutput({
+            resourceGroupName: args.resourceGroupName,
+            accountName: storageAccount.name,
+        });
 
         this.storageAccountKey1 = secret(storageAccountKeys.keys[0].value);
         this.storageAccountKey2 = secret(storageAccountKeys.keys[1].value);
@@ -53,7 +53,7 @@ export class Storage extends ComponentResource {
         this.checkpointBlobName = checkpointBlob.name;
         this.policyBlobName = policyBlob.name;
         this.storageAccountName = storageAccount.name;
-        
+
         this.registerOutputs({
             storageAccountId: this.storageAccountId,
             storageAccountKey1: this.storageAccountKey1,

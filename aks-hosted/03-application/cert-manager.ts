@@ -17,9 +17,9 @@ export class CertManagerDeployment extends ComponentResource {
     constructor(name: string, args: CertManagerArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:certManagerDeployment", name, args, opts);
 
-        const letsEncryptUrl = "https://acme-v02.api.letsencrypt.org/directory";
+        //  const letsEncryptUrl = "https://acme-v02.api.letsencrypt.org/directory";
         // FOR TESTING:
-        // const letsEncryptUrl = "https://acme-staging-v02.api.letsencrypt.org/directory";
+        const letsEncryptUrl = "https://acme-staging-v02.api.letsencrypt.org/directory";
         const acmeSpec = args.issuerEmail ?
             {
                 server: letsEncryptUrl,

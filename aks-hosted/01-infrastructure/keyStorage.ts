@@ -72,7 +72,6 @@ export class KeyStorage extends ComponentResource {
 
         const key = new keyvault.Key(`${name}-key`, {
             resourceGroupName: args.resourceGroupName,
-
             properties: {
                 kty: keyvault.JsonWebKeyType.RSA
             },

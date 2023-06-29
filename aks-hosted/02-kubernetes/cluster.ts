@@ -8,7 +8,7 @@ interface KubernetesClusterArgs {
   aDApplicationId: Output<string>;
   aDApplicationSecret: Output<string>;
   aDAdminGroupId: Output<string>;
-  enableAzureDnsCertManagement: boolean;
+  disableAzureDnsCertManagement: boolean;
   tags?: Input<{
     [key: string]: Input<string>;
   }>,
@@ -78,7 +78,7 @@ export class KubernetesCluster extends ComponentResource {
     // this props will allow use to deploy cert-manager using azure managed identity
     // ultimately, the cert-manager pods will be able to use this ID to securely work with
     // azure DNS resources to ensure our certs are automatically verified.
-    if (args.enableAzureDnsCertManagement) {
+    if (!args.disableAzureDnsCertManagement) {
       clusterArgs.oidcIssuerProfile = {
         enabled: true
       };
@@ -92,7 +92,6 @@ export class KubernetesCluster extends ComponentResource {
 
     // Must use a shorter name due to https://aka.ms/aks-naming-rules.
     const cluster = new containerservice.v20230102preview.ManagedCluster(`${name}-aks`, clusterArgs, { parent: this, protect: true });
-
     const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
     const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
       resourceGroupName: nodeResourceGroup,

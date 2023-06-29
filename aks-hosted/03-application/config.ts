@@ -23,8 +23,8 @@ export const getConfig = async () => {
 
     // the below enableAzureDnsCertManagement will cause the legacy certs and keys to be ignored as well ass
     // a cluster issuer and cert created using letsencrypt w/ DNs01 validation via Azure DNS
-    const enableAzureDnsCertManagementValue = await clusterStack.getOutputDetails("enableAzureDnsCertManagement");
-    const enableAzureDnsCertManager = getValue<boolean>(enableAzureDnsCertManagementValue, false);
+    const enableAzureDnsCertManagementValue = await clusterStack.getOutputDetails("disableAzureDnsCertManagement");
+    const disableAzureDnsCertManagement = getValue<boolean>(enableAzureDnsCertManagementValue, false);
 
     const azureDnsZoneValue = await clusterStack.getOutputDetails("azureDnsZone");
     const azureDnsZone = getValue<string>(azureDnsZoneValue, "");
@@ -43,7 +43,7 @@ export const getConfig = async () => {
     let apiTlsKey: Output<string> | undefined;
     let consoleTlsCert: Output<string> | undefined;
     let consoleTlsKey: Output<string> | undefined;
-    if (!enableAzureDnsCertManager) {
+    if (disableAzureDnsCertManagement) {
         apiTlsKey = stackConfig.requireSecret("apiTlsKey");
         apiTlsCert = stackConfig.requireSecret("apiTlsCert");
         consoleTlsKey = stackConfig.requireSecret("consoleTlsKey");
@@ -57,7 +57,7 @@ export const getConfig = async () => {
         kubeconfig: clusterStack.requireOutput("kubeconfig"),
         licenseKey: stackConfig.requireSecret("licenseKey"),
         database: {
-            connectionString: infrastructureStack.requireOutput("dbConnectionString"),
+            endpoint: infrastructureStack.requireOutput("dbEndpoint"),
             login: infrastructureStack.requireOutput("dbLogin"),
             password: infrastructureStack.requireOutput("dbPassword"),
             serverName: infrastructureStack.requireOutput("dbServerName")
@@ -95,7 +95,7 @@ export const getConfig = async () => {
         apiTlsCert,
         consoleTlsKey,
         consoleTlsCert,
-        enableAzureDnsCertManager,
+        disableAzureDnsCertManagement,
         azureDnsZone,
         azureDnsZoneResourceGroup,
         certManagerNamespace,

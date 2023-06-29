@@ -13,7 +13,7 @@ const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
     aDApplicationSecret: config.adApplicationSecret,
     resourceGroupName: config.resourceGroupName,
     tags: config.baseTags,
-    enableAzureDnsCertManagement: config.enableAzureDnsCertManagement,
+    disableAzureDnsCertManagement: config.disableAzureDnsCertManagement,
 });
 
 export const kubeconfig = secret(cluster.Kubeconfig);
@@ -34,7 +34,7 @@ let certManagerNs: Output<string> | undefined;
 // this props will allow use to deploy cert-manager using azure managed identity
 // ultimately, the cert-manager pods will be able to use this ID to securely work with
 // azure DNS resources to ensure our certs are automatically verified.
-if (config.enableAzureDnsCertManagement) {
+if (!config.disableAzureDnsCertManagement) {
     const certManager = new CertManager("pulumi-selfhosted", {
         provider,
         certManagerNamespaceName,
@@ -60,7 +60,7 @@ export const ingressNamespace = ingress.IngressNamespace;
 export const stackName2 = config.stackName;
 
 // this will enable cert-manager deployments using letsencrypt in the 03 project
-export const enableAzureDnsCertManagement = config.enableAzureDnsCertManagement;
+export const disableAzureDnsCertManagement = config.disableAzureDnsCertManagement;
 export const certManagerNamespace = certManagerNs;
 export const azureDnsZone = config.azureDnsZoneName;
 export const azureDnsZoneResourceGroup = config.azureDnsZoneResourceGroup;
