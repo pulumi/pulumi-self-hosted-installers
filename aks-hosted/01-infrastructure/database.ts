@@ -57,6 +57,10 @@ export class Database extends ComponentResource {
             administratorLogin: adminLogin,
             administratorLoginPassword: dbPassword.result,
             resourceGroupName: args.resourceGroupName,
+            backup: {
+                backupRetentionDays: 7,
+                geoRedundantBackup: "Disabled",
+            },
             network: {
                 delegatedSubnetResourceId: args.dbSubnetId,
                 privateDnsZoneResourceId: privateZone.id,
