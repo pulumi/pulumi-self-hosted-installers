@@ -14,7 +14,7 @@ export interface SecretsCollectionArgs {
         consoleTlsKey: Output<string> | undefined,
         consoleTlsCert: Output<string> | undefined,
         database: {
-            connectionString: Input<string>,
+            endpoint: Input<string>,
             login: Input<string>,
             password: Input<string>,
             serverName: Input<string>,
@@ -77,8 +77,8 @@ export class SecretsCollection extends ComponentResource {
                 namespace: args.namespace,
             },
             stringData: {
-                host: args.secretValues.database.connectionString,
-                username: interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
+                host: args.secretValues.database.endpoint,
+                username: args.secretValues.database.login, // interpolate`${args.secretValues.database.login}@${args.secretValues.database.serverName}`,
                 password: args.secretValues.database.password,
             },
         }, { provider: args.provider, parent: this });

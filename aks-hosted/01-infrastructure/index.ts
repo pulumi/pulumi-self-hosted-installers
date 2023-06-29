@@ -13,34 +13,36 @@ export = async () => {
         resourceGroupName: config.disableAutoNaming ? `${config.resourceNamePrefix}-rg` : undefined,
         tags: config.baseTags,
     }, { protect: true });
-    
+
     const adApplication = new ad.ActiveDirectoryApplication(`${config.resourceNamePrefix}`);
-    
-    // this will allow users to bring their own (BYO) virtual network, although we will still create a subnet
-    const vnetResourceGroupName = config.vnetResourceGroup && config.vnetResourceGroup != "" ? 
-        output(config.vnetResourceGroup) : 
+    const vnetResourceGroupName = config.vnetResourceGroup && config.vnetResourceGroup != "" ?
+        output(config.vnetResourceGroup) :
         resourceGroup.name;
 
-    const network = new networking.Network(`${config.resourceNamePrefix}`, {
+    const network = new networking.Network(config.resourceNamePrefix, {
         resourceGroupName: vnetResourceGroupName,
         networkCidr: config.networkCidr,
         subnetCidr: config.subnetCidr,
+        dbSubnetCidr: config.dbSubnetCidr,
         vnetName: config.vnetName,
         tags: config.baseTags,
     });
-    
-    const storageDetails = new storage.Storage(`${config.resourceNamePrefix}`, {
+
+    const storageDetails = new storage.Storage(config.resourceNamePrefix, {
         resourceGroupName: resourceGroup.name,
         tags: config.baseTags,
     });
-    
-    const database = new db.Database(`${config.resourceNamePrefix}`, {
+
+    // AKS and MySQL DB will be located in different subnets
+    const database = new db.Database(config.resourceNamePrefix, {
         resourceGroupName: resourceGroup.name,
-        subnetId: network.subnetId,
+        dbSubnetId: network.dbSubnetId,
+        aksSubnetId: network.subnetId,
+        vnetId: network.vnetId,
         tags: config.baseTags,
     });
-    
-    const kv = new key.KeyStorage(`${config.resourceNamePrefix}`, {
+
+    const kv = new key.KeyStorage(config.resourceNamePrefix, {
         objectId: adApplication.PrincipalServerObjectId,
         tenantId: adApplication.TenantId,
         resourceGroupName: resourceGroup.name,
@@ -65,7 +67,7 @@ export = async () => {
         dbServerName: database.DatabaseServerName,
         dbLogin: database.DatabaseLogin,
         dbPassword: database.DatabasePassword,
-        dbConnectionString: database.DatabaseConnectionString,
+        dbEndpoint: database.DatabaseEndpoint,
         keyvaultUri: kv.KeyVaultUri,
         keyvaultKeyName: kv.KeyName,
         keyvaultKeyVersion: kv.KeyVersion,

@@ -47,7 +47,7 @@ export = async () => {
       consoleTlsCert: config.consoleTlsCert,
       consoleTlsKey: config.consoleTlsKey,
       database: {
-        connectionString: config.database.connectionString,
+        endpoint: config.database.endpoint,
         login: config.database.login,
         password: config.database.password,
         serverName: config.database.serverName
@@ -324,7 +324,7 @@ export = async () => {
   }
 
   const certSecretName = `${commonName}-tls`;
-  if (config.enableAzureDnsCertManager) {
+  if (!config.disableAzureDnsCertManagement) {
     const cert = new CertManagerDeployment(commonName, {
       provider,
       domains: [
@@ -360,11 +360,11 @@ export = async () => {
       tls: [
         {
           hosts: [config.consoleDomain],
-          secretName: config.enableAzureDnsCertManager ? certSecretName : secrets.ConsoleCertificateSecret?.metadata.name,
+          secretName: !config.disableAzureDnsCertManagement ? certSecretName : secrets.ConsoleCertificateSecret?.metadata.name,
         },
         {
           hosts: [config.apiDomain],
-          secretName: config.enableAzureDnsCertManager ? certSecretName : secrets.ApiCertificateSecret?.metadata.name,
+          secretName: config.disableAzureDnsCertManagement ? certSecretName : secrets.ApiCertificateSecret?.metadata.name,
         }
       ],
       rules: [
