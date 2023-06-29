@@ -56,6 +56,10 @@ export class Database extends ComponentResource {
         const server = new dbformysql.Server(`${name}-mysql`, {
             administratorLogin: adminLogin,
             administratorLoginPassword: dbPassword.result,
+            backup: {
+                backupRetentionDays: 7,
+                geoRedundantBackup: "Disabled"
+            },
             resourceGroupName: args.resourceGroupName,
             network: {
                 delegatedSubnetResourceId: args.dbSubnetId,
@@ -80,7 +84,7 @@ export class Database extends ComponentResource {
 
         new dbformysql.Configuration(`${name}-disable-tls`, {
             resourceGroupName: args.resourceGroupName,
-            serverName: server.name,  
+            serverName: server.name,
             source: "user-override",
             configurationName: "require_secure_transport",
             value: "OFF",
@@ -104,7 +108,7 @@ export class Database extends ComponentResource {
             protect: true,
         });
 
-        this.DatabaseEndpoint = interpolate `${server.name}.${privateZone.name}`;
+        this.DatabaseEndpoint = interpolate`${server.name}.${privateZone.name}`;
         this.DatabaseLogin = server.administratorLogin;
         this.DatabasePassword = dbPassword.result;
         this.DatabaseName = db.name;
