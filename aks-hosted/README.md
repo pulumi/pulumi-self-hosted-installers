@@ -113,7 +113,7 @@ Note if not set, "forgot password" and email invites will not work but sign ups 
 To get the IP address output for the cluster, run the following in the `02-kubernetes` folder: 
 
 ```
-pulumi stack output ingressServiceIp
+pulumi stack output ingressIp
 ```
 
 Create DNS A record entries for `{domain for api}` and `{domain for console}` that point to the IP returned from the above command.
