@@ -18,8 +18,10 @@ let azureDnsZoneName = undefined;
 let azureDnsZoneResourceGroup = undefined;
 if (!disableAzureDnsCertManagement) {
     azureDnsZoneName = stackConfig.require("azureDnsZoneName");
-    azureDnsZoneResourceGroup = stackConfig.require("azureDnsZoneResourceGroup");
+    azureDnsZoneResourceGroup = stackConfig.require("azureDnsZoneResourceGroupName");
 }
+
+const privateIpAddress = stackConfig.get("privateIpAddress");
 
 export const config = {
     projectName,
@@ -28,13 +30,15 @@ export const config = {
     disableAzureDnsCertManagement,
     azureDnsZoneName,
     azureDnsZoneResourceGroup,
+    privateIpAddress,
+    enablePrivateLoadBalancer: privateIpAddress != undefined,
     baseTags: {
         project: projectName,
         stack: stackName,
     },
     resourceGroupName: <Output<string>>infrastructureStack.requireOutput("resourceGroupName"),
+    subnetId: <Output<string>>infrastructureStack.requireOutput("networkSubnetId"),
     adGroupId: <Output<string>>infrastructureStack.requireOutput("adGroupId"),
     adApplicationId: <Output<string>>infrastructureStack.requireOutput("adApplicationId"),
     adApplicationSecret: <Output<string>>infrastructureStack.requireOutput("adApplicationSecret"),
-    subnetId: <Output<string>>infrastructureStack.requireOutput("networkSubnetId"),
 };

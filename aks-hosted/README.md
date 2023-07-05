@@ -55,50 +55,58 @@ To ensure that the Pulumi program can access variables between the three deploym
 
 To deploy entire stack, run the following in your terminal:
 
-1. `cd 01-infrastructure`
-1. `npm install`
-1. `pulumi stack init {stackName1}` - see note above about NO NUMBERS in stack name
-1. `pulumi config set azure-native:location {azure region}`
-1. `pulumi config set networkCidr 10.2.0.0/16` - this should be set to what you want your VNet cidr block to be  
-1. **Note** if you elect to provide an existing Azure VirtualNetwork, instead of `networkCidr` you'll be required to provide the following:`pulumi config set virtualNetworkName someVnet && pulumi config set virtualNetworkResourceGroup vnetResourceGroup`
-1. `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
-1. `pulumi config set dbSubnetCidr 10.2.2.0/24` - this should be set to what you want your DB subnet cidr block to be
-1. `az login` (to avoid the following error: Could not create service principal: graphrbac.ServicePrincipalsClient#Create: Failure)
-1. `pulumi up`
-1. `cd ../02-kubernetes`
-1. `npm install`
-1. `pulumi stack init {stackName2}` - see note above about NO NUMBERS in stack name
-1. `pulumi config set stackName1 {stackName1}` 
-1. **OPTIONAL** `pulumi config set enableAzureDnsCertManagement true` **NOTE** this requires both `azureDnsZoneName` and `azureDnsZoneResourceGroup` to be set
-1. **OPTIONAL** if `enableAzureDnsCertManagement` is set then: `pulumi config set azureDnsZoneName {zone_name}`
-1. **OPTIONAL** if `enableAzureDnsCertManagement` is set then: `pulumi config set azureDnsZoneResourceGroup {resource_group_name}`
-1. `pulumi up`
-1. `cd ../03-application`
-1. `npm install`
-1. `pulumi stack init {stackName3}` - see note above about NO NUMBERS in stack name
-1. `pulumi config set stackName1 {stackName1}`
-1. `pulumi config set stackName2 {stackName2}`
-1. `pulumi config set apiDomain {domain for api}`
-1. `pulumi config set consoleDomain {domain for console}`
-1. `pulumi config set licenseKey {licenseKey} --secret`
-1. `pulumi config set imageTag {imageTag}`
-1. `pulumi config set samlEnabled {true | false}` - If not configuring SAML SSO initially, skip or set to false.
+## 01-infrastructure
+- `cd 01-infrastructure`
+- `npm install`
+- `pulumi stack init {stackName1}` - see note above about NO NUMBERS in stack name
+- `pulumi config set azure-native:location {azure region}`
+- `pulumi config set networkCidr 10.2.0.0/16` - this should be set to what you want your VNet cidr block to be  
+- **Note** if you elect to provide an existing Azure VirtualNetwork, instead of `networkCidr` you'll be required to provide the following:`pulumi config set virtualNetworkName someVnet && pulumi config set virtualNetworkResourceGroup vnetResourceGroup`
+- `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
+- `pulumi config set dbSubnetCidr 10.2.2.0/24` - this should be set to what you want your DB subnet cidr block to be
+- `az login` (to avoid the following error: Could not create service principal: graphrbac.ServicePrincipalsClient#Create: Failure)
+- `pulumi up`
+
+## 02-kubernetes
+- `cd ../02-kubernetes`
+- `npm install`
+- `pulumi config set azureDnsZoneName {DNS_ZONE_NAME}`
+- `pulumi config set azureDnsZoneResourceGroup {DNS_ZONE_RESOURCE_GROUP_NAME}`
+- `pulumi stack init {stackName2}` - see note above about NO NUMBERS in stack name
+- `pulumi config set stackName1 {stackName1}` 
+  
+The following settings are optional. 
+- `pulumi config set disableAzureDnsCertManagement true` **NOTE** this disables the cert-manager deployment which hanldes SSL certificates. 03-application will need TLS certificates.
+- `pulumi config set privateIpAddress {private_ip_from_vnet}` - this will disable the ingress services public IP address and deploy an internal load balancer. This blocks all public access to the Pulumi self-hosted app.
+
+## 03-application
+- `pulumi up`
+- `cd ../03-application`
+- `npm install`
+- `pulumi stack init {stackName3}` - see note above about NO NUMBERS in stack name
+- `pulumi config set stackName1 {stackName1}`
+- `pulumi config set stackName2 {stackName2}`
+- `pulumi config set apiDomain {domain for api}`
+- `pulumi config set consoleDomain {domain for console}`
+- `pulumi config set licenseKey {licenseKey} --secret`
+- `pulumi config set imageTag {imageTag}`
+- `pulumi config set samlEnabled {true | false}` - If not configuring SAML SSO initially, skip or set to false.
 
 The following settings are optional.  
 Note if not set, "forgot password" and email invites will not work but sign ups and general functionality will still work.
-1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
-1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
-1. `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
-1. `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
-1. `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
-1. `pulumi config set smtpUsername {smtp username}`
-1. `pulumi config set smtpPassword {smtp password} --secret`
-1. `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
-1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
-1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
-1. `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the set up to be open to the internet). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range) 
-1. `pulumi config set certManagerEmail {email}` (email address that will be used for certificate expirations purposes from letsencrypt)
-1. `pulumi up`
+- `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+- `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+- `cat {path to console key file} | pulumi config set consoleTlsKey --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+- `cat {path to console cert file} | pulumi config set consoleTlsCert --secret --` (on a mac or linux machine) **NOT REQUIRED IF CERT-MANAGER IS ENABLED**
+- `pulumi config set smtpServer {smtp server:port}` (for example: smtp.domain.com:587)
+- `pulumi config set smtpUsername {smtp username}`
+- `pulumi config set smtpPassword {smtp password} --secret`
+- `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
+- `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
+- `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
+- `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the set up to be open to the internet). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range) 
+- `pulumi config set certManagerEmail {email}` (email address that will be used for certificate expirations purposes from letsencrypt)
+- `pulumi up`
 
 ### Configure DNS
 
