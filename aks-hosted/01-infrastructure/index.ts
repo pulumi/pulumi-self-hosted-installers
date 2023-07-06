@@ -58,8 +58,9 @@ export = async () => {
 
     // our aks cluster will use this SP and it needs to be able to perform actions on subnets
     // to place nodes appropriately into our snets
+    // requires Network Contributor role: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor
     new authorization.RoleAssignment(`${config.resourceNamePrefix}-roleassign-snet`, {
-        roleDefinitionId: "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7",
+        roleDefinitionId: "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7", 
         scope: network.vnetId,
         principalId: adApplication.PrincipalServerObjectId,
         principalType: "ServicePrincipal",
