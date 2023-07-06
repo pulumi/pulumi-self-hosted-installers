@@ -7,13 +7,14 @@ import { CertManager } from "./cert-manager";
 import { Identity } from "./identity";
 
 const certManagerNamespaceName = "pulumi-selfhosted-certmanager";
-const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
+const cluster = new KubernetesCluster(config.resourceNamePrefix, {
     aDAdminGroupId: config.adGroupId,
     aDApplicationId: config.adApplicationId,
     aDApplicationSecret: config.adApplicationSecret,
     resourceGroupName: config.resourceGroupName,
     tags: config.baseTags,
     disableAzureDnsCertManagement: config.disableAzureDnsCertManagement,
+    privateIpAddress: config.privateIpAddress,
 });
 
 export const kubeconfig = secret(cluster.Kubeconfig);
@@ -22,9 +23,10 @@ const provider = new Provider("k8s-provider", {
     deleteUnreachable: true,
 }, { dependsOn: cluster });
 
-const ingress = new NginxIngress("pulumi-selfhosted", {
+const ingress = new NginxIngress(config.resourceNamePrefix, {
     provider,
-    publicIpAddress: cluster.PublicIp,
+    ipAddress: cluster.ClusterIp,
+    enablePrivateLoadBalancer: config.enablePrivateLoadBalancer,
 }, { dependsOn: cluster });
 
 let clientId: Output<string> | undefined;
@@ -55,7 +57,7 @@ if (!config.disableAzureDnsCertManagement) {
     clientId = identity.ClientId;
 }
 
-export const publicIp = cluster.PublicIp;
+export const ingressIp = cluster.ClusterIp;
 export const ingressNamespace = ingress.IngressNamespace;
 export const stackName2 = config.stackName;
 

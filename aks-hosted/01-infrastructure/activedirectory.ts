@@ -1,22 +1,18 @@
 import { Application, Group, ServicePrincipal, ServicePrincipalPassword } from "@pulumi/azuread";
 import { Output, ComponentResource, ComponentResourceOptions, output } from "@pulumi/pulumi";
-import { authorization } from "@pulumi/azure-native";
+
+export interface ActiveDirectoryApplicationArgs {
+  userId: string;
+}
 
 export class ActiveDirectoryApplication extends ComponentResource {
   public readonly GroupId: Output<string>;
   public readonly ApplicationId: Output<string>;
   public readonly ApplicationSecret: Output<string>;
-  public readonly TenantId: Output<string>;
-  public readonly SubscriptionId: Output<string>;
   public readonly ApplicationObjectId: Output<string>;
   public readonly PrincipalServerObjectId: Output<string>;
-  constructor(name: string, opts?: ComponentResourceOptions) {
-    super("x:infrastructure:activedirectoryapplication", name, opts);
-
-    const clientConfig = authorization.getClientConfig();
-    const currentPrincipal = clientConfig.then((x) => x.objectId);
-    const currentTenantId = clientConfig.then(x => x.tenantId);
-    const currentSubscriptionId = clientConfig.then(x => x.subscriptionId);
+  constructor(name: string, args: ActiveDirectoryApplicationArgs, opts?: ComponentResourceOptions) {
+    super("x:infrastructure:activedirectoryapplication", name, args, opts);
 
     const applicationServer = new Application(`${name}-app-server`, {
       displayName: `${name}-app-server`,
@@ -28,7 +24,7 @@ export class ActiveDirectoryApplication extends ComponentResource {
 
     const adminGroup = new Group(`${name}-ad-admingroup`, {
       displayName: `${name}-ad-admingroup`,
-      members: [currentPrincipal, principalServer.objectId],
+      members: [args.userId, principalServer.objectId],
     }, { parent: this });
 
     const spPasswordServer = new ServicePrincipalPassword(`${name}-sppwd-server`, {
@@ -39,8 +35,6 @@ export class ActiveDirectoryApplication extends ComponentResource {
     this.GroupId = adminGroup.id;
     this.ApplicationId = applicationServer.applicationId;
     this.ApplicationSecret = spPasswordServer.value;
-    this.TenantId = output(currentTenantId);
-    this.SubscriptionId = output(currentSubscriptionId);
     this.ApplicationObjectId = applicationServer.objectId;
     this.PrincipalServerObjectId = principalServer.objectId;
 
@@ -48,8 +42,6 @@ export class ActiveDirectoryApplication extends ComponentResource {
       GroupId: this.GroupId,
       ApplicationId: this.ApplicationId,
       ApplicationSecret: this.ApplicationSecret,
-      TenantId: this.TenantId,
-      SubscriptionId: this.SubscriptionId,
       ApplicationObjectId: this.ApplicationObjectId,
       PrincipalServerObjectId: this.PrincipalServerObjectId
     });

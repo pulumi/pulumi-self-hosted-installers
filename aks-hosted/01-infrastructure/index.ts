@@ -1,4 +1,4 @@
-import { resources } from "@pulumi/azure-native";
+import { authorization, resources } from "@pulumi/azure-native";
 import * as ad from "./activedirectory";
 import * as networking from "./network"
 import * as storage from "./storage";
@@ -8,13 +8,20 @@ import { config } from "./config";
 import { output } from "@pulumi/pulumi";
 
 export = async () => {
+
+    // retrieve informatino about our currently deployment user (principal)
+    const azureClientConfig = await authorization.getClientConfig();
+
     // although this RG may not house the vnet, it will house all the remaining resources we create
     const resourceGroup = new resources.ResourceGroup(`${config.resourceNamePrefix}-rg`, {
         resourceGroupName: config.disableAutoNaming ? `${config.resourceNamePrefix}-rg` : undefined,
         tags: config.baseTags,
     }, { protect: true });
 
-    const adApplication = new ad.ActiveDirectoryApplication(`${config.resourceNamePrefix}`);
+    const adApplication = new ad.ActiveDirectoryApplication(config.resourceNamePrefix, {
+        userId: azureClientConfig.objectId,
+    });
+
     const vnetResourceGroupName = config.vnetResourceGroup && config.vnetResourceGroup != "" ?
         output(config.vnetResourceGroup) :
         resourceGroup.name;
@@ -44,9 +51,19 @@ export = async () => {
 
     const kv = new key.KeyStorage(config.resourceNamePrefix, {
         objectId: adApplication.PrincipalServerObjectId,
-        tenantId: adApplication.TenantId,
+        tenantId: azureClientConfig.tenantId,
         resourceGroupName: resourceGroup.name,
         tags: config.baseTags,
+    });
+
+    // our aks cluster will use this SP and it needs to be able to perform actions on subnets
+    // to place nodes appropriately into our snets
+    // requires Network Contributor role: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#network-contributor
+    new authorization.RoleAssignment(`${config.resourceNamePrefix}-roleassign-snet`, {
+        roleDefinitionId: "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7", 
+        scope: network.vnetId,
+        principalId: adApplication.PrincipalServerObjectId,
+        principalType: "ServicePrincipal",
     });
 
     return {
@@ -54,8 +71,8 @@ export = async () => {
         adGroupId: adApplication.GroupId,
         adApplicationId: adApplication.ApplicationId,
         adApplicationSecret: adApplication.ApplicationSecret,
-        tenantId: adApplication.TenantId,
-        subscriptionId: adApplication.SubscriptionId,
+        tenantId: azureClientConfig.tenantId,
+        subscriptionId: azureClientConfig.subscriptionId,
         networkSubnetId: network.subnetId,
         storageAccountId: storageDetails.storageAccountId,
         storagePrimaryKey: storageDetails.storageAccountKey1,

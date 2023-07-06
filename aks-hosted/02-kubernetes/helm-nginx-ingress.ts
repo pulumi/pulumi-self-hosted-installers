@@ -3,7 +3,8 @@ import { ComponentResource, Input, ComponentResourceOptions, Output, interpolate
 
 export interface NginxIngressArgs {
     provider: Provider;
-    publicIpAddress: Output<string>;
+    ipAddress: Output<string>;
+    enablePrivateLoadBalancer: boolean;
 };
 
 export class NginxIngress extends ComponentResource {
@@ -17,7 +18,7 @@ export class NginxIngress extends ComponentResource {
             },
         }, { provider: args.provider, dependsOn: opts?.dependsOn, parent: this });
 
-        const nginx = new helm.v3.Release(`ingress`, {
+        new helm.v3.Release("ingress", {
             chart: "ingress-nginx",
             repositoryOpts: {
                 repo: "https://kubernetes.github.io/ingress-nginx"
@@ -39,7 +40,10 @@ export class NginxIngress extends ComponentResource {
                     },
                     service: {
                         "externalTrafficPolicy": "Local", // https://github.com/MicrosoftDocs/azure-docs/issues/92179#issuecomment-1169809165
-                        "loadBalancerIP": args.publicIpAddress,
+                        "loadBalancerIP": args.ipAddress,
+                        "annotations": {
+                            "service.beta.kubernetes.io/azure-load-balancer-internal": args.enablePrivateLoadBalancer ? "true" : "false"
+                        }
                     },
                 },
                 defaultBackend: {
