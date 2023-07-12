@@ -1,20 +1,24 @@
 import * as networking from "./network"
-import * as serviceaccount from "./service-account";
+import * as serviceaccount from "./serviceAccount";
 import * as storage from "./storage";
 import * as db from "./database";
 import { config } from "./config";
 
-const sa = new serviceaccount.ServiceAccount(`${config.resourceNamePrefix}`)
-
-const network = new networking.Network(`${config.resourceNamePrefix}`, {
+const storageDetails = new storage.Storage(config.resourceNamePrefix, {
     tags: config.baseTags,
 });
 
-const storageDetails = new storage.Storage(`${config.resourceNamePrefix}`, {
+const sa = new serviceaccount.ServiceAccount(config.resourceNamePrefix, {
+    tags: config.baseTags,
+    checkpointBucketName: storageDetails.checkpointBucketName,
+    policyBucketName: storageDetails.policyBucketName
+});
+
+const network = new networking.Network(config.resourceNamePrefix, {
     tags: config.baseTags,
 });
 
-const database = new db.Database(`${config.resourceNamePrefix}`, {
+const database = new db.Database(config.resourceNamePrefix, {
     vpcId: network.networkId,
     dbInstanceType: config.dbInstanceType,
     dbUser: config.dbUser,
