@@ -27,6 +27,11 @@ export class NginxIngress extends pulumi.ComponentResource {
             values: {
                 controller: {
                     replicaCount: 2,
+                    service: {
+                        // This is needed to preserve client IP.
+                        // And preserving the client IP is needed to allow the ingressAllowList config option in the 03-application stack to work.
+                        externalTrafficPolicy: "Local" 
+                    }
                 },
             },
         }, {provider: args.provider, dependsOn: opts?.dependsOn, parent: ingressNamespace});
