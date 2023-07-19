@@ -26,17 +26,16 @@ export class ServiceAccount extends pulumi.ComponentResource {
 
         // apply least privileges for our SA so we don't get access to all buckets in a given GCP account
         const gcpProject = gcp.config.project!;
-        new gcp.projects.IAMBinding(`${saName}-IAM`, {
-            project: gcpProject,
+        const checkpointBucketIAMMember = new gcp.storage.BucketIAMMember(`${saName}-checkpoint-bucket-iam`, {
+            bucket: args.checkpointBucketName,
             role: "roles/storage.objectAdmin",
-            members: [pulumi.interpolate`serviceAccount:${serviceAccount.email}`],
-            condition: {
-                title: "bucket-grant-policy",
-                description: "grant service account admin permission on specific buckets",
-                expression: pulumi.interpolate`resource.type == "storage.googleapis.com/Bucket" &&
-                               (resource.name.startsWith("projects/${gcpProject}/buckets/${args.checkpointBucketName}") || 
-                                resource.name.startsWith("projects/${gcpProject}/buckets/${args.policyBucketName}"))`
-            },
+            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`
+        }, { parent: serviceAccount });
+
+        const policyBucketIAMMember = new gcp.storage.BucketIAMMember(`${saName}-policy-bucket-iam`, {
+            bucket: args.policyBucketName,
+            role: "roles/storage.objectAdmin",
+            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`
         }, { parent: serviceAccount });
 
         const serviceAccountKey = new gcp.storage.HmacKey(`${saName}-hmac`, {
