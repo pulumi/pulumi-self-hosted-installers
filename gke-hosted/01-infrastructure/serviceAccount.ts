@@ -38,19 +38,6 @@ export class ServiceAccount extends pulumi.ComponentResource {
             member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`
         }, { parent: serviceAccount });
 
-        // new gcp.projects.IAMBinding(`${saName}-IAM`, {
-        //     project: gcpProject,
-        //     role: "roles/storage.objectAdmin",
-        //     members: [pulumi.interpolate`serviceAccount:${serviceAccount.email}`],
-        //     // condition: {
-        //     //     title: "bucket-grant-policy",
-        //     //     description: "grant service account admin permission on specific buckets",
-        //     //     expression: pulumi.interpolate`resource.type == "storage.googleapis.com/Bucket" &&
-        //     //                    (resource.name.startsWith("projects/${gcpProject}/buckets/${args.checkpointBucketName}") || 
-        //     //                     resource.name.startsWith("projects/${gcpProject}/buckets/${args.policyBucketName}"))`
-        //     // },
-        // }, { parent: serviceAccount });
-
         const serviceAccountKey = new gcp.storage.HmacKey(`${saName}-hmac`, {
             serviceAccountEmail: serviceAccount.email,
         }, { parent: this, additionalSecretOutputs: ["secret"] });
