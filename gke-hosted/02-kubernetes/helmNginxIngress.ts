@@ -1,15 +1,14 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
-import { ComponentResourceOptions, Output } from "@pulumi/pulumi";
 
 export interface NginxIngressArgs {
     provider: k8s.Provider
 };
 
 export class NginxIngress extends pulumi.ComponentResource {
-    public readonly IngressNamespace: Output<string>;
-    public readonly IngressServiceIp: Output<string>;
-    constructor(name: string, args: NginxIngressArgs, opts?: ComponentResourceOptions) {
+    public readonly IngressNamespace: pulumi.Output<string>;
+    public readonly IngressServiceIp: pulumi.Output<string>;
+    constructor(name: string, args: NginxIngressArgs, opts?: pulumi.ComponentResourceOptions) {
         super("x:kubernetes:nginxingress", name);
 
         const ingressNamespace = new k8s.core.v1.Namespace(`${name}-namespace`, {
@@ -23,27 +22,17 @@ export class NginxIngress extends pulumi.ComponentResource {
                 repo: "https://kubernetes.github.io/ingress-nginx"
             },
             chart: "ingress-nginx",
-            version: "3.31.0",
+            version: "4.7.1",
             namespace: ingressNamespace.metadata.name,
             values: {
                 controller: {
-                    replicaCount: 1,
-                    // nodeSelector: {
-                    //     "beta.kubernetes.io/os": "linux"
-                    // },
-                    // admissionWebhooks: {
-                    //     patch: {
-                    //         nodeSelector: {
-                    //             "beta.kubernetes.io/os": "linux"
-                    //         }
-                    //     }
-                    // }
+                    replicaCount: 2,
+                    service: {
+                        // This is needed to preserve client IP.
+                        // And preserving the client IP is needed to allow the ingressAllowList config option in the 03-application stack to work.
+                        externalTrafficPolicy: "Local" 
+                    }
                 },
-                // defaultBackend: {
-                //     nodeSelector: {
-                //         "beta.kubernetes.io/os": "linux"
-                //     }
-                // }
             },
         }, {provider: args.provider, dependsOn: opts?.dependsOn, parent: ingressNamespace});
 
