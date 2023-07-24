@@ -7,7 +7,7 @@
         "@pulumi/gcp": "6.59.0",
         "@pulumi/kubernetes": "3.30.0",
         "@pulumi/pulumi": "3.74.0",
-        "@pulumi/random": "4.7.0",
+        "@pulumi/random": "4.13.2",
         "@pulumi/tls": "4.6.0"
     }
 }
