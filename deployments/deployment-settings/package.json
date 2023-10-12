@@ -1,0 +1,11 @@
+{
+    "name": "self-hosted-deployment-settings",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^16"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.0.0",
+        "@pulumi/pulumiservice": "^0.13.0"
+    }
+}
