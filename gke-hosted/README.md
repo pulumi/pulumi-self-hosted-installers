@@ -59,12 +59,14 @@ Since the installer uses Pulumi to deploy the service into Google Cloud Platform
 ### Deploy 01-infrastructure
 1. `cd 01-infrastructure`
 1. `npm install`
-1. `pulumi stack init {stackName1}` 
+1. `pulumi stack init organization/01-infrastructure-selfhosted-gke/{stackName1}` 
+   Note: The stack name plus the common name (optionally set below) is used when naming resources. So, keep these two names under, say, 20 characters in total to avoid hitting GCP naming convention limits.
 1. `pulumi config set gcp:project {GCP project name}`
 1. `pulumi config set gcp:region {GCP region}` - e.g. us-east1
 1. `pulumi config set gcp:zone {GCP zone}` - e.g. us-east1-a
 Optional settings (will use default values if not set)
 1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
+   Note: See note above regarding the stackname.
 1. `pulumi config set dbInstanceType {GCP SQL DB instance type}` - uses "db-g1-small" if not set
 1. `pulumi config set dbUser {user name for SQL DB}` - uses "pulumiadmin" if not set
 1. `pulumi up` - Wait to complete before proceeding.
@@ -72,22 +74,24 @@ Optional settings (will use default values if not set)
 ### Deploy 02-kubernetes
 1. `cd ../02-kubernetes`
 1. `npm install`
-1. `pulumi stack init {stackName2}` 
+1. `pulumi stack init organization/02-kubernetes-selfhosted-gke/{stackName2}` 
+   Note: The stack name plus the common name (optionally set below) is used when naming resources. So, keep these two names under, say, 20 characters in total to avoid hitting GCP naming convention limits.
 1. `pulumi config set gcp:project {GCP project name}`
 1. `pulumi config set gcp:region {GCP region}` - e.g. us-east1
 1. `pulumi config set gcp:zone {GCP zone}` - e.g. us-east1-a
-1. `pulumi config set stackName1 {stackName1}` - the full stack name for the "01-infrastructure" stack.
+1. `pulumi config set stackName1 organization/01-infrastructure-selfhosted-gke/{stackName1}` - the full stack name for the "01-infrastructure" stack.
 Optional settings (will use default values if not set)
 1. `pulumi config set commonName {common base name to use for resources}` - uses "pulumiselfhosted" if not set
+   Note: See note above regarding the stackname.
 1. `pulumi config set clusterVersion {Kubernetes cluster version to use}` - defaults to latest version currently supported by the installer.
 1. `pulumi up` - Wait to complete before proceeding.
 
 ### Deploy 03-application
 1. `cd ../03-application`
 1. `npm install`
-1. `pulumi stack init {stackName3}` 
-1. `pulumi config set stackName1 {stackName1}` - the full stack name for the "01-infrastructure" stack.
-1. `pulumi config set stackName2 {stackName2}` - the full stack name for the "02-kubernetes" stack.
+1. `pulumi stack init organization/03-application-selfhosted-gke/{stackName3}` 
+1. `pulumi config set stackName1 organization/01-infrastructure-selfhosted-gke/{stackName1}` - the full stack name for the "01-infrastructure" stack.
+1. `pulumi config set stackName2 organization/02-kubernetes-selfhosted-gke/{stackName2}` - the full stack name for the "02-kubernetes" stack.
 1. `pulumi config set apiDomain {domain for api}` - e.g. api.pulumi.example.com (must start with "api")
 1. `pulumi config set consoleDomain {domain for console}` - e.g. app.pulumi.example.com (must start with "app")
 1. `pulumi config set licenseKey {licenseKey} --secret` - the license key is available from your Pulumi contact.
@@ -106,6 +110,7 @@ If not set, "forgot password" and email invites will not work but direct sign up
 1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
 Optional setting will use default value if not set.
 1. `pulumi config set samlSsoEnabled true` - set to false by default.
+1. `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the service to be open to the any address that can route to it). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range)
 1. `pulumi up`
 
 ### Configure DNS
@@ -184,7 +189,7 @@ The resultant X.key.pem and X.cert.pem files will be used when configuring the `
 1. Point your browser at your `app.XXXXX` URL.
 1. Click the `Not Secure` indicator in the Browser address bar.
 1. Click on "Certificate is not valid" in the window that pops up.
-1. Click on the certificate icon that is displayed and slide it into a Finder window (say into your Downloads folder).
+1. Click on the Details tab and export the certificate.
 1. Open "Keychain Access" on your Mac.
 1. Select the "System KeyChains" in the "Keychain Access" window.
 1. Click on the file that was copied to your Finder window and slide it into the "System Keychains" folder in"Keychain Access".

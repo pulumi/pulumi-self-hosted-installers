@@ -3,7 +3,7 @@ import { ComponentResource, ComponentResourceOptions, Input, Output, interpolate
 
 export interface KeyStorageArgs {
     objectId: Output<string>,
-    tenantId: Output<string>,
+    tenantId: string,
     resourceGroupName: Output<string>,
     tags?: Input<{
         [key: string]: Input<string>;

@@ -3,7 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import {config} from "./config";
 import {SecretsCollection} from "./secrets";
 import {SsoCertificate} from "./sso-cert";
-import {EncryptionService} from "./encryption-service";
+import {EncryptionService} from "./encryptionService";
 
 /**
  * Check pre-requisites.
@@ -304,14 +304,23 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
     },
   }, { provider, parent: consoleDeployment });
 
+  let ingressAnnotations: pulumi.Input<{
+    [key: string]: pulumi.Input<string>;
+  }> = {
+    "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+    "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
+  };
+  
+  if(config.ingressAllowList.length > 0) {
+    ingressAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"] = config.ingressAllowList;
+  }
+
   const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
     kind: "Ingress",
     metadata: {
       name: "pulumi-service-ingress",
       namespace: appsNamespace.metadata.name,
-      annotations: {
-        "nginx.ingress.kubernetes.io/ssl-redirect": "true"
-      }
+      annotations: ingressAnnotations,
     },
     spec: {
       ingressClassName: "nginx",

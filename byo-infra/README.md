@@ -13,7 +13,7 @@ Version ID | Date | K8s Version Supported | Note
 
 ## Prerequisites
 * K8s Cluster
-* MySQL 5.7 database server
+* MySQL 8.0 database server
   * At least 20GB SSD storage space
   * A databaser user that has the following grants:
     * `GRANT ALL PRIVILEGES ON 'pulumi'.* TO 'pulumi'@'%'`

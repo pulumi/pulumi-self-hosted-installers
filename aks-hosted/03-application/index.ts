@@ -364,7 +364,7 @@ export = async () => {
         },
         {
           hosts: [config.apiDomain],
-          secretName: config.disableAzureDnsCertManagement ? certSecretName : secrets.ApiCertificateSecret?.metadata.name,
+          secretName: !config.disableAzureDnsCertManagement ? certSecretName : secrets.ApiCertificateSecret?.metadata.name,
         }
       ],
       rules: [

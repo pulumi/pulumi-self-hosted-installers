@@ -1,7 +1,7 @@
-import { authorization, containerservice, managedidentity, network } from "@pulumi/azure-native/";
+import { containerservice, network } from "@pulumi/azure-native/";
 import { PrivateKey } from "@pulumi/tls";
 import { config } from "./config";
-import { Input, ComponentResource, ComponentResourceOptions, Output, all, interpolate } from "@pulumi/pulumi";
+import { Input, ComponentResource, ComponentResourceOptions, Output, output } from "@pulumi/pulumi";
 
 interface KubernetesClusterArgs {
   resourceGroupName: Output<string>;
@@ -9,6 +9,7 @@ interface KubernetesClusterArgs {
   aDApplicationSecret: Output<string>;
   aDAdminGroupId: Output<string>;
   disableAzureDnsCertManagement: boolean;
+  privateIpAddress: string | undefined;
   tags?: Input<{
     [key: string]: Input<string>;
   }>,
@@ -17,7 +18,7 @@ interface KubernetesClusterArgs {
 export class KubernetesCluster extends ComponentResource {
   public readonly Kubeconfig: Output<string>;
   public readonly Name: Output<string>;
-  public readonly PublicIp: Output<string>;
+  public readonly ClusterIp: Output<string>;
   public readonly OidcClusterIssuerUrl: Output<string | undefined>;
 
   constructor(name: string, args: KubernetesClusterArgs, opts?: ComponentResourceOptions) {
@@ -37,11 +38,11 @@ export class KubernetesCluster extends ComponentResource {
         clientId: args.aDApplicationId,
         secret: args.aDApplicationSecret,
       },
-      enableRBAC: true,
       aadProfile: {
         managed: true,
         adminGroupObjectIDs: [args.aDAdminGroupId],
       },
+      enableRBAC: true,
       agentPoolProfiles: [
         {
           count: 2,
@@ -91,29 +92,30 @@ export class KubernetesCluster extends ComponentResource {
     }
 
     // Must use a shorter name due to https://aka.ms/aks-naming-rules.
-    const cluster = new containerservice.v20230102preview.ManagedCluster(`${name}-aks`, clusterArgs, { parent: this, protect: true });
+    const cluster = new containerservice.v20230102preview.ManagedCluster(
+      `${name}-aks`,
+      clusterArgs,
+      {
+        parent: this,
+        protect: true,
+        deleteBeforeReplace: true,
+        replaceOnChanges: ["servicePrincipalProfile"]
+      }
+    );
+  
     const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
-    const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
-      resourceGroupName: nodeResourceGroup,
-      publicIPAllocationMethod: "Static",
-      sku: {
-        name: "Standard"
-      },
-      tags: args.tags,
-    }, { parent: this, dependsOn: [cluster] });
-
     const credentials = containerservice.listManagedClusterAdminCredentialsOutput({
       resourceGroupName: args.resourceGroupName,
       resourceName: cluster.name
     });
 
-    const ip = network.getPublicIPAddressOutput({
-      resourceGroupName: nodeResourceGroup,
-      publicIpAddressName: publicIp.name,
-    });
+    if (args.privateIpAddress) {
+      this.ClusterIp = output(args.privateIpAddress!);
+    } else {
+      this.ClusterIp = this.createPublicIpAddress(name, nodeResourceGroup, args.tags!, cluster);
+    }
 
     this.Name = cluster.name;
-    this.PublicIp = ip.ipAddress!.apply(s => s!);
     this.Kubeconfig = credentials.kubeconfigs[0].value.apply((config) =>
       Buffer.from(config, "base64").toString()
     );
@@ -122,8 +124,30 @@ export class KubernetesCluster extends ComponentResource {
     this.registerOutputs({
       Name: this.Name,
       Kubeconfig: this.Kubeconfig,
-      PublicIp: this.PublicIp,
+      ClusterIp: this.ClusterIp,
       OidcClusterIssuerUrl: this.OidcClusterIssuerUrl,
     });
+  }
+
+  createPublicIpAddress(
+    name: string,
+    nodeResourceGroup: Output<string>,
+    tags: Input<{ [key: string]: Input<string> }>,
+    cluster: containerservice.v20230102preview.ManagedCluster): Output<string> {
+    const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
+      resourceGroupName: nodeResourceGroup,
+      publicIPAllocationMethod: "Static",
+      sku: {
+        name: "Standard"
+      },
+      tags: tags,
+    }, { parent: this, dependsOn: [cluster] });
+
+    const ip = network.getPublicIPAddressOutput({
+      resourceGroupName: nodeResourceGroup,
+      publicIpAddressName: publicIp.name,
+    });
+
+    return ip.ipAddress!.apply(s => s!);
   }
 }
