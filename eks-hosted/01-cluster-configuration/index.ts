@@ -51,10 +51,10 @@ const vpc = new awsx.ec2.Vpc(`${name}-vpc`,
     {
         cidrBlock: "172.16.0.0/16",
         numberOfAvailabilityZones: 3,
-        subnets: [
+        subnetSpecs: [
             // Any non-null value is valid.
-            { type: "public", tags: {"kubernetes.io/role/elb": "1", ...tags}},
-            { type: "private", tags: {"kubernetes.io/role/internal-elb": "1", ...tags}},
+            { type: "Public", tags: {"kubernetes.io/role/elb": "1", ...tags}},
+            { type: "Private", tags: {"kubernetes.io/role/internal-elb": "1", ...tags}},
         ],
         tags: { "Name": `${name}-vpc`, ...tags},
     },
@@ -71,7 +71,7 @@ const vpc = new awsx.ec2.Vpc(`${name}-vpc`,
     }
 );
 
-export const vpcId = vpc.id;
+export const vpcId = vpc.vpcId;
 export const publicSubnetIds = vpc.publicSubnetIds;
 export const privateSubnetIds = vpc.privateSubnetIds;
 
