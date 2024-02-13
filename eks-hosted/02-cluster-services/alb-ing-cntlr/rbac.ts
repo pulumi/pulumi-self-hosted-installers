@@ -72,7 +72,9 @@ export function createIAM(
                             "elasticloadbalancing:DescribeTargetGroups",
                             "elasticloadbalancing:DescribeTargetGroupAttributes",
                             "elasticloadbalancing:DescribeTargetHealth",
-                            "elasticloadbalancing:DescribeTags"
+                            "elasticloadbalancing:DescribeTags",
+                            "elasticloadbalancing:AddTags"
+
                         ],
                         "Resource": "*"
                     },
