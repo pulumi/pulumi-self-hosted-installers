@@ -46,6 +46,12 @@ services:
       PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:
       PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:
 
+      # Enable OpenTelemetry
+      # Uses noop meter and noop tracer providers if not specified
+      PULUMI_OTLP_ENDPOINT:
+      # Valid protocols are grpc or http
+      PULUMI_OTLP_PROTOCOL: "grpc"
+
       # SAML SSO Settings
       SAML_CERTIFICATE_PUBLIC_KEY:
       SAML_CERTIFICATE_PRIVATE_KEY:
