@@ -197,6 +197,8 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 
 > Note: All configuration properties shown in this section are **required**.
 
+> Note: If using the Pulumi backend to deploy, you may need to prepend each stack name with your org name, e.g.
+> MyOrganization/my-selfhosted-01-cluster
 The installer requires a YAML configuration file with the following configuration properties:
 
 ```yaml
@@ -223,7 +225,6 @@ Configuration properties can be passed for SMTP and SSO support as well as to th
 
 ```yaml
 region: us-west-2
-stackName: selfhosted-us-west-2
 licenseFilePath: pulumi-selfhosted-company.license
 route53Zone: example.com
 route53Subdomain: pulumi
