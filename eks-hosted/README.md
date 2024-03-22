@@ -196,7 +196,8 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 ### Required Configuration
 
 > Note: All configuration properties shown in this section are **required**.
-
+> Note: If using the Pulumi backend to deploy, you may need to prepend each stack name with your org name, e.g.
+> <orgName>/my-selfhosted-01-cluster
 The installer requires a YAML configuration file with the following configuration properties:
 
 ```yaml
