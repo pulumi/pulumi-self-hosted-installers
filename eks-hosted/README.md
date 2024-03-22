@@ -223,7 +223,6 @@ Configuration properties can be passed for SMTP and SSO support as well as to th
 
 ```yaml
 region: us-west-2
-stackName: selfhosted-us-west-2
 licenseFilePath: pulumi-selfhosted-company.license
 route53Zone: example.com
 route53Subdomain: pulumi
