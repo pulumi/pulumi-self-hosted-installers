@@ -19,7 +19,7 @@ func NewAwsLogs(ctx *pulumi.Context, name string, args *AwsArgs, opts ...pulumi.
 	resource := AwsLogs{
 		LogGroup: lg,
 		Region:   args.Region,
-		Outputs: map[string]interface{}{
+		Outputs: map[string]any{
 			"region":     args.Region,
 			"logGroupId": lg.ID(),
 		},
@@ -28,11 +28,11 @@ func NewAwsLogs(ctx *pulumi.Context, name string, args *AwsArgs, opts ...pulumi.
 	return &resource, nil
 }
 
-func (l AwsLogs) GetConfiguration() map[string]interface{} {
+func (l AwsLogs) GetConfiguration() map[string]any {
 
-	return map[string]interface{}{
+	return map[string]any{
 		"logDriver": "awslogs",
-		"options": map[string]interface{}{
+		"options": map[string]any{
 			"awslogs-region":        l.Outputs["region"],
 			"awslogs-group":         l.Outputs["logGroupId"],
 			"awslogs-stream-prefix": "pulumi-api",
@@ -49,5 +49,5 @@ type AwsArgs struct {
 type AwsLogs struct {
 	Region   string
 	LogGroup *cloudwatch.LogGroup
-	Outputs  map[string]interface{}
+	Outputs  map[string]any
 }

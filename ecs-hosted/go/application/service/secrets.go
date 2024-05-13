@@ -22,7 +22,7 @@ func NewSecrets(ctx *pulumi.Context, name string, args *SecretsArgs, opts ...pul
 	// create our parented options
 	options := append(opts, pulumi.Parent(&resource))
 
-	var outputs []map[string]interface{}
+	var outputs []map[string]any
 
 	for _, s := range args.Secrets {
 		secretName := strings.ToLower(s.Name)
@@ -45,7 +45,7 @@ func NewSecrets(ctx *pulumi.Context, name string, args *SecretsArgs, opts ...pul
 			return nil, err
 		}
 
-		outputs = append(outputs, map[string]interface{}{
+		outputs = append(outputs, map[string]any{
 			"name":      s.Name,
 			"valueFrom": secret.Arn,
 		})

@@ -194,10 +194,10 @@ func hydrateConsoleValues(appConfig *config.Config, resource *ConfigArgs) {
 }
 
 func OutputToStringArray(output pulumi.AnyOutput) pulumi.StringArrayOutput {
-	return output.ApplyT(func(out interface{}) []string {
+	return output.ApplyT(func(out any) []string {
 		var res []string
 		if out != nil {
-			for _, v := range out.([]interface{}) {
+			for _, v := range out.([]any) {
 				res = append(res, v.(string))
 			}
 		}

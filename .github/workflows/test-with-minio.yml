@@ -47,9 +47,9 @@ jobs:
           echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${checkpoint_endpoint}" >> $GITHUB_ENV
           echo "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${pp_endpoint}" >> $GITHUB_ENV
 
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
-          go-version: '~1.17.0'
+          go-version: 1.22
 
       - uses: actions/setup-node@v4
         with:

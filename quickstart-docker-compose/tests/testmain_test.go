@@ -11,8 +11,6 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 const pulumiAPIURI = "http://localhost:8080"
@@ -90,27 +88,27 @@ type loginWithGitHubResponse struct {
 func createPulumiEmailUser() error {
 	b, err := json.Marshal(testEmailUserSignupRequest)
 	if err != nil {
-		return errors.Wrap(err, "marshaling signup request")
+		return fmt.Errorf("marshaling signup request %w", err)
 	}
 
 	emailUserSignupEndpoint := fmt.Sprintf("%s/api/console/email/signup", pulumiAPIURI)
 	resp, err := http.Post(emailUserSignupEndpoint, "application/json", bytes.NewReader(b))
 	if err != nil {
-		return errors.Wrap(err, "creating test user")
+		return fmt.Errorf("creating test user: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("unexpected response status code: %v", resp.StatusCode)
+		return fmt.Errorf("unexpected response status code: %v", resp.StatusCode)
 	}
 
 	var signupResponse loginWithGitHubResponse
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "reading response from signup request")
+		return fmt.Errorf("reading response from signup request: %w", err)
 	}
 
 	if err := json.Unmarshal(body, &signupResponse); err != nil {
-		return errors.Wrap(err, "unmarshaling the response body")
+		return fmt.Errorf("unmarshaling the response body: %w", err)
 	}
 
 	testAccountAccessToken = signupResponse.PulumiAccessToken

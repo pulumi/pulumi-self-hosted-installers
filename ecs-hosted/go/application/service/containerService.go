@@ -128,7 +128,7 @@ func NewContainerService(ctx *pulumi.Context, name string, args *ContainerServic
 		return nil, err
 	}
 
-	resourceId := pulumi.All(resource.Cluster.Name, resource.Service.Name).ApplyT(func(args []interface{}) string {
+	resourceId := pulumi.All(resource.Cluster.Name, resource.Service.Name).ApplyT(func(args []any) string {
 		return fmt.Sprintf("service/%s/%s", args[0], args[1])
 	}).(pulumi.StringOutput)
 
@@ -342,9 +342,9 @@ func NewSecretsManagerPolicy(ctx *pulumi.Context, name string, region string, se
 
 	return key.Arn.ApplyT(func(s string) (string, error) {
 		secretsArn := common.GetIamPolicyArn(region, fmt.Sprintf("arn:aws:secretsmanager:%s:%s:secret:%s/*", region, accountId, secretsPrefix))
-		doc, err := json.Marshal(map[string]interface{}{
+		doc, err := json.Marshal(map[string]any{
 			"Version": "2012-10-17",
-			"Statement": []map[string]interface{}{
+			"Statement": []map[string]any{
 				{
 					"Effect": "Allow",
 					"Action": []string{
@@ -429,7 +429,7 @@ type Secret struct {
 type SecretsOutput struct {
 	pulumi.ResourceState
 
-	Secrets []map[string]interface{}
+	Secrets []map[string]any
 }
 
 type SecretOut struct {

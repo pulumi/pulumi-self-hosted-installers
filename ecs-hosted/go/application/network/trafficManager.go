@@ -99,7 +99,7 @@ func newAccessLogBucket(ctx *pulumi.Context, region string, name string, prefix 
 	}
 
 	policy := pulumi.All(accessLogsBucket.ID(), serviceAccount, accountId).ApplyT(
-		func(args []interface{}) (string, error) {
+		func(args []any) (string, error) {
 			accessLogsBucketId := args[0].(string)
 			serviceAccount := args[1].(elb.GetServiceAccountResult)
 			accountId := args[2].(string)
