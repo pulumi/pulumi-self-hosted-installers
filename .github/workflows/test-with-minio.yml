@@ -3,6 +3,7 @@
 # match on an event_type parameter when triggered via an API call.
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
+  pull_request:
   workflow_dispatch:
 
   repository_dispatch:
