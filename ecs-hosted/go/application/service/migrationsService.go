@@ -156,7 +156,7 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 		args.PrivateSubnetIds,
 		taskDefinition.Arn,
 		taskDefinition.Family,
-	).ApplyT(func(applyArgs []interface{}) string {
+	).ApplyT(func(applyArgs []any) string {
 		clusterId := applyArgs[0].(pulumi.ID)
 		sgId := applyArgs[1].(pulumi.ID)
 		privateSubnets := applyArgs[2].([]string)
@@ -219,28 +219,28 @@ func newContainerDefinitions(ctx *pulumi.Context, name string, args *MigrationsC
 		args.DatabaseArgs.ClusterEndpoint,
 		args.DatabaseArgs.Port,
 		secrets.Secrets,
-		logGroup.ID()).ApplyT(func(applyArgs []interface{}) (string, error) {
+		logGroup.ID()).ApplyT(func(applyArgs []any) (string, error) {
 
 		dbClusterEndpoint := applyArgs[0].(string)
 		dbPort := applyArgs[1].(int)
-		secretsOutput := applyArgs[2].([]map[string]interface{})
+		secretsOutput := applyArgs[2].([]map[string]any)
 		logId := applyArgs[3].(pulumi.ID)
 
-		containerJson, err := json.Marshal([]interface{}{
-			map[string]interface{}{
+		containerJson, err := json.Marshal([]any{
+			map[string]any{
 				"name":              "pulumi-migration",
 				"image":             image,
 				"cpu":               cpu,
 				"memoryReservation": memoryReservation,
-				"environment": []map[string]interface{}{
+				"environment": []map[string]any{
 					CreateEnvVar("SKIP_CREATE_DB_USER", "true"),
 					CreateEnvVar("PULUMI_DATABASE_ENDPOINT", fmt.Sprintf("%s:%d", dbClusterEndpoint, dbPort)),
 					CreateEnvVar("PULUMI_DATABASE_PING_ENDPOINT", dbClusterEndpoint),
 				},
 				"secrets": secretsOutput,
-				"logConfiguration": map[string]interface{}{
+				"logConfiguration": map[string]any{
 					"logDriver": "awslogs",
-					"options": map[string]interface{}{
+					"options": map[string]any{
 						"awslogs-region":        args.Region,
 						"awslogs-group":         logId,
 						"awslogs-stream-prefix": "pulumi-api",

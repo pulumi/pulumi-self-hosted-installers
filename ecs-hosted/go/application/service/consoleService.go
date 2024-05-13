@@ -151,20 +151,20 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 	// resolve all needed outputs to construct our container definition in JSON
 	conatinerDefinitions, _ := pulumi.All(
 		args.TrafficManager.Public.LoadBalancer.DnsName,
-		args.LogDriver).ApplyT(func(applyArgs []interface{}) (string, error) {
+		args.LogDriver).ApplyT(func(applyArgs []any) (string, error) {
 
 		dnsName := applyArgs[0].(string)
 		logDriver := applyArgs[1].(log.LogDriver)
 
-		containerJson, err := json.Marshal([]interface{}{
-			map[string]interface{}{
+		containerJson, err := json.Marshal([]any{
+			map[string]any{
 				"cpu":               containerCpu,
 				"environment":       newConsoleEnvironmentVariables(args, dnsName),
 				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
 				"name":              consoleContainerName,
-				"portMappings": []map[string]interface{}{
+				"portMappings": []map[string]any{
 					{
 						"containerPort": consolePort,
 					},
@@ -189,9 +189,9 @@ func newConsoleTaskArgs(ctx *pulumi.Context, args *ConsoleContainerServiceArgs) 
 	}, nil
 }
 
-func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName string) []map[string]interface{} {
+func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName string) []map[string]any {
 
-	env := []map[string]interface{}{
+	env := []map[string]any{
 		CreateEnvVar("AWS_REGION", args.Region),
 		CreateEnvVar("LOGIN_RECAPTCHA_SITE_KEY", args.RecaptchaSiteKey),
 		CreateEnvVar("PULUMI_API", fmt.Sprintf("https://%s", args.ApiUrl)),

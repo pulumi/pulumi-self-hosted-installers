@@ -14,7 +14,7 @@ import (
 
 // assertRequestWithBodySuccess issues an HTTP request to the provided path and asserts that the response
 // has a 200 status code, and non-zero response body. It then returns the response for further assertions.
-func assertRequestWithBodySuccess(t *testing.T, method, path string, reqBody interface{}, respCode int) *http.Response {
+func assertRequestWithBodySuccess(t *testing.T, method, path string, reqBody any, respCode int) *http.Response {
 	pulumiAPI := pulumiAPIURI
 	pulumiAPI = strings.TrimRight(pulumiAPI, "/")
 	path = strings.TrimLeft(path, "/")

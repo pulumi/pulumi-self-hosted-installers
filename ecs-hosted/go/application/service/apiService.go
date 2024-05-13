@@ -21,7 +21,8 @@ const apiContainerName = "pulumi-service"
 
 /*
 Entry point to creating the Pulumi API Container Service
-API specific values like ECS Container Definition, health check, listener conditions, etc will be constructed here
+API specific values like ECS Container Request, health check, listener conditions, etc will be constructed here
+
 	before calling the base ContainerService.
 */
 func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainerServiceArgs, opts ...pulumi.ResourceOption) (*ApiContainerService, error) {
@@ -287,7 +288,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	imageName := fmt.Sprintf("pulumi/service:%s", args.ImageTag)
 	fullQualifiedImage := utils.NewEcrImageTag(ecrAccountId, args.Region, imageName, args.ImagePrefix)
 
-	inputs := []interface{}{
+	inputs := []any{
 		args.DatabaseArgs.ClusterEndpoint,
 		args.DatabaseArgs.Port,
 		secrets.Secrets,
@@ -303,11 +304,11 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	// resolve all needed outputs to construct our container definition in JSON
 	conatinerDefinitions, _ := pulumi.All(
 		inputs...,
-	).ApplyT(func(applyArgs []interface{}) (string, error) {
+	).ApplyT(func(applyArgs []any) (string, error) {
 
 		dbEndpoint := applyArgs[0].(string)
 		dbPort := applyArgs[1].(int)
-		secretsOutput := applyArgs[2].([]map[string]interface{})
+		secretsOutput := applyArgs[2].([]map[string]any)
 		checkpointBucket := applyArgs[3].(string)
 		policypackBucket := applyArgs[4].(string)
 		logDriver := applyArgs[5].(log.LogDriver)
@@ -317,21 +318,21 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 			samlCertPublicKey = applyArgs[6].(string)
 		}
 
-		containerJson, err := json.Marshal([]interface{}{
-			map[string]interface{}{
+		containerJson, err := json.Marshal([]any{
+			map[string]any{
 				"cpu":               containerCpu,
 				"environment":       newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket, samlCertPublicKey),
 				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
 				"name":              apiContainerName,
-				"portMappings": []map[string]interface{}{
+				"portMappings": []map[string]any{
 					{
 						"containerPort": apiPort,
 					},
 				},
 				"secrets": secretsOutput,
-				"ulimits": []map[string]interface{}{
+				"ulimits": []map[string]any{
 					{
 						"softLimit": 100000,
 						"hardLimit": 200000,
@@ -348,7 +349,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		return string(containerJson), nil
 	}).(pulumi.StringOutput)
 
-	s3AccessPolicyDoc := pulumi.All(args.CheckPointbucket.Bucket, args.PolicyPacksBucket.Bucket).ApplyT(func(applyArgs []interface{}) (string, error) {
+	s3AccessPolicyDoc := pulumi.All(args.CheckPointbucket.Bucket, args.PolicyPacksBucket.Bucket).ApplyT(func(applyArgs []any) (string, error) {
 
 		checkpointBucket := applyArgs[0].(string)
 		policypackBucket := applyArgs[1].(string)
@@ -356,9 +357,9 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		checkpointBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", checkpointBucket))
 		policypackBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", policypackBucket))
 
-		policyDoc, err := json.Marshal(map[string]interface{}{
+		policyDoc, err := json.Marshal(map[string]any{
 			"Version": "2012-10-17",
-			"Statement": []map[string]interface{}{
+			"Statement": []map[string]any{
 				{
 					"Effect": "Allow",
 					"Action": []string{"s3:*"},
@@ -386,9 +387,9 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	}
 
 	kmsPolicyDoc := kmsKey.Arn.ApplyT(func(arn string) (string, error) {
-		kmsDoc, err := json.Marshal(map[string]interface{}{
+		kmsDoc, err := json.Marshal(map[string]any{
 			"Version": "2012-10-17",
-			"Statement": []map[string]interface{}{
+			"Statement": []map[string]any{
 				{
 					"Effect": "Allow",
 					"Action": []string{
@@ -422,9 +423,9 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	}, nil
 }
 
-func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string, dbPort int, checkpointBucket string, policypackBucket string, samlPublicKey string) []map[string]interface{} {
+func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string, dbPort int, checkpointBucket string, policypackBucket string, samlPublicKey string) []map[string]any {
 
-	env := []map[string]interface{}{
+	env := []map[string]any{
 		CreateEnvVar("PULUMI_LICENSE_KEY", args.LicenseKey),
 		CreateEnvVar("PULUMI_ENTERPRISE", "true"),
 		CreateEnvVar("PULUMI_DATABASE_ENDPOINT", fmt.Sprintf("%s:%d", dbEndpoint, dbPort)),
@@ -459,8 +460,8 @@ func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string
 	return env
 }
 
-func CreateEnvVar(name string, value string) map[string]interface{} {
-	return map[string]interface{}{
+func CreateEnvVar(name string, value string) map[string]any {
+	return map[string]any{
 		"name":  name,
 		"value": value,
 	}

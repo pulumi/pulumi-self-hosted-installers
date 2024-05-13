@@ -33,5 +33,5 @@ func NewLogs(ctx *pulumi.Context, logType LogType, name string, region string, j
 }
 
 type LogDriver interface {
-	GetConfiguration() map[string]interface{}
+	GetConfiguration() map[string]any
 }

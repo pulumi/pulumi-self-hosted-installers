@@ -14,7 +14,7 @@ func main() {
 			return err
 		}
 
-		domain := pulumi.All(cfg.Route53ZoneName, cfg.Route53Subdomain).ApplyT(func(args []interface{}) string {
+		domain := pulumi.All(cfg.Route53ZoneName, cfg.Route53Subdomain).ApplyT(func(args []any) string {
 			zone := args[0].(string)
 			sub := args[1].(string)
 
