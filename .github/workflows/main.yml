@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Remove unnecessary files from for packaging
       run: |
         # Don't need tests and override files for the final package.
@@ -20,12 +20,13 @@ jobs:
         rm -r **/*.override.yml
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v4
       with:
         # Artifact name
         name: pulumi-self-hosted-installers
         # Directory containing files to upload
         path: .
+        overwrite: true
 
     - name: Create Release
       id: create_release
