@@ -1,5 +1,3 @@
-version: "3.0"
-
 networks:
   pulumi-self-hosted-installers:
     # Setting external to true will prevent docker-compose from creating the
@@ -10,9 +8,55 @@ networks:
 
 services:
 
+  opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: search
+    ulimits:
+      memlock:
+        soft: -1 # Set memlock to unlimited (no soft or hard limit)
+        hard: -1
+      nofile:
+        soft: 65536 # Maximum number of open files for the opensearch user - set to at least 65536
+        hard: 65536
+    volumes:
+      - $PULUMI_DATA_PATH/opensearch/data:$PULUMI_DATA_PATH/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+      - "9600:9600"
+    expose:
+      - 9200
+      - 9300
+      - 9600
+    env_file: ../search_vars.env
+    networks:
+      - pulumi-services
+    healthcheck:
+      test: ["CMD-SHELL", "curl -u admin:admin -f http://localhost:9200 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.1
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    expose:
+      - 5601
+    environment:
+      OPENSEARCH_HOSTS: '["http://search:9200"]'
+    networks:
+      - pulumi-services
+    depends_on:
+      opensearch:
+        condition: service_healthy
+
   api:
     ports:
-      - 8080:8080
+      - "8080:8080"
     image: "pulumi/service:latest"
     env_file: ../service_vars.env
     # Environment variables can be dynamically configured by setting them in your host's environment.
@@ -37,7 +81,7 @@ services:
       PULUMI_AZURE_KV_KEY_NAME:
       PULUMI_AZURE_KV_KEY_VERSION:
       # Email identity config for self-service password reset.
-      # The site (RECAPTCHA_SITE_KEY) key counterpart for this 
+      # The site (RECAPTCHA_SITE_KEY) key counterpart for this
       # must be set in the `console` service below.
       RECAPTCHA_SECRET_KEY:
       # Checkpoint object storage (configure one)
@@ -63,6 +107,10 @@ services:
       AZURE_CLIENT_SECRET:
       AZURE_TENANT_ID:
       AZURE_SUBSCRIPTION_ID:
+      # Search env vars
+      PULUMI_SEARCH_DOMAIN: http://opensearch:9200
+      PULUMI_SEARCH_USER: admin
+      PULUMI_SEARCH_PASSWORD: admin
     networks:
       pulumi-self-hosted-installers:
       pulumi-services:
@@ -74,20 +122,24 @@ services:
       - $PULUMI_DATA_PATH/policy_packs:$PULUMI_DATA_PATH/policy_packs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/status"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 5s
     ulimits:
       nofile:
         soft: 100000
         hard: 200000
     depends_on:
-      - db
+      opensearch:
+        condition: service_healthy
+      db:
+        condition: service_started
     restart: unless-stopped
 
   console:
     ports:
-      - 3000:3000
+      - "3000:3000"
     image: "pulumi/console:latest"
     env_file: ../console_vars.env
     networks:
@@ -117,7 +169,7 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-  
+
   db:
     image: "mysql:8.0"
     environment:
@@ -140,4 +192,6 @@ services:
       - pulumi-self-hosted-installers
     restart: on-failure
     depends_on:
-      - db
+      db:
+        condition: service_started
+
