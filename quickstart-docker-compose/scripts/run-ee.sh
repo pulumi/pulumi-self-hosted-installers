@@ -81,8 +81,6 @@ docker_compose_stop() {
     else
         docker compose ${DOCKER_COMPOSE_ARGS} stop
     fi
-
-    docker compose logs
 }
 
 trap docker_compose_stop SIGINT SIGTERM ERR EXIT
