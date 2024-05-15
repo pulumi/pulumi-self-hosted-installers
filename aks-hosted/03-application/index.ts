@@ -4,6 +4,7 @@ import { getConfig } from "./config";
 import { SecretsCollection } from "./secrets";
 import { SsoCertificate } from "./sso-cert";
 import { CertManagerDeployment } from "./cert-manager";
+import { OpenSearchComponent } from "./search";
 
 export = async () => {
   /**
@@ -71,6 +72,16 @@ export = async () => {
     namespace: appsNamespace.metadata.name,
     provider: provider
   });
+
+  const search = new OpenSearchComponent(
+      "search",
+      {
+        namespace: appsNamespace,
+        storageClassName: config.searchStorageClassName,
+        storageSizeGB: config.searchStorageSizeGB,
+        accessModes: ["ReadWriteOnce"],
+      },
+  );
 
   const apiPortName = "http";
   const apiDeployment = new apps.v1.Deployment(`${commonName}-${apiName}`, {
@@ -225,7 +236,19 @@ export = async () => {
                 {
                   name: "LOGIN_RECAPTCHA_SECRET_KEY",
                   valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
-                }
+                },
+                {
+                  name: "PULUMI_SEARCH_DOMAIN",
+                  value: "http://opensearch:9200",
+                },
+                {
+                  name: "PULUMI_SEARCH_USER",
+                  value: "admin",
+                },
+                {
+                  name: "PULUMI_SEARCH_PASSWORD",
+                  value: "admin",
+                },
               ],
             },
           ],
@@ -339,6 +362,8 @@ export = async () => {
       subscriptionId: config.subscriptionId,
       issuerEmail: config.certManagerEmail,
     });
+
+    ingressAnnotations["cert-manager.io/cluster-issuer"] = cert.Issuer;
   }
 
   new networking.v1.Ingress(`${commonName}-ingress`, {
@@ -359,13 +384,21 @@ export = async () => {
       },
       tls: [
         {
-          hosts: [config.consoleDomain],
-          secretName: !config.disableAzureDnsCertManagement ? certSecretName : secrets.ConsoleCertificateSecret?.metadata.name,
+          hosts: [
+              config.consoleDomain,
+              config.apiDomain,
+          ],
+          secretName: certSecretName,
         },
-        {
-          hosts: [config.apiDomain],
-          secretName: !config.disableAzureDnsCertManagement ? certSecretName : secrets.ApiCertificateSecret?.metadata.name,
-        }
+          // TODO: this doesn't work for cert-manager since the cert name is the same
+        // {
+        //   hosts: [config.consoleDomain],
+        //   secretName: !config.disableAzureDnsCertManagement ? certSecretName : secrets.ConsoleCertificateSecret?.metadata.name,
+        // },
+        // {
+        //   hosts: [config.apiDomain],
+        //   secretName: !config.disableAzureDnsCertManagement ? certSecretName : secrets.ApiCertificateSecret?.metadata.name,
+        // }
       ],
       rules: [
         {

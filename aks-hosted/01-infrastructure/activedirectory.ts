@@ -19,12 +19,14 @@ export class ActiveDirectoryApplication extends ComponentResource {
     }, { parent: this });
 
     const principalServer = new ServicePrincipal(`${name}-sp-server`, {
-      applicationId: applicationServer.applicationId,
+      clientId: applicationServer.clientId,
     }, { parent: applicationServer });
 
     const adminGroup = new Group(`${name}-ad-admingroup`, {
       displayName: `${name}-ad-admingroup`,
+      mailEnabled: false,
       members: [args.userId, principalServer.objectId],
+      securityEnabled: true,
     }, { parent: this });
 
     const spPasswordServer = new ServicePrincipalPassword(`${name}-sppwd-server`, {
