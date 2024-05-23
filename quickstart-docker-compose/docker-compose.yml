@@ -66,7 +66,7 @@ services:
       AZURE_TENANT_ID:
       AZURE_SUBSCRIPTION_ID:
       # Search env vars
-      PULUMI_SEARCH_DOMAIN:
+      PULUMI_SEARCH_DOMAIN: "${PULUMI_SEARCH_DOMAIN}"
       PULUMI_SEARCH_USER:
       PULUMI_SEARCH_PASSWORD:
     networks:
