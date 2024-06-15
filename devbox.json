@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.11.0/.schema/devbox.schema.json",
+  "packages": [
+    "go@latest",
+    "gopls@latest",
+    "gotests@latest",
+    "gomodifytags@latest",
+    "impl@latest",
+    "pulumi@latest",
+    "pulumiPackages.pulumi-language-go@latest",
+    "pulumiPackages.pulumi-language-nodejs@latest",
+    "go-task@latest",
+    "minikube@latest",
+    "kubectl@latest",
+    "aws-iam-authenticator@latest",
+    "cobra-cli@latest"
+  ],
+  "env": {
+    "GOPATH": "$PWD",
+    "PATH": "$PATH:$PWD/bin"
+  },
+  "shell": {
+    "init_hook": [
+      "source ./devbox.d/entry.sh"
+    ],
+    "scripts": {
+      "test": [
+        "echo \"Error: no test specified\" && exit 1"
+      ]
+    }
+  }
+}
