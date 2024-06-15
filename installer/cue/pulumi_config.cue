@@ -13,60 +13,17 @@ AwsSubnetID = =~"^subnet-[a-zA-Z0-9]+$"
 AwsVpcID = =~"^vpc-[a-zA-Z0-9]+$"
 ACMCertificateARN = =~"^arn:aws:acm:[a-z0-9-]+:[0-9]+:certificate/[a-zA-Z0-9-]+$"
 
+import "config"
+
 // Deployment options
-deploymentOptions: {
-  minikube: {
-    platforms: ["default"]
-    services: {
-      opensearch: ["image", "awsOpensearch"]
-      opensearchDashboards: ["image"]
-      api: ["image"]
-      console: ["image"]
-      db: ["image", "awsRDS"]
-      migration: ["image"]
-    }
-  }
-  aws: {
-    platforms: ["eks", "ecs", "byoK8s"]
-    services: {
-      opensearch: ["image", "awsOpensearch"]
-      opensearchDashboards: ["image"]
-      api: ["image"]
-      console: ["image"]
-      db: ["image", "awsRDS"]
-      migration: ["image"]
-    }
-  }
-  azure: {
-    platforms: ["aks", "byoK8s"]
-    services: {
-      opensearch: ["image"]
-      opensearchDashboards: ["image"]
-      api: ["image"]
-      console: ["image"]
-      db: ["image", "azureDB"]
-      migration: ["image"]
-    }
-  }
-  gcp: {
-    platforms: ["gke", "byoK8s"]
-    services: {
-      opensearch: ["image"]
-      opensearchDashboards: ["image"]
-      api: ["image"]
-      console: ["image"]
-      db: ["image", "gcpDB"]
-      migration: ["image"]
-    }
-  }
-}
+deploymentOptions: config.deploymentOptions
 
 // Selected deployment pattern
 deploymentPattern: {
   // Cloud provider (aws, azure, gcp)
   provider: string & list.Contains(deploymentOptions, _)
   // Deployment platform (e.g., eks, aks, gke)
-  platform: string & list.Contains(deploymentOptions[_provider].platforms, _)
+  platform: string & list.Contains(deploymentOptions[_provider].platforms.name, _)
   // Selected services for deployment
   services: [string] & [ for _, service in _ { service & list.Contains(deploymentOptions[_provider].services, service) }]
 }
