@@ -46,7 +46,7 @@ var configureCmd = &cobra.Command{
 		ctx := cuecontext.New()
 		setupLogging()
 
-		f, err := os.ReadFile("installer/cue/deployment_patterns.cue")
+		f, err := os.ReadFile("../cue/deployment_patterns.cue")
 		if err != nil {
 			fmt.Println("Error reading CUE file:", err)
 			return
@@ -222,7 +222,7 @@ var configureCmd = &cobra.Command{
 			fmt.Println("Error converting globalConfig to string:", err)
 			return
 		}
-		configDir := "installer/config"
+		configDir := "../config"
 		configFilePath := configDir + "/config.cue"
 
 		// Create the directory if it doesn't exist
