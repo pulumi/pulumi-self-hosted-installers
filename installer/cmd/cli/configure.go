@@ -46,7 +46,7 @@ var configureCmd = &cobra.Command{
 		ctx := cuecontext.New()
 		setupLogging()
 
-		f, err := os.ReadFile("../../cue/deployment_patterns.cue")
+		f, err := os.ReadFile("installer/cue/deployment_patterns.cue")
 		if err != nil {
 			fmt.Println("Error reading CUE file:", err)
 			return
