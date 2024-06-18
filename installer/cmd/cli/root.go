@@ -41,29 +41,37 @@ func collectServiceOptions(inst cue.Value, selected map[string]string) map[strin
 		log.Println("Error loading global configuration: field 'global' not found")
 		return nil
 	}
-	provider := global.LookupPath(cue.ParsePath("deploymentOptions." + selected["provider"]))
+	provider := inst.LookupPath(cue.ParsePath("deploymentOptions." + selected["provider"]))
+	if !provider.Exists() {
+		log.Println("Error loading provider configuration: field 'deploymentOptions' not found")
+		return nil
+	}
 	services := provider.LookupPath(cue.ParsePath("services"))
-	if services.Exists() {
-		iter, err := services.Fields()
+	if !services.Exists() {
+		log.Println("Error loading services configuration: field 'services' not found")
+		return nil
+	}
+	iter, err := services.Fields()
+	if err != nil {
+		log.Printf("Failed to iterate over services: %v", err)
+		return nil
+	}
+	for iter.Next() {
+		service := iter.Value()
+		serviceName := iter.Label()
+		options := []list.Item{}
+		serviceIter, err := service.Fields()
 		if err != nil {
-			log.Printf("Failed to iterate over services: %v", err)
+			log.Printf("Failed to iterate over service options: %v", err)
+			continue
 		}
-		for iter.Next() {
-			service := iter.Value()
-			serviceName := iter.Label()
-			options := []list.Item{}
-			serviceIter, err := service.Fields()
-			if err != nil {
-				log.Printf("Failed to iterate over service options: %v", err)
-			}
-			for serviceIter.Next() {
-				option := serviceIter.Value()
-				optionName, _ := option.LookupPath(cue.ParsePath("name")).String()
-				optionDescription, _ := option.LookupPath(cue.ParsePath("description")).String()
-				options = append(options, item{title: optionName, description: optionDescription})
-			}
-			serviceOptions[serviceName] = options
+		for serviceIter.Next() {
+			option := serviceIter.Value()
+			optionName, _ := option.LookupPath(cue.ParsePath("name")).String()
+			optionDescription, _ := option.LookupPath(cue.ParsePath("description")).String()
+			options = append(options, item{title: optionName, description: optionDescription})
 		}
+		serviceOptions[serviceName] = options
 	}
 	return serviceOptions
 }
