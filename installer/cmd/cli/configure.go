@@ -230,7 +230,13 @@ var configureCmd = &cobra.Command{
 			fmt.Println("Error creating config directory:", err)
 			return
 		}
-		log.Printf("Writing configuration to %s", configFilePath)
+		absConfigFilePath, err := filepath.Abs(configFilePath)
+		if err != nil {
+			log.Printf("Error getting absolute path: %v", err)
+			fmt.Println("Error getting absolute path:", err)
+			return
+		}
+		log.Printf("Writing configuration to %s", absConfigFilePath)
 		err = os.WriteFile(configFilePath, []byte(configStr), 0644)
 		if err != nil {
 			log.Printf("Error saving configuration: %v", err)
