@@ -111,7 +111,11 @@ var configureCmd = &cobra.Command{
 		}
 		data.Provider = providerModel.selectedItem
 		log.Printf("Selected provider: %s", data.Provider)
-		globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.provider"), data.Provider)
+		if globalConfig.Exists() {
+			globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.provider"), data.Provider)
+		} else {
+			globalConfig = ctx.CompileString(fmt.Sprintf("{selectedDeploymentOptions: {provider: \"%s\"}}", data.Provider))
+		}
 
 		// Fetch platform options for the selected provider
 		log.Printf("Fetching platform options for provider: %s", data.Provider)
@@ -155,7 +159,11 @@ var configureCmd = &cobra.Command{
 		}
 		data.Platform = platformModel.selectedItem
 		log.Printf("Selected platform: %s", data.Platform)
-		globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.platform"), data.Platform)
+		if globalConfig.Exists() {
+			globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.platform"), data.Platform)
+		} else {
+			globalConfig = ctx.CompileString(fmt.Sprintf("{selectedDeploymentOptions: {platform: \"%s\"}}", data.Platform))
+		}
 
 		// Select services
 		for _, service := range []string{"opensearch", "opensearchDashboards", "api", "console", "db", "migration"} {
@@ -183,7 +191,11 @@ var configureCmd = &cobra.Command{
 					}
 					data.Services[service] = serviceModel.selectedItem
 					log.Printf("Selected option for %s: %s", service, serviceModel.selectedItem)
-					globalConfig = globalConfig.FillPath(cue.ParsePath(fmt.Sprintf("selectedDeploymentOptions.services.%s.deployment", service)), serviceModel.selectedItem)
+					if globalConfig.Exists() {
+						globalConfig = globalConfig.FillPath(cue.ParsePath(fmt.Sprintf("selectedDeploymentOptions.services.%s.deployment", service)), serviceModel.selectedItem)
+					} else {
+						globalConfig = ctx.CompileString(fmt.Sprintf("{selectedDeploymentOptions: {services: { %s: { deployment: \"%s\" }}}}", service, serviceModel.selectedItem))
+					}
 				}
 			}
 		}
