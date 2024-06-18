@@ -36,7 +36,12 @@ func setupLogging() {
 
 func collectServiceOptions(inst cue.Value, selected map[string]string) map[string][]list.Item {
 	serviceOptions := make(map[string][]list.Item)
-	provider := inst.LookupPath(cue.ParsePath("deploymentOptions." + selected["provider"]))
+	global := inst.LookupPath(cue.ParsePath("global"))
+	if !global.Exists() {
+		log.Println("Error loading global configuration: field 'global' not found")
+		return nil
+	}
+	provider := global.LookupPath(cue.ParsePath("deploymentOptions." + selected["provider"]))
 	services := provider.LookupPath(cue.ParsePath("services"))
 	if services.Exists() {
 		iter, err := services.Fields()
