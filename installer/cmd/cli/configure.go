@@ -209,7 +209,13 @@ var configureCmd = &cobra.Command{
 		}
 
 		fmt.Println("Saving configuration...")
-		configStr, err := globalConfig.String()
+		configBytes, err := globalConfig.MarshalJSON()
+		if err != nil {
+			log.Println("Error converting globalConfig to JSON:", err)
+			fmt.Println("Error converting globalConfig to JSON:", err)
+			return
+		}
+		configStr := string(configBytes)
 		if err != nil {
 			log.Println("Error converting globalConfig to string:", err)
 			fmt.Println("Error converting globalConfig to string:", err)
