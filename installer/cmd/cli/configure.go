@@ -96,14 +96,13 @@ var configureCmd = &cobra.Command{
 			items[iter.Label()] = desc
 		}
 
-
 		// Declare variables for provider, platforms, and platformModel
 		var provider cue.Value
 		var platforms cue.Value
 		var platformModel GenericSelectionModel
 
 		// Select provider
-		providerModel := NewGenericSelectionModel("Select a provider", "", items)
+		providerModel := NewGenericSelectionModel("Select a provider", "test status message", items)
 		p := tea.NewProgram(&providerModel)
 		if err := p.Start(); err != nil {
 			log.Fatalf("Error starting Bubbletea program: %v", err)
@@ -176,7 +175,7 @@ var configureCmd = &cobra.Command{
 					for _, option := range options {
 						items[option] = "No description available"
 					}
-					serviceModel := NewGenericSelectionModel(fmt.Sprintf("Select an option for %s", service), "", items)
+					serviceModel := NewGenericSelectionModel(fmt.Sprintf("Select an option for %s", service), "mystatus", items)
 					p = tea.NewProgram(&serviceModel)
 					if err := p.Start(); err != nil {
 						log.Fatalf("Error starting Bubbletea program: %v", err)
