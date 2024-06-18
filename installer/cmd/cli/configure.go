@@ -222,7 +222,7 @@ var configureCmd = &cobra.Command{
 			fmt.Println("Error converting globalConfig to string:", err)
 			return
 		}
-		configDir := "../../config"
+		configDir := "installer/config"
 		configFilePath := configDir + "/config.cue"
 
 		// Create the directory if it doesn't exist
