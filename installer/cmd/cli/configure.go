@@ -221,7 +221,15 @@ var configureCmd = &cobra.Command{
 			fmt.Println("Error converting globalConfig to string:", err)
 			return
 		}
-		configFilePath := "installer/config/config.cue"
+		configDir := "installer/config"
+		configFilePath := configDir + "/config.cue"
+
+		// Create the directory if it doesn't exist
+		if err := os.MkdirAll(configDir, os.ModePerm); err != nil {
+			log.Printf("Error creating config directory: %v", err)
+			fmt.Println("Error creating config directory:", err)
+			return
+		}
 		log.Printf("Writing configuration to %s", configFilePath)
 		err = os.WriteFile(configFilePath, []byte(configStr), 0644)
 		if err != nil {
