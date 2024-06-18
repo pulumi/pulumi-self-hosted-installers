@@ -42,7 +42,6 @@ var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "Configure the deployment options",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Load deployment patterns from CUE file
 		ctx := cuecontext.New()
 		setupLogging()
 
