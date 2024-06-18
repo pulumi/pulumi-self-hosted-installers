@@ -63,6 +63,7 @@ var configureCmd = &cobra.Command{
 			fmt.Println("Error loading global configuration: field 'global' not found")
 			return
 		}
+		log.Printf("Global configuration loaded successfully: %v", globalConfig)
 
 		// Initialize the data struct
 		data := ConfigData{
