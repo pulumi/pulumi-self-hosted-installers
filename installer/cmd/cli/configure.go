@@ -60,10 +60,10 @@ var configureCmd = &cobra.Command{
 		// Load global configuration from CUE file
 		globalConfig := inst.LookupPath(cue.ParsePath("global"))
 		if !globalConfig.Exists() {
-			fmt.Println("Error loading global configuration: field 'global' not found")
-			return
+			log.Println("Warning: field 'global' not found in the CUE file. Proceeding without global configuration.")
+		} else {
+			log.Printf("Global configuration loaded successfully: %v", globalConfig)
 		}
-		log.Printf("Global configuration loaded successfully: %v", globalConfig)
 
 		// Initialize the data struct
 		data := ConfigData{
