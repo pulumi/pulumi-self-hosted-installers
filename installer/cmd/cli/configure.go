@@ -58,20 +58,16 @@ var configureCmd = &cobra.Command{
 			return
 		}
 
+		// Load global configuration from CUE file
+		globalConfig := ctx.CompileBytes(f).LookupPath(cue.ParsePath("global"))
+		if globalConfig.Err() != nil {
+			fmt.Println("Error loading global configuration:", globalConfig.Err())
+			return
+		}
+
 		// Initialize the data struct
-		data := struct {
-			Provider string
-			Platform string
-			Services map[string]string
-		}{
-			Services: map[string]string{
-				"opensearch":           "containerImage",
-				"opensearchDashboards": "containerImage",
-				"api":                  "containerImage",
-				"console":              "containerImage",
-				"db":                   "containerImage",
-				"migration":            "containerImage",
-			},
+		data := ConfigData{
+			Services: make(map[string]string),
 		}
 
 		// Get top-level keys and descriptions
@@ -115,6 +111,7 @@ var configureCmd = &cobra.Command{
 		}
 		data.Provider = providerModel.selectedItem
 		log.Printf("Selected provider: %s", data.Provider)
+		globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.provider"), data.Provider)
 
 		// Fetch platform options for the selected provider
 		log.Printf("Fetching platform options for provider: %s", data.Provider)
@@ -158,6 +155,7 @@ var configureCmd = &cobra.Command{
 		}
 		data.Platform = platformModel.selectedItem
 		log.Printf("Selected platform: %s", data.Platform)
+		globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.platform"), data.Platform)
 
 		// Select services
 		for _, service := range []string{"opensearch", "opensearchDashboards", "api", "console", "db", "migration"} {
@@ -185,6 +183,7 @@ var configureCmd = &cobra.Command{
 					}
 					data.Services[service] = serviceModel.selectedItem
 					log.Printf("Selected option for %s: %s", service, serviceModel.selectedItem)
+					globalConfig = globalConfig.FillPath(cue.ParsePath(fmt.Sprintf("selectedDeploymentOptions.services.%s.deployment", service)), serviceModel.selectedItem)
 				}
 			}
 		}
@@ -200,6 +199,13 @@ var configureCmd = &cobra.Command{
 		fmt.Printf("Platform: %s\n", data.Platform)
 		for k, v := range data.Services {
 			fmt.Printf("%s: %s\n", k, v)
+		}
+		fmt.Println("Saving configuration...")
+		err = os.WriteFile("path/to/save/config.cue", []byte(globalConfig.String()), 0644)
+		if err != nil {
+			fmt.Println("Error saving configuration:", err)
+		} else {
+			fmt.Println("Configuration saved successfully.")
 		}
 	},
 }
