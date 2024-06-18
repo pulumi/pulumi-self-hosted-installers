@@ -193,16 +193,13 @@ var configureCmd = &cobra.Command{
 		log.Printf("Platform: %s", data.Platform)
 		for k, v := range data.Services {
 			log.Printf("%s: %s", k, v)
-		}
-		fmt.Println("Selected options:")
-		fmt.Printf("Provider: %s\n", data.Provider)
-		fmt.Printf("Platform: %s\n", data.Platform)
-		for k, v := range data.Services {
 			fmt.Printf("%s: %s\n", k, v)
 		}
+
 		fmt.Println("Saving configuration...")
 		configStr, err := globalConfig.String()
 		if err != nil {
+			log.Println("Error converting globalConfig to string:", err)
 			fmt.Println("Error converting globalConfig to string:", err)
 			return
 		}
