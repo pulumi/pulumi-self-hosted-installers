@@ -30,6 +30,19 @@ deploymentPattern: {
 
 // Global configuration
 global: {
+  // User-selected deployment options
+  selectedDeploymentOptions: {
+    // Cloud provider (aws, azure, gcp)
+    provider: string & list.Contains(deploymentOptions, _)
+    // Deployment platform (e.g., eks, aks, gke)
+    platform: string & list.Contains(deploymentOptions[_provider].platforms.name, _)
+    // Selected services for deployment
+    services: {
+      [service: string]: {
+        deployment: string & list.Contains(deploymentOptions[_provider].services, service)
+      }
+    }
+  }
   // Azure location (e.g., eastus)
   location: string & =~"^[a-zA-Z0-9_-]+$"
   network: {
@@ -111,11 +124,11 @@ config: {
     // Additional configurations for specific services
     db?: {
       // DB instance type for AWS RDS
-      instanceType: string & len > 0 if list.Contains(deploymentPattern.services, "awsRDS")
+      instanceType: string & len > 0 if global.selectedDeploymentOptions.services.db?.deployment == "awsRDS"
     }
     opensearch?: {
       // Instance type for AWS OpenSearch
-      instanceType: string & len > 0 if list.Contains(deploymentPattern.services, "awsOpensearch")
+      instanceType: string & len > 0  if global.selectedDeploymentOptions.services.opensearch?.deployment, "awsOpensearch")
     }
   }
 
@@ -143,7 +156,7 @@ config: {
     // Additional configurations for specific services
     db?: {
       // DB instance type for Azure DB
-      instanceType: string & len > 0 if list.Contains(deploymentPattern.services, "azureDB")
+      instanceType: string & len > 0  if global.selectedDeploymentOptions.services.db?.deployment, "azureDB")
     }
   }
 
@@ -169,7 +182,7 @@ config: {
     // Additional configurations for specific services
     db?: {
       // DB instance type for GCP DB
-      instanceType: string & len > 0 if list.Contains(deploymentPattern.services, "gcpDB")
+      instanceType: string & len > 0  if global.selectedDeploymentOptions.services.db?.deployment, "gcpDB")
     }
   }
 }
