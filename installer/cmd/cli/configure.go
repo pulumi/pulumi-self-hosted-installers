@@ -201,7 +201,12 @@ var configureCmd = &cobra.Command{
 			fmt.Printf("%s: %s\n", k, v)
 		}
 		fmt.Println("Saving configuration...")
-		err = os.WriteFile("path/to/save/config.cue", []byte(globalConfig.String()), 0644)
+		configStr, err := globalConfig.String()
+		if err != nil {
+			fmt.Println("Error converting globalConfig to string:", err)
+			return
+		}
+		err = os.WriteFile("path/to/save/config.cue", []byte(configStr), 0644)
 		if err != nil {
 			fmt.Println("Error saving configuration:", err)
 		} else {
