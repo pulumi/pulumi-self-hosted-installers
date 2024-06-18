@@ -25,7 +25,7 @@ func init() {
 
 func setupLogging() {
 	if debugFile != "" {
-		logFile, err := os.OpenFile(debugFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		logFile, err := os.OpenFile(debugFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 		if err != nil {
 			fmt.Printf("Failed to open log file: %v", err)
 			os.Exit(1)

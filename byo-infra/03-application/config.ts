@@ -58,6 +58,15 @@ export const config = {
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
     recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
     recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
-    samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false"
+    samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
+    opensearch: {
+        imageTag: stackConfig.require("opensearchImageTag"),
+        dashboardsImageTag: stackConfig.require("opensearchDashboardsImageTag"),
+        instanceType: stackConfig.require("opensearchInstanceType"),
+        instanceCount: stackConfig.requireNumber("opensearchInstanceCount"),
+        volumeSize: stackConfig.requireNumber("opensearchVolumeSize"),
+        adminUsername: stackConfig.requireSecret("opensearchAdminUsername"),
+        adminPassword: stackConfig.requireSecret("opensearchAdminPassword")
+    }
 };
 

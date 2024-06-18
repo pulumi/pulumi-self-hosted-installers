@@ -16,8 +16,8 @@
     "cobra-cli@latest"
   ],
   "env": {
-    "GOPATH": "$PWD",
-    "PATH": "$PATH:$PWD/bin"
+    "PATH": "$PATH:$PWD/bin",
+    "GO111MODULE": "on"
   },
   "shell": {
     "init_hook": [

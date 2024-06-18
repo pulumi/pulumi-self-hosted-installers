@@ -16,35 +16,39 @@ type GenericSelectionModel struct {
 	selectedItem string
 }
 
-func NewGenericSelectionModel(title, status string, items map[string]string) GenericSelectionModel {
+func NewGenericSelectionModel(title, status string, items map[string]string, selectedItem string) GenericSelectionModel {
 	var listItems []list.Item
 	keys := make([]string, 0, len(items))
+	selectedIndex := 0
 	for k := range items {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	for _, k := range keys {
+	for i, k := range keys {
 		v := items[k]
 		listItems = append(listItems, item{title: k, description: v})
+		if k == selectedItem {
+			selectedIndex = i
+		}
 	}
 	l := list.New(listItems, list.NewDefaultDelegate(), 80, 20)
 	l.Title = title
+	l.Select(selectedIndex)
 
 	log.Printf("Title: %s, Status: %s, Items: %v", title, status, items)
 
 	return GenericSelectionModel{
-		title:  title,
-		status: status,
-		items:  items,
-		list:   l,
+		title:        title,
+		status:       status,
+		items:        items,
+		list:         l,
+		selectedItem: selectedItem,
 	}
 }
 
 func (m GenericSelectionModel) Init() tea.Cmd {
 	return nil
 }
-
-
 
 type item struct {
 	title       string
@@ -95,4 +99,3 @@ func (m *GenericSelectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m GenericSelectionModel) View() string {
 	return m.list.View()
 }
-

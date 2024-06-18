@@ -2,6 +2,7 @@
   "name": "pulumi-selfhosted-fully-managed-aws",
   "version": "1.0.0",
   "dependencies": {
+    "@pulumi/kubernetesx": "^0.1.6",
     "@pulumi/pulumi": "^3.2.1",
     "@types/js-yaml": "^3.12.5",
     "@types/readline-sync": "^1.4.3",

@@ -72,14 +72,12 @@ const smtpUsername = stackConfig.get("smtpUsername");
 const smtpPassword = stackConfig.getSecret("smtpPassword");
 const smtpGenericSender = stackConfig.get("smtpGenericSender");
 
-// logs
-const logType = toLogType(stackConfig.get("logType"));
-const logArgs: any = stackConfig.getObject("logArgs");
-
-if (logArgs) {
-    // enrich with region just in case
-    logArgs["region"] = region;
-}
+const logArgs = stackConfig.getObject("logArgs") || {};
+const logType = stackConfig.require("logType");
+const ecsClusterArn = stackConfig.require("ecsClusterArn");
+const openSearchInstanceType = stackConfig.get("openSearchInstanceType") || "t3.medium.search";
+const openSearchInstanceCount = stackConfig.getNumber("openSearchInstanceCount") || 2;
+const openSearchVolumeSize = stackConfig.getNumber("openSearchVolumeSize") || 10;
 
 export const config = {
     region,
@@ -144,5 +142,11 @@ export const config = {
     logs: {
         logArgs,
         logType
+    },
+    ecsClusterArn,
+    insights: {
+        openSearchInstanceType,
+        openSearchInstanceCount,
+        openSearchVolumeSize
     }
 };

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"cuelang.org/go/cue/cuecontext"
+	"cuelang.org/go/cue/format"
 	"github.com/spf13/viper"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -58,15 +59,35 @@ var configureCmd = &cobra.Command{
 			return
 		}
 
-		// Load global configuration from CUE file
-		globalConfig := inst.LookupPath(cue.ParsePath("global"))
-		if !globalConfig.Exists() {
-			log.Println("Warning: field 'global' not found in the CUE file. Proceeding without global configuration.")
-		} else {
-			log.Printf("Global configuration loaded successfully: %v", globalConfig)
+		// Debug: Print the structure of the CUE file
+		log.Printf("CUE file structure: %v", inst)
+
+		// Read the existing configuration from the config file
+		configFilePath := "../config/config.cue"
+		existingConfigBytes, err := os.ReadFile(configFilePath)
+		if err != nil {
+			log.Printf("Error reading existing config file: %v", err)
+			fmt.Println("Error reading existing config file:", err)
+			return
 		}
 
-		// Initialize the data struct
+		// Parse the existing configuration
+		existingGlobalConfig := ctx.CompileBytes(existingConfigBytes)
+		if existingGlobalConfig.Err() != nil {
+			log.Printf("Error compiling existing config file: %v", existingGlobalConfig.Err())
+			fmt.Println("Error compiling existing config file:", existingGlobalConfig.Err())
+			return
+		}
+
+		// Load global configuration from CUE file
+		selectedDeploymentOptions := existingGlobalConfig.LookupPath(cue.ParsePath("selectedDeploymentOptions"))
+		if !selectedDeploymentOptions.Exists() {
+			log.Println("Warning: field 'selectedDeploymentOptions' not found in the existing config file. Proceeding without selectedDeploymentOptions configuration.")
+		} else {
+			log.Printf("selectedDeploymentOptions configuration loaded successfully: %v", selectedDeploymentOptions)
+		}
+
+		// Initialize the data struct with default values
 		data := ConfigData{
 			Services: make(map[string]string),
 		}
@@ -98,10 +119,19 @@ var configureCmd = &cobra.Command{
 		var platforms cue.Value
 		var platformModel GenericSelectionModel
 
-		// Select provider
-		providerModel := NewGenericSelectionModel("Select a provider", "test status message", items)
+		// Select provider with the option to keep the current value
+		var currentProvider string
+		if cp, err := existingGlobalConfig.LookupPath(cue.ParsePath("selectedDeploymentOptions.provider")).String(); err == nil {
+			currentProvider = cp
+		}
+		log.Printf("Current provider: %s", currentProvider)
+		providerModel := NewGenericSelectionModel("Select a provider (press Enter to keep current value)", "", items, currentProvider)
+		if currentProvider != "" {
+			providerModel.selectedItem = currentProvider
+		}
+		existingGlobalConfig = existingGlobalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.provider"), currentProvider).Unify(ctx.CompileString(fmt.Sprintf(`selectedDeploymentOptions: { provider: "%s" }`, currentProvider)))
 		p := tea.NewProgram(&providerModel)
-		if err := p.Start(); err != nil {
+		if _, err := p.Run(); err != nil {
 			log.Fatalf("Error starting Bubbletea program: %v", err)
 		}
 
@@ -111,12 +141,8 @@ var configureCmd = &cobra.Command{
 			log.Fatalf("No provider selected")
 		}
 		data.Provider = providerModel.selectedItem
+		existingGlobalConfig = existingGlobalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.provider"), data.Provider)
 		log.Printf("Selected provider: %s", data.Provider)
-		if globalConfig.Exists() {
-			globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.provider"), data.Provider)
-		} else {
-			globalConfig = ctx.CompileString(fmt.Sprintf("{selectedDeploymentOptions: {provider: \"%s\"}}", data.Provider))
-		}
 
 		// Fetch platform options for the selected provider
 		log.Printf("Fetching platform options for provider: %s", data.Provider)
@@ -149,24 +175,33 @@ var configureCmd = &cobra.Command{
 			items = make(map[string]string)
 		}
 
-		// Select platform
-		platformModel = NewGenericSelectionModel("Select a platform", "", items)
+		// Select platform with the option to keep the current value
+		var currentPlatform string
+		platformPath := cue.ParsePath("selectedDeploymentOptions.platform")
+		log.Printf("Looking up path: %s", platformPath)
+		log.Printf("selectedDeploymentOptions config: %v", selectedDeploymentOptions)
+		if cp := existingGlobalConfig.LookupPath(platformPath); cp.Exists() {
+			currentPlatform, _ = cp.String()
+			log.Printf("Found current platform: %s", currentPlatform)
+		} else {
+			log.Printf("Current platform not found in selectedDeploymentOptions config")
+		}
+		log.Printf("Current platform after lookup: %s", currentPlatform)
+		platformModel = NewGenericSelectionModel(fmt.Sprintf("Select Platform"), "", items, currentPlatform)
+		if currentPlatform != "" {
+			platformModel.selectedItem = currentPlatform
+		}
+		existingGlobalConfig = existingGlobalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.platform"), currentPlatform)
 		p = tea.NewProgram(&platformModel)
-		if err := p.Start(); err != nil {
+		if _, err := p.Run(); err != nil {
 			log.Fatalf("Error starting Bubbletea program: %v", err)
 		}
 		if platformModel.selectedItem == "" {
 			log.Fatalf("No platform selected")
 		}
 		data.Platform = platformModel.selectedItem
+		existingGlobalConfig = existingGlobalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.platform"), data.Platform)
 		log.Printf("Selected platform: %s", data.Platform)
-		if globalConfig.Exists() {
-			globalConfig = globalConfig.FillPath(cue.ParsePath("selectedDeploymentOptions.platform"), data.Platform)
-		} else {
-			globalConfig = ctx.CompileString(fmt.Sprintf("{selectedDeploymentOptions: {platform: \"%s\"}}", data.Platform))
-		}
-
-		// Select services
 		for _, service := range []string{"opensearch", "opensearchDashboards", "api", "console", "db", "migration"} {
 			serviceOptions := provider.LookupPath(cue.ParsePath(fmt.Sprintf("services.%s", service)))
 			if serviceOptions.Exists() {
@@ -182,9 +217,18 @@ var configureCmd = &cobra.Command{
 					for _, option := range options {
 						items[option] = "No description available"
 					}
-					serviceModel := NewGenericSelectionModel(fmt.Sprintf("Select an option for %s", service), "mystatus", items)
+					// Select service option with the option to keep the current value
+					var currentServiceOption string
+					if cso, err := existingGlobalConfig.LookupPath(cue.ParsePath(fmt.Sprintf("selectedDeploymentOptions.services.%s.deployment", service))).String(); err == nil {
+						currentServiceOption = cso
+					}
+					log.Printf("Current option for %s: %s", service, currentServiceOption)
+					serviceModel := NewGenericSelectionModel(fmt.Sprintf("Select an option for %s (press Enter to keep current value)", service), "", items, currentServiceOption)
+					if currentServiceOption != "" {
+						serviceModel.selectedItem = currentServiceOption
+					}
 					p = tea.NewProgram(&serviceModel)
-					if err := p.Start(); err != nil {
+					if _, err := p.Run(); err != nil {
 						log.Fatalf("Error starting Bubbletea program: %v", err)
 					}
 					if serviceModel.selectedItem == "" {
@@ -192,10 +236,8 @@ var configureCmd = &cobra.Command{
 					}
 					data.Services[service] = serviceModel.selectedItem
 					log.Printf("Selected option for %s: %s", service, serviceModel.selectedItem)
-					if globalConfig.Exists() {
-						globalConfig = globalConfig.FillPath(cue.ParsePath(fmt.Sprintf("selectedDeploymentOptions.services.%s.deployment", service)), serviceModel.selectedItem)
-					} else {
-						globalConfig = ctx.CompileString(fmt.Sprintf("{selectedDeploymentOptions: {services: { %s: { deployment: \"%s\" }}}}", service, serviceModel.selectedItem))
+					if existingGlobalConfig.Exists() {
+						existingGlobalConfig = existingGlobalConfig.FillPath(cue.ParsePath(fmt.Sprintf("selectedDeploymentOptions.services.%s.deployment", service)), serviceModel.selectedItem)
 					}
 				}
 			}
@@ -210,20 +252,9 @@ var configureCmd = &cobra.Command{
 		}
 
 		fmt.Println("Saving configuration...")
-		configBytes, err := globalConfig.MarshalJSON()
-		if err != nil {
-			log.Println("Error converting globalConfig to JSON:", err)
-			fmt.Println("Error converting globalConfig to JSON:", err)
-			return
-		}
-		configStr := string(configBytes)
-		if err != nil {
-			log.Println("Error converting globalConfig to string:", err)
-			fmt.Println("Error converting globalConfig to string:", err)
-			return
-		}
+
 		configDir := "../config"
-		configFilePath := configDir + "/config.cue"
+		configFilePath = configDir + "/config.cue"
 
 		// Create the directory if it doesn't exist
 		if err := os.MkdirAll(configDir, os.ModePerm); err != nil {
@@ -238,7 +269,14 @@ var configureCmd = &cobra.Command{
 			return
 		}
 		log.Printf("Writing configuration to %s", absConfigFilePath)
-		err = os.WriteFile(configFilePath, []byte(configStr), 0644)
+		formattedConfig, err := format.Node(existingGlobalConfig.Value().Syntax())
+		if err != nil {
+			log.Printf("Error formatting CUE configuration: %v", err)
+			fmt.Println("Error formatting CUE configuration:", err)
+			return
+		}
+
+		err = os.WriteFile(configFilePath, formattedConfig, 0644)
 		if err != nil {
 			log.Printf("Error saving configuration: %v", err)
 			fmt.Println("Error saving configuration:", err)

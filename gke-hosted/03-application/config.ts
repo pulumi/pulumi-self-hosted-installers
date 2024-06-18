@@ -60,5 +60,14 @@ export const config = {
     recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
     samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
     ingressAllowList: stackConfig.get("ingressAllowList") || "",
+    imageTag,
+    opensearch: {
+        instanceType: stackConfig.get("opensearchInstanceType") || "t3.medium.search",
+        instanceCount: stackConfig.getNumber("opensearchInstanceCount") || 2,
+        volumeSize: stackConfig.getNumber("opensearchVolumeSize") || 10,
+        adminUsername: stackConfig.requireSecret("opensearchAdminUsername"),
+        adminPassword: stackConfig.requireSecret("opensearchAdminPassword"),
+        imageTag: stackConfig.require("opensearchImageTag"),
+    },
 };
 

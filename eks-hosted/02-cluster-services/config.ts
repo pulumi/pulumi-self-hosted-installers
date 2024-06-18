@@ -27,4 +27,8 @@ export const config = {
 
     // DNS Hosted Zone to manage with external-dns and use with ALB, ACM.
     hostedZoneDomainName: pulumiConfig.require("hostedZoneDomainName"),
+    // OpenSearch
+    openSearchInstanceType: pulumiConfig.get("openSearchInstanceType") || "t3.medium.search",
+    openSearchInstanceCount: pulumiConfig.getNumber("openSearchInstanceCount") || 2,
+    openSearchDomainName: pulumiConfig.require("openSearchDomainName"),
 };
