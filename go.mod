@@ -9,6 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/pulumi/pulumi/sdk/v3 v3.116.0
 	github.com/spf13/cobra v1.8.0
+	github.com/pulumi/pulumi-aws/sdk/v4 v4.38.0
 	github.com/stretchr/testify v1.9.0
 )
 

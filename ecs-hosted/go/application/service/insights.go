@@ -4,76 +4,9 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ecs"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/opensearch"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
-
-func DeployOpenSearch(ctx *pulumi.Context, config *config.ConfigArgs, vpcId pulumi.StringOutput, subnetIds pulumi.StringArrayOutput, securityGroupId pulumi.StringOutput) error {
-	// Create IAM role for OpenSearch
-	opensearchRole, err := iam.NewRole(ctx, "opensearchRole", &iam.RoleArgs{
-		AssumeRolePolicy: pulumi.String(`{
-			"Version": "2012-10-17",
-			"Statement": [
-				{
-					"Effect": "Allow",
-					"Principal": {
-						"Service": "es.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				}
-			]
-		}`),
-	})
-	if err != nil {
-		return err
-	}
-
-	// Attach necessary policies to the role
-	_, err = iam.NewRolePolicyAttachment(ctx, "opensearchRolePolicyAttachment", &iam.RolePolicyAttachmentArgs{
-		Role:      opensearchRole.Name,
-		PolicyArn: pulumi.String("arn:aws:iam::aws:policy/AmazonOpenSearchServiceFullAccess"),
-	})
-	if err != nil {
-		return err
-	}
-
-	// Create OpenSearch domain
-	opensearchDomain, err := opensearch.NewDomain(ctx, "opensearchDomain", &opensearch.DomainArgs{
-		ClusterConfig: &opensearch.DomainClusterConfigArgs{
-			InstanceType:  pulumi.String(config.OpenSearchInstanceType),
-			InstanceCount: pulumi.Int(config.OpenSearchInstanceCount),
-		},
-		EbsOptions: &opensearch.DomainEbsOptionsArgs{
-			EbsEnabled: pulumi.Bool(true),
-			VolumeSize: pulumi.Int(config.OpenSearchVolumeSize),
-		},
-		AccessPolicies: pulumi.String(`{
-			"Version": "2012-10-17",
-			"Statement": [
-				{
-					"Effect": "Allow",
-					"Principal": "*",
-					"Action": "es:*",
-					"Resource": "arn:aws:es:us-west-2:123456789012:domain/opensearchDomain/*"
-				}
-			]
-		}`),
-		VpcOptions: &opensearch.DomainVpcOptionsArgs{
-			SecurityGroupIds: pulumi.StringArray{securityGroupId},
-			SubnetIds:        subnetIds,
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Output the OpenSearch domain endpoint
-	ctx.Export("opensearchDomainEndpoint", opensearchDomain.Endpoint)
-
-	return nil
-}
 
 func DeployOpenSearchDashboards(ctx *pulumi.Context, config *config.ConfigArgs, opensearchDomainEndpoint pulumi.StringOutput, vpcId pulumi.StringOutput, subnetIds pulumi.StringArrayOutput, securityGroupId pulumi.StringOutput) error {
 	// Create ECS cluster
@@ -84,27 +17,29 @@ func DeployOpenSearchDashboards(ctx *pulumi.Context, config *config.ConfigArgs, 
 
 	// Create ECS task definition
 	taskDefinition, err := ecs.NewTaskDefinition(ctx, "opensearchDashboardsTask", &ecs.TaskDefinitionArgs{
-		ContainerDefinitions: pulumi.String(fmt.Sprintf(`[
-			{
-				"name": "opensearch-dashboards",
-				"image": "opensearchproject/opensearch-dashboards:latest",
-				"memory": %d,
-				"cpu": %d,
-				"essential": true,
-				"portMappings": [
-					{
-						"containerPort": 5601,
-						"hostPort": 5601
-					}
-				],
-				"environment": [
-					{
-						"name": "OPENSEARCH_HOSTS",
-						"value": "%s"
-					}
-				]
-			}
-		]`, config.OpenSearchDashboardsMemory, config.OpenSearchDashboardsCpu, opensearchDomainEndpoint)),
+		ContainerDefinitions: opensearchDomainEndpoint.ApplyT(func(endpoint string) string {
+			return fmt.Sprintf(`[
+				{
+					"name": "opensearch-dashboards",
+					"image": "opensearchproject/opensearch-dashboards:latest",
+					"memory": %d,
+					"cpu": %d,
+					"essential": true,
+					"portMappings": [
+						{
+							"containerPort": 5601,
+							"hostPort": 5601
+						}
+					],
+					"environment": [
+						{
+							"name": "OPENSEARCH_HOSTS",
+							"value": "%s"
+						}
+					]
+				}
+			]`, config.OpenSearchDashboardsMemory, config.OpenSearchDashboardsCpu, endpoint)
+		}).(pulumi.StringOutput),
 		Family:      pulumi.String("opensearch-dashboards"),
 		NetworkMode: pulumi.String("awsvpc"),
 		RequiresCompatibilities: pulumi.StringArray{

@@ -10,3 +10,5 @@ require (
 )
 
 replace github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common => ../common
+
+replace github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/go/infrastructure => ./ecs-hosted/go/infrastructure

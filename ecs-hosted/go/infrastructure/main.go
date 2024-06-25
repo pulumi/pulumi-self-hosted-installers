@@ -5,6 +5,7 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
+	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/opensearch"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -143,7 +144,24 @@ func main() {
 			return err
 		}
 
+		opensearchArgs := &OpenSearchArgs{
+			DeployOpenSearch: config.DeployOpenSearch,
+			InstanceType:     config.OpenSearchInstanceType,
+			InstanceCount:    config.OpenSearchInstanceCount,
+		}
+
+		opensearchDomain, err := NewOpenSearch(ctx, getCommonName(name, "opensearch"), opensearchArgs)
+		if err != nil {
+			return err
+		}
+
 		ctx.Export("vpcId", pulumi.String(config.vpcId))
+		if opensearchDomain != nil {
+			opensearchDomain.Endpoint.ApplyT(func(endpoint string) string {
+				ctx.Export("opensearchDomainEndpoint", pulumi.String(endpoint))
+				return endpoint
+			})
+		}
 		ctx.Export("publicSubnetIds", pulumi.ToStringArray(config.publicSubnetIds))
 		ctx.Export("privateSubnetIds", pulumi.ToStringArray(config.privateSubnetIds))
 		ctx.Export("isolatedSubnetIds", pulumi.ToStringArray(config.isolatedSubnetIds))

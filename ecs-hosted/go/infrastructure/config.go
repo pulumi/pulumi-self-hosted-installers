@@ -19,6 +19,10 @@ type ConfigValues struct {
 	isolatedSubnetIds []string
 	dbInstanceType    string
 	baseTags          map[string]string
+	UseOpenSearchContainer bool
+	DeployOpenSearch       bool
+	OpenSearchInstanceType string
+	OpenSearchInstanceCount int
 }
 
 func NewConfig(ctx *pulumi.Context) (*ConfigValues, error) {
@@ -57,6 +61,16 @@ func NewConfig(ctx *pulumi.Context) (*ConfigValues, error) {
 	configValues.dbInstanceType = appConfig.Get("dbInstanceType")
 	if configValues.dbInstanceType == "" {
 		configValues.dbInstanceType = "db.t3.medium"
+	}
+
+	configValues.DeployOpenSearch = appConfig.GetBool("deployOpenSearch")
+	configValues.OpenSearchInstanceType = appConfig.Get("opensearchInstanceType")
+	if configValues.OpenSearchInstanceType == "" {
+		configValues.OpenSearchInstanceType = "t3.medium.search"
+	}
+	configValues.OpenSearchInstanceCount = appConfig.GetInt("opensearchInstanceCount")
+	if configValues.OpenSearchInstanceCount == 0 {
+		configValues.OpenSearchInstanceCount = 1
 	}
 
 	return &configValues, nil
