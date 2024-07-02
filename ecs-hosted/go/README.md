@@ -88,7 +88,7 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     ```bash
     git clone https://github.com/pulumi/self-hosted
-    cd fully-managed-aws-ecs/{ts|go}
+    cd ecs-hosted/{ts|go}
     ```
 
 2.  Login to your [Self-Managed Backend](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend).
