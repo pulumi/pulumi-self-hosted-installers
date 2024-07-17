@@ -71,14 +71,14 @@ Pulumi projects to decouple the database, its required services, and the Pulumi 
 
 ### Design considerations
 
-The Pulumi services operate in Kubernetes with the following app properties.
+The Pulumi services operate in AWS Elastic Container Service (ECS) with the following app properties.
 
 - **Stateless**: Uses RDS and S3 for state management, which allows for rolling updates
   of the API and Console to occur with ease.
 - **Highly-Scalable**: API and Console services are configured to scale up or down on CPU and Memory metrics.
   This ensure the Pulumi services will elastically respond to the needs of your users.
 - **Highly-Available**: API and Console services are configured to be deployed across multiple
-  availability zones ensuring redudancy in your applications. RDS Database can also be configured with multiple replicas, across different availability zones.
+  availability zones ensuring redudancy in your applications. RDS Database and OpenSearch can also be configured with multiple replicas, across different availability zones.
 
 ## Install
 
