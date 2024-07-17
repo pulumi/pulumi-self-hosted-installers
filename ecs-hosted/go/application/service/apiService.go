@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/kms"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/lb"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/s3"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/kms"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/lb"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
@@ -63,6 +63,11 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 		{
 			Name:  "LOGIN_RECAPTCHA_SECRET_KEY",
 			Value: pulumi.String(args.RecaptchaSecretKey).ToStringOutput(),
+		},
+		{
+			// TODO: what if this value isn't present? we need to control this a bit better
+			Name:  "PULUMI_SEARCH_PASSWORD",
+			Value: args.OpensearchPassword,
 		},
 	}
 
@@ -295,6 +300,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		args.CheckPointbucket.Bucket,
 		args.PolicyPacksBucket.Bucket,
 		args.LogDriver,
+		args.OpensearchUser,
+		args.OpensearchEndpoint,
 	}
 
 	if args.SamlArgs.Enabled {
@@ -312,16 +319,29 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		checkpointBucket := applyArgs[3].(string)
 		policypackBucket := applyArgs[4].(string)
 		logDriver := applyArgs[5].(log.LogDriver)
+		opensearchUser := applyArgs[6].(string)
+		opensearchEndpoint := applyArgs[7].(string)
 
 		samlCertPublicKey := ""
 		if len(inputs) > 6 {
 			samlCertPublicKey = applyArgs[6].(string)
 		}
 
+		envArgs := &ApiContainerEnvironment{
+			ApiContainerArgs:   args,
+			DbEndpoint:         dbEndpoint,
+			DbPort:             dbPort,
+			CheckPointBucket:   checkpointBucket,
+			PolicyPackBucket:   policypackBucket,
+			SamlPublicKey:      samlCertPublicKey,
+			OpensearchUser:     opensearchUser,
+			OpensearchEndpoint: opensearchEndpoint,
+		}
+
 		containerJson, err := json.Marshal([]any{
 			map[string]any{
 				"cpu":               containerCpu,
-				"environment":       newApiEnvironmentVariables(args, dbEndpoint, dbPort, checkpointBucket, policypackBucket, samlCertPublicKey),
+				"environment":       newApiEnvironmentVariables(*envArgs),
 				"image":             fullQualifiedImage,
 				"logConfiguration":  logDriver.GetConfiguration(),
 				"memoryReservation": containerMemoryRes,
@@ -423,20 +443,23 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 	}, nil
 }
 
-func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string, dbPort int, checkpointBucket string, policypackBucket string, samlPublicKey string) []map[string]any {
+func newApiEnvironmentVariables(environmentArgs ApiContainerEnvironment) []map[string]any {
+	args := environmentArgs.ApiContainerArgs
 
 	env := []map[string]any{
 		CreateEnvVar("PULUMI_LICENSE_KEY", args.LicenseKey),
 		CreateEnvVar("PULUMI_ENTERPRISE", "true"),
-		CreateEnvVar("PULUMI_DATABASE_ENDPOINT", fmt.Sprintf("%s:%d", dbEndpoint, dbPort)),
-		CreateEnvVar("PULUMI_DATABASE_PING_ENDPOINT", dbEndpoint),
+		CreateEnvVar("PULUMI_DATABASE_ENDPOINT", fmt.Sprintf("%s:%d", environmentArgs.DbEndpoint, environmentArgs.DbPort)),
+		CreateEnvVar("PULUMI_DATABASE_PING_ENDPOINT", environmentArgs.DbEndpoint),
 		CreateEnvVar("PULUMI_DATABASE_NAME", "pulumi"),
 		CreateEnvVar("PULUMI_API_DOMAIN", args.ApiUrl),
 		CreateEnvVar("PULUMI_CONSOLE_DOMAIN", args.ConsoleUrl),
-		CreateEnvVar("PULUMI_OBJECTS_BUCKET", checkpointBucket),
-		CreateEnvVar("PULUMI_POLICY_PACK_BUCKET", policypackBucket),
+		CreateEnvVar("PULUMI_OBJECTS_BUCKET", environmentArgs.CheckPointBucket),
+		CreateEnvVar("PULUMI_POLICY_PACK_BUCKET", environmentArgs.PolicyPackBucket),
 		CreateEnvVar("PULUMI_KMS_KEY", args.KmsServiceKeyId),
 		CreateEnvVar("AWS_REGION", args.Region),
+		CreateEnvVar("PULUMI_SEARCH_USER", environmentArgs.OpensearchUser),
+		CreateEnvVar("PULUMI_SEARCH_DOMAIN", environmentArgs.OpensearchEndpoint),
 	}
 
 	if args.DisableEmailLogin {
@@ -453,8 +476,8 @@ func newApiEnvironmentVariables(args *ApiContainerServiceArgs, dbEndpoint string
 		env = append(env, CreateEnvVar("SMTP_GENERIC_SENDER", args.SmtpArgs.GenericSender))
 	}
 
-	if args.SamlArgs.Enabled && samlPublicKey != "" {
-		env = append(env, CreateEnvVar("SAML_CERTIFICATE_PUBLIC_KEY", samlPublicKey))
+	if args.SamlArgs.Enabled && environmentArgs.SamlPublicKey != "" {
+		env = append(env, CreateEnvVar("SAML_CERTIFICATE_PUBLIC_KEY", environmentArgs.SamlPublicKey))
 	}
 
 	return env
@@ -494,10 +517,25 @@ type ApiContainerServiceArgs struct {
 	CheckPointbucket           *s3.Bucket
 	PolicyPacksBucket          *s3.Bucket
 	ExecuteMigrations          bool
+	OpensearchUser             pulumi.StringOutput
+	OpensearchPassword         pulumi.StringOutput
+	OpensearchDomain           pulumi.StringOutput
+	OpensearchEndpoint         pulumi.StringOutput
 }
 
 type ApiContainerService struct {
 	pulumi.ResourceState
 
 	ContainerService *ContainerService
+}
+
+type ApiContainerEnvironment struct {
+	ApiContainerArgs   *ApiContainerServiceArgs
+	DbEndpoint         string
+	DbPort             int
+	CheckPointBucket   string
+	PolicyPackBucket   string
+	SamlPublicKey      string
+	OpensearchUser     string
+	OpensearchEndpoint string
 }
