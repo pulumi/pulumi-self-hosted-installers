@@ -67,7 +67,7 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 		{
 			// TODO: what if this value isn't present? we need to control this a bit better
 			Name:  "PULUMI_SEARCH_PASSWORD",
-			Value: args.OpensearchPassword,
+			Value: args.OpenSearchPassword,
 		},
 	}
 
@@ -300,8 +300,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		args.CheckPointbucket.Bucket,
 		args.PolicyPacksBucket.Bucket,
 		args.LogDriver,
-		args.OpensearchUser,
-		args.OpensearchEndpoint,
+		args.OpenSearchUser,
+		args.OpenSearchEndpoint,
 	}
 
 	if args.SamlArgs.Enabled {
@@ -319,8 +319,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		checkpointBucket := applyArgs[3].(string)
 		policypackBucket := applyArgs[4].(string)
 		logDriver := applyArgs[5].(log.LogDriver)
-		opensearchUser := applyArgs[6].(string)
-		opensearchEndpoint := applyArgs[7].(string)
+		OpenSearchUser := applyArgs[6].(string)
+		OpenSearchEndpoint := applyArgs[7].(string)
 
 		samlCertPublicKey := ""
 		if len(inputs) > 6 {
@@ -334,8 +334,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 			CheckPointBucket:   checkpointBucket,
 			PolicyPackBucket:   policypackBucket,
 			SamlPublicKey:      samlCertPublicKey,
-			OpensearchUser:     opensearchUser,
-			OpensearchEndpoint: opensearchEndpoint,
+			OpenSearchUser:     OpenSearchUser,
+			OpenSearchEndpoint: OpenSearchEndpoint,
 		}
 
 		containerJson, err := json.Marshal([]any{
@@ -458,8 +458,8 @@ func newApiEnvironmentVariables(environmentArgs ApiContainerEnvironment) []map[s
 		CreateEnvVar("PULUMI_POLICY_PACK_BUCKET", environmentArgs.PolicyPackBucket),
 		CreateEnvVar("PULUMI_KMS_KEY", args.KmsServiceKeyId),
 		CreateEnvVar("AWS_REGION", args.Region),
-		CreateEnvVar("PULUMI_SEARCH_USER", environmentArgs.OpensearchUser),
-		CreateEnvVar("PULUMI_SEARCH_DOMAIN", environmentArgs.OpensearchEndpoint),
+		CreateEnvVar("PULUMI_SEARCH_USER", environmentArgs.OpenSearchUser),
+		CreateEnvVar("PULUMI_SEARCH_DOMAIN", environmentArgs.OpenSearchEndpoint),
 	}
 
 	if args.DisableEmailLogin {
@@ -517,10 +517,10 @@ type ApiContainerServiceArgs struct {
 	CheckPointbucket           *s3.Bucket
 	PolicyPacksBucket          *s3.Bucket
 	ExecuteMigrations          bool
-	OpensearchUser             pulumi.StringOutput
-	OpensearchPassword         pulumi.StringOutput
-	OpensearchDomain           pulumi.StringOutput
-	OpensearchEndpoint         pulumi.StringOutput
+	OpenSearchUser             pulumi.StringOutput
+	OpenSearchPassword         pulumi.StringOutput
+	OpenSearchDomain           pulumi.StringOutput
+	OpenSearchEndpoint         pulumi.StringOutput
 }
 
 type ApiContainerService struct {
@@ -536,6 +536,6 @@ type ApiContainerEnvironment struct {
 	CheckPointBucket   string
 	PolicyPackBucket   string
 	SamlPublicKey      string
-	OpensearchUser     string
-	OpensearchEndpoint string
+	OpenSearchUser     string
+	OpenSearchEndpoint string
 }

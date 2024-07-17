@@ -22,7 +22,7 @@ type ConfigValues struct {
 	DbInstanceType                 string
 	BaseTags                       map[string]string
 	UseOpenSearchContainer         bool
-	DeployOpenSearch               bool
+	EnableOpenSearch               bool
 	OpenSearchInstanceType         string
 	OpenSearchInstanceCount        int
 	OpenSearchDomainName           string
@@ -75,20 +75,20 @@ func NewConfig(ctx *pulumi.Context) (*ConfigValues, error) {
 		configValues.DbInstanceType = "db.t3.medium"
 	}
 
-	configValues.DeployOpenSearch = appConfig.GetBool("deployOpenSearch")
-	configValues.OpenSearchInstanceType = appConfig.Get("opensearchInstanceType")
+	configValues.EnableOpenSearch = appConfig.GetBool("enableOpenSearch")
+	configValues.OpenSearchInstanceType = appConfig.Get("openSearchInstanceType")
 	if configValues.OpenSearchInstanceType == "" {
 		configValues.OpenSearchInstanceType = "t3.medium.search"
 	}
-	configValues.OpenSearchInstanceCount = appConfig.GetInt("opensearchInstanceCount")
+	configValues.OpenSearchInstanceCount = appConfig.GetInt("openSearchInstanceCount")
 	if configValues.OpenSearchInstanceCount < 2 {
 		configValues.OpenSearchInstanceCount = 2
 	}
-	configValues.OpenSearchDomainName = appConfig.Get("opensearchDomainName")
+	configValues.OpenSearchDomainName = appConfig.Get("openSearchDomainName")
 	if configValues.OpenSearchDomainName == "" {
 		configValues.OpenSearchDomainName = "pulumi"
 	}
-	configValues.OpenSearchDedicatedMasterCount = appConfig.GetInt("opensearchDedicatedMasterCount")
+	configValues.OpenSearchDedicatedMasterCount = appConfig.GetInt("openSearchDedicatedMasterCount")
 
 	return &configValues, nil
 }

@@ -134,10 +134,10 @@ func main() {
 			TaskCpu:                    config.ApiTaskCpu,
 			TrafficManager:             trafficManager,
 			WhiteListCidrBlocks:        config.WhiteListCidrBlocks,
-			OpensearchUser:             config.OpensearchUser,
-			OpensearchPassword:         config.OpensearchPassword,
-			OpensearchDomain:           config.OpensearchDomain,
-			OpensearchEndpoint:         config.OpensearchEndpoint,
+			OpenSearchUser:             config.OpenSearchUser,
+			OpenSearchPassword:         config.OpenSearchPassword,
+			OpenSearchDomain:           config.OpenSearchDomain,
+			OpenSearchEndpoint:         config.OpenSearchEndpoint,
 		})
 
 		if err != nil {

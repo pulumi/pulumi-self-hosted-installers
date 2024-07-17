@@ -24,8 +24,8 @@ type OpenSearchArgs struct {
 	DedicatedMasterCount int
 }
 
-func NewOpenSearch(ctx *pulumi.Context, name string, args *OpenSearchArgs, opts ...pulumi.ResourceOption) (*Opensearch, error) {
-	var resource Opensearch
+func NewOpenSearch(ctx *pulumi.Context, name string, args *OpenSearchArgs, opts ...pulumi.ResourceOption) (*OpenSearch, error) {
+	var resource OpenSearch
 
 	if !args.DeployOpenSearch {
 		return nil, nil
@@ -48,7 +48,7 @@ func NewOpenSearch(ctx *pulumi.Context, name string, args *OpenSearchArgs, opts 
 	options := append(opts, pulumi.Parent(&resource))
 
 	// open search has a specific domain name so we need to specify deleteBeforeReplace
-	opensearchOpts := append(options, pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "5h"}), pulumi.DeleteBeforeReplace(true))
+	OpenSearchOpts := append(options, pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "5h"}), pulumi.DeleteBeforeReplace(true))
 
 	sg, err := ec2.NewSecurityGroup(ctx, name, &ec2.SecurityGroupArgs{
 		VpcId: pulumi.String(args.VpcId),
@@ -191,7 +191,7 @@ func NewOpenSearch(ctx *pulumi.Context, name string, args *OpenSearchArgs, opts 
 				"Resource": "arn:aws:es:%s:%s:domain/%s/*"
 			}]
 		}`, args.Region, args.AccountId, args.DomainName)),
-	}, opensearchOpts...)
+	}, OpenSearchOpts...)
 
 	if err != nil {
 		return nil, err
@@ -251,7 +251,7 @@ func newLogGroup(ctx *pulumi.Context, name string, opts ...pulumi.ResourceOption
 	return lg, nil
 }
 
-type Opensearch struct {
+type OpenSearch struct {
 	pulumi.ResourceState
 
 	Domain   pulumi.StringOutput

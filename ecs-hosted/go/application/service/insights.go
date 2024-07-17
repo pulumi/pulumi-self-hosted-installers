@@ -8,20 +8,20 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func DeployOpenSearchDashboards(ctx *pulumi.Context, config *config.ConfigArgs, opensearchDomainEndpoint pulumi.StringOutput, vpcId pulumi.StringOutput, subnetIds pulumi.StringArrayOutput, securityGroupId pulumi.StringOutput) error {
+func DeployOpenSearchDashboards(ctx *pulumi.Context, config *config.ConfigArgs, OpenSearchDomainEndpoint pulumi.StringOutput, vpcId pulumi.StringOutput, subnetIds pulumi.StringArrayOutput, securityGroupId pulumi.StringOutput) error {
 	// Create ECS cluster
-	// cluster, err := ecs.NewCluster(ctx, "opensearchDashboardsCluster", nil)
+	// cluster, err := ecs.NewCluster(ctx, "OpenSearchDashboardsCluster", nil)
 	// if err != nil {
 	// 	return err
 	// }
 
 	// // Create ECS task definition
-	// taskDefinition, err := ecs.NewTaskDefinition(ctx, "opensearchDashboardsTask", &ecs.TaskDefinitionArgs{
-	// 	ContainerDefinitions: opensearchDomainEndpoint.ApplyT(func(endpoint string) string {
+	// taskDefinition, err := ecs.NewTaskDefinition(ctx, "OpenSearchDashboardsTask", &ecs.TaskDefinitionArgs{
+	// 	ContainerDefinitions: OpenSearchDomainEndpoint.ApplyT(func(endpoint string) string {
 	// 		return fmt.Sprintf(`[
 	// 			{
-	// 				"name": "opensearch-dashboards",
-	// 				"image": "opensearchproject/opensearch-dashboards:latest",
+	// 				"name": "OpenSearch-dashboards",
+	// 				"image": "OpenSearchproject/OpenSearch-dashboards:latest",
 	// 				"memory": %d,
 	// 				"cpu": %d,
 	// 				"essential": true,
@@ -33,14 +33,14 @@ func DeployOpenSearchDashboards(ctx *pulumi.Context, config *config.ConfigArgs, 
 	// 				],
 	// 				"environment": [
 	// 					{
-	// 						"name": "OPENSEARCH_HOSTS",
+	// 						"name": "OpenSearch_HOSTS",
 	// 						"value": "%s"
 	// 					}
 	// 				]
 	// 			}
 	// 		]`, config.OpenSearchDashboardsMemory, config.OpenSearchDashboardsCpu, endpoint)
 	// 	}).(pulumi.StringOutput),
-	// 	Family:      pulumi.String("opensearch-dashboards"),
+	// 	Family:      pulumi.String("OpenSearch-dashboards"),
 	// 	NetworkMode: pulumi.String("awsvpc"),
 	// 	RequiresCompatibilities: pulumi.StringArray{
 	// 		pulumi.String("FARGATE"),
@@ -54,7 +54,7 @@ func DeployOpenSearchDashboards(ctx *pulumi.Context, config *config.ConfigArgs, 
 	// }
 
 	// // Create ECS service
-	// _, err = ecs.NewService(ctx, "opensearchDashboardsService", &ecs.ServiceArgs{
+	// _, err = ecs.NewService(ctx, "OpenSearchDashboardsService", &ecs.ServiceArgs{
 	// 	Cluster:        cluster.Arn,
 	// 	TaskDefinition: taskDefinition.Arn,
 	// 	DesiredCount:   pulumi.Int(1),

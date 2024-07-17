@@ -66,10 +66,10 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		SecurityGroupId: stackRef.GetStringOutput(pulumi.String("dbSecurityGroupId")),
 	}
 
-	resource.OpensearchUser = stackRef.GetStringOutput(pulumi.String("opensearchUser"))
-	resource.OpensearchPassword = stackRef.GetStringOutput(pulumi.String("opensearchPassword"))
-	resource.OpensearchDomain = stackRef.GetStringOutput(pulumi.String("opensearchDomain"))
-	resource.OpensearchEndpoint = stackRef.GetStringOutput(pulumi.String("opensearchEndpoint"))
+	resource.OpenSearchUser = stackRef.GetStringOutput(pulumi.String("OpenSearchUser"))
+	resource.OpenSearchPassword = stackRef.GetStringOutput(pulumi.String("OpenSearchPassword"))
+	resource.OpenSearchDomain = stackRef.GetStringOutput(pulumi.String("OpenSearchDomain"))
+	resource.OpenSearchEndpoint = stackRef.GetStringOutput(pulumi.String("OpenSearchEndpoint"))
 
 	// this SG protects the VPCEs created in the infrastructure stack
 	resource.EndpointSecurityGroup = stackRef.GetStringOutput(pulumi.String("endpointSecurityGroupId"))
@@ -193,10 +193,10 @@ type ConfigArgs struct {
 	ConsoleHideEmailSignup            bool
 
 	// Insights Related Values
-	OpensearchUser     pulumi.StringOutput
-	OpensearchPassword pulumi.StringOutput
-	OpensearchDomain   pulumi.StringOutput
-	OpensearchEndpoint pulumi.StringOutput
+	OpenSearchUser     pulumi.StringOutput
+	OpenSearchPassword pulumi.StringOutput
+	OpenSearchDomain   pulumi.StringOutput
+	OpenSearchEndpoint pulumi.StringOutput
 
 	// Configuration for Both
 	SamlArgs *SamlArgs
@@ -207,27 +207,27 @@ type ConfigArgs struct {
 }
 
 // func hydrateInsightsValues(appConfig *config.Config, resource *ConfigArgs) {
-// 	resource.OpenSearchInstanceType = appConfig.Get("openSearchInstanceType")
+// 	resource.OpenSearchInstanceType = appConfig.Get("OpenSearchInstanceType")
 // 	if resource.OpenSearchInstanceType == "" {
 // 		resource.OpenSearchInstanceType = "t3.medium.search"
 // 	}
 
-// 	resource.OpenSearchInstanceCount = appConfig.GetInt("openSearchInstanceCount")
+// 	resource.OpenSearchInstanceCount = appConfig.GetInt("OpenSearchInstanceCount")
 // 	if resource.OpenSearchInstanceCount == 0 {
 // 		resource.OpenSearchInstanceCount = 2
 // 	}
 
-// 	resource.OpenSearchVolumeSize = appConfig.GetInt("openSearchVolumeSize")
+// 	resource.OpenSearchVolumeSize = appConfig.GetInt("OpenSearchVolumeSize")
 // 	if resource.OpenSearchVolumeSize == 0 {
 // 		resource.OpenSearchVolumeSize = 10
 // 	}
 
-// 	resource.OpenSearchDashboardsMemory = appConfig.GetInt("openSearchDashboardsMemory")
+// 	resource.OpenSearchDashboardsMemory = appConfig.GetInt("OpenSearchDashboardsMemory")
 // 	if resource.OpenSearchDashboardsMemory == 0 {
 // 		resource.OpenSearchDashboardsMemory = 512
 // 	}
 
-// 	resource.OpenSearchDashboardsCpu = appConfig.GetInt("openSearchDashboardsCpu")
+// 	resource.OpenSearchDashboardsCpu = appConfig.GetInt("OpenSearchDashboardsCpu")
 // 	if resource.OpenSearchDashboardsCpu == 0 {
 // 		resource.OpenSearchDashboardsCpu = 256
 // 	}

@@ -1,4 +1,5 @@
 # Self-Hosted Pulumi on AWS ECS Fargate - Golang
+
 This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
@@ -6,6 +7,7 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 > ℹ️ You will likely want to use one of the [Self-Managed Backends](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend) as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc) so that future updates will be straightforward for you and your colleagues.
 
 ## Revision History
+
 Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
@@ -13,8 +15,9 @@ Version ID | Date | Note
 3 | 05/03/2022 | README.md split into Golang and Typescript specific versions
 4 | 05/10/2022 | Optional configuration parameter `imagePrefix` added for the Application project.
 5 | 01/20/2023 | MySQL 8 support.
+6 | 07/17/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble.
 
-## User Guides:
+## User Guides
 
 - [Self-Hosted Pulumi Service][self-hosted-pulumi-user-guide]
 - [Pulumi API Service][pulumi-api-service-user-guide]
@@ -28,7 +31,7 @@ Version ID | Date | Note
   - Set AWS_PROFILE to your AWS profile of choice as defined in ~/.aws/config
   - Set PULUMI_CONFIG_PASSPHRASE to some secret passphrase for handling secrets.
 - [ECR][ecr] repositories which contain Pulumi API (service), Pulumi UI (console), and Pulumi Migration images. NOTE: the below `imageTag` configuration value corresponds to image tag in each ECR repo. Also, by default this program expects the ECR repos to be named after the Pulumi containers. Eg- `pulumi/service`, `pulumi/console`, `pulumi/migrations`.
-- [VPC][vpc] 
+- [VPC][vpc]
   - At least two public subnet available.
   - At least two private subnet available.
   - At least two isolated subnet available. In this case as `isolated` subnet is one which can only be connected to or from other instances in the same subnet. They do not route traffic to the internet, therefore, they do not require NAT gateways.
@@ -47,6 +50,7 @@ Version ID | Date | Note
 - [Route53][r53] - Managed DNS records.
 - [NLB][nlb] - Managed L4 / application traffic and SSL termination.
 - [ACM][acm] - Managed public TLS certificates.
+- [OpenSearch][OpenSearch] - Managed OpenSearch
 
 ## Architecture
 
@@ -57,9 +61,9 @@ Version ID | Date | Note
 1. [application-infrastructure](./application)
 
     Deploy ECS Clusters and Services to run the Pulumi API and Pulumi UI
-    
+
 1. [dns-infrastructure](./dns)
-    
+
     Deploy Route 53 A Records for the Pulumi API and Pulumi UI
 
 The architecture is split up by functional responsibilities in separate
@@ -71,27 +75,27 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
 - **Stateless**: Uses RDS and S3 for state management, which allows for rolling updates
   of the API and Console to occur with ease.
-- **Highly-Scalable**: API and Console services are configured to scale up or down on CPU and Memory metrics. 
+- **Highly-Scalable**: API and Console services are configured to scale up or down on CPU and Memory metrics.
   This ensure the Pulumi services will elastically respond to the needs of your users.
-- **Highly-Available**: API and Console services are configured to be deployed across multiple 
+- **Highly-Available**: API and Console services are configured to be deployed across multiple
   availability zones ensuring redudancy in your applications. RDS Database can also be configured with multiple replicas, across different availability zones.
 
 ## Install
 
-1.  Clone the repo and install dependencies:
+1. Clone the repo and install dependencies:
 
     ```bash
     git clone https://github.com/pulumi/self-hosted
     cd fully-managed-aws-ecs/{ts|go}
     ```
 
-2.  Login to your [Self-Managed Backend](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend).
+2. Login to your [Self-Managed Backend](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend).
 
     ```bash
     pulumi login s3://<bucket-name>
     ```
 
-3.  Navigate to `infrastructure` directory to initialize, configure, and deploy the base infrastructure resources required.
+3. Navigate to `infrastructure` directory to initialize, configure, and deploy the base infrastructure resources required.
 
     ```bash
     cd infrastructure
@@ -99,7 +103,8 @@ The Pulumi services operate in Kubernetes with the following app properties.
     pulumi stack init # follow prompt
     ```
 
-    ### Required Configuration
+### Required Configuration
+
     ```
     region - AWS Region
     vpcId - Valid, pre-existing AWS VPC 
@@ -108,13 +113,21 @@ The Pulumi services operate in Kubernetes with the following app properties.
     isolatedSubnetIds - At least two isolated subnet ID
     ```
 
-    ### Optional Configuration
+### Optional Configuration
+
     ```
     dbInstanceType - RDS Database Instance Type (default is db.t3.small)
+    enableOpenSearch - Deploys an AWS OpenSearch Domain as part of the project
+    openSearchInstanceType - AWS OpenSearch Instance Type (default is t3.medium.search)
+    openSearchInstanceCount - AWS OpenSearch Instance Count (default is 2 && value cannot be less than 2)
+    openSearchDomainName - AWS OpenSearch Domain Name (default is pulumi)
+    openSearchDedicatedMasterCount - AWS OpenSearch Dedicated Master Count (default is no dedicated master nodes)
     ```
 
     **Note: below configuration values are examples. Provide your own.**
-    ### Set Configuration Values
+
+### Set Configuration Values
+
     ```bash
     pulumi config set aws:region us-west-2
     pulumi config set vpcId vpc-12345789
@@ -125,7 +138,7 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
     Optionally, configure the DB Instance Type of your choice.
 
-    ### Deploy
+### Deploy
 
     ```bash
     pulumi up
@@ -141,10 +154,12 @@ The Pulumi services operate in Kubernetes with the following app properties.
     pulumi stack init # follow prompt
     ```
 
-    ### NOTE
+### NOTE
+
     Pulumi Migrations container, by default, will execute on every `pulumi up` of the `application` project. This behavior can be disabled by setting the environment variable `$PULUMI_EXECUTE_MIGRATIONS` to `false`.
 
-    ### Required Configuration
+### Required Configuration
+
     ```
     region - AWS Region
     baseStackReference - Pulumi Stack Reference to base infrastructure Stack. Required for retrieve outputs.
@@ -156,7 +171,8 @@ The Pulumi services operate in Kubernetes with the following app properties.
     licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obtain).
     ```
 
-    ### Optional Configuration
+### Optional Configuration
+
     ```
     samlEnabled - boolean - if enabled, SAML certificates will be created and SAML SSO will be enabled for the Pulumi Service. Note, if user provides their own SAML certificates through samlCertPublicKey and samlCertPrivateKey, those will be respected.
     samlCertPublicKey - public key to be used for SAML SSO interaction
@@ -192,7 +208,9 @@ The Pulumi services operate in Kubernetes with the following app properties.
     ```
 
     **Note: below configuration values are examples. Provide your own.**
-    ### Set Configuration Values
+
+### Set Configuration Values
+
     ```bash
     pulumi config set aws:region us-west-2
     pulumi config set baseStackReference myorg/infrastructure/my-stack # NOTE: in the case of self-hosted S3 backend, use the stack name for the infrastructure stack
@@ -212,10 +230,12 @@ The Pulumi services operate in Kubernetes with the following app properties.
     pulumi config set region us-west-2
     ```
 
-    ### Deploy
+### Deploy
+
     ```bash
     pulumi up
     ```
+
     Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the application project, will be retrieved as Stack References from the infrastructure project.
 
 5. Navigate to the `dns` directory initialize and create the route53 A records for the Pulumi API and Pulumi UI
@@ -226,34 +246,40 @@ The Pulumi services operate in Kubernetes with the following app properties.
     pulumi stack init # follow prompt
     ```
 
-    ### Required Configuration
-    
+### Required Configuration
+
     ```
     region - AWS region
     appStackReference - stack reference to the application stack. This will be used to obtain the required ELB values. 
     ```
 
-    ### Optional Configuration
-    
+### Optional Configuration
+
     enablePrivateLoadBalancerAndLimitEgress - boolean - if enabled, an additional Route 53 A record will be created which allows private routing to the internal, private NLB.
 
     **Note: below configuration values are examples. Provide your own.**
-    ### Set Configuration Values
+
+### Set Configuration Values
 
     ```bash
     pulumi config set aws-region us-west-2
     pulumi config set appStackReference myorg/application/my-stack # NOTE: in the case of self-hosted S3 backend, use the stack name for the application stack
     ```
 
-    ### Deploy
+### Deploy
+
     ```bash
     pulumi up
     ```
+
     Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the dns project, will be retrieved as Stack Reference Outputs from the application project.
 
 ## Logging
+
 To enable logging configurations for your ECS services, you must specify at least one of the following logging configurations in the `application` stack configuration. NOTE: if no configuration is specified, application logging will not be enabled.
+
 - Cloudwatch (awslogs)
+
   ```bash
   pulumi config set logType awslogs
   pulumi config set logArgs '{"name": "your_log_base_name", "retentionDays": 3}' # NOTE: retentionDays defaults to 7 (days)
@@ -283,11 +309,13 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 
 [Get started][aws-ts-get-started] with a simple and new AWS Typescript project.
 
-# Updates and Upgrades
+## Updates and Upgrades
 
 ## Updating the Pulumi Service Images
+
 * Update the application project's configuration file to point at the latest pulumi docker image tags (imageTag).
-* Run the **Deploy Pulumi** steps described above.
+
+- Run the **Deploy Pulumi** steps described above.
 
 [get-started-aws]: https://www.pulumi.com/docs/get-started/aws/
 [s3-backend]: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-aws-s3-backend
@@ -308,3 +336,4 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 [vpc]: https://aws.amazon.com/vpc/
 [route53]: https://aws.amazon.com/route53/
 [kms]: https://aws.amazon.com/kms/
+[opensearch]: https://aws.amazon.com/opensearch-service/

@@ -143,19 +143,19 @@ func main() {
 			return err
 		}
 
-		opensearchArgs := &OpenSearchArgs{
-			DeployOpenSearch:     config.DeployOpenSearch,
+		OpenSearchArgs := &OpenSearchArgs{
+			DeployOpenSearch:     config.EnableOpenSearch,
 			InstanceType:         config.OpenSearchInstanceType,
 			InstanceCount:        config.OpenSearchInstanceCount,
 			DomainName:           config.OpenSearchDomainName,
+			DedicatedMasterCount: config.OpenSearchDedicatedMasterCount,
 			VpcId:                config.VpcId,
 			SubnetIds:            config.PrivateSubnetIds,
 			AccountId:            config.AccountId,
 			Region:               config.Region,
-			DedicatedMasterCount: config.OpenSearchDedicatedMasterCount,
 		}
 
-		opensearchDomain, err := NewOpenSearch(ctx, getCommonName(name, "opensearch"), opensearchArgs)
+		OpenSearchDomain, err := NewOpenSearch(ctx, getCommonName(name, "opensearch"), OpenSearchArgs)
 		if err != nil {
 			return err
 		}
@@ -172,10 +172,10 @@ func main() {
 		ctx.Export("dbSecurityGroupId", database.dbSecurityGroupId)
 		ctx.Export("endpointSecurityGroupId", endpointSecurityGroup.ID())
 		ctx.Export("s3EndpointPrefixId", privateS3PrefixList.Id())
-		ctx.Export("opensearchDomain", opensearchDomain.Domain)
-		ctx.Export("opensearchEndpoint", opensearchDomain.Endpoint)
-		ctx.Export("opensearchUser", opensearchDomain.User)
-		ctx.Export("opensearchPassword", opensearchDomain.Password)
+		ctx.Export("opensearchDomain", OpenSearchDomain.Domain)
+		ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
+		ctx.Export("opensearchUser", OpenSearchDomain.User)
+		ctx.Export("opensearchPassword", OpenSearchDomain.Password)
 
 		return nil
 	})
