@@ -8,10 +8,8 @@ import { getIamPolicyArn } from "../common/utils";
 
 const namespace = "pulumi:auroraDatabase";
 const engine = "aurora-mysql";
-const engineVersion = "8.0.mysql_aurora.3.02.2";
-
-// standard mysql
-const databasePort = 3306;
+const engineVersion = "8.0.mysql_aurora.3.07.0";
+const dbOptionsFamily = "aurora-mysql8.0";
 
 export interface DatabaseArgs {
     vpcId: string,
@@ -72,7 +70,7 @@ export class Database extends pulumi.ComponentResource {
         }, pulumi.mergeOptions(options, { protect: true }));
 
         const databaseInstanceOptions = new rds.ParameterGroup(`${name}-instance-options`, {
-            family: "aurora-mysql8.0",
+            family: dbOptionsFamily,
             parameters: [
                 // Enable the general and slow query logs and write them to files on the RDS instance.
                 { name: "slow_query_log", value: "1" },
