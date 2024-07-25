@@ -85,12 +85,16 @@ export class ApiService extends pulumi.ComponentResource {
                 name: "PULUMI_DATABASE_USER_PASSWORD",
                 value: pulumi.secret(this.baseArgs.database.dbPassword)
             },
+            {
+                name: "PULUMI_DATABASE_USER_NAME",
+                value: pulumi.secret(this.baseArgs.database.dbUsername),
+            },
         ];
 
         if (args.opensearch) {
             secretArgs.push({
                 name: "PULUMI_SEARCH_PASSWORD",
-                value: pulumi.secret(args.opensearch!.password)
+                value: pulumi.secret(args.opensearch!.password!)
             });
         }
 
@@ -185,26 +189,22 @@ export class ApiService extends pulumi.ComponentResource {
         // Fully qualified ECR tag will be built for `image` property below
         const containerDefinitions = pulumi
             .all([
-                this.baseArgs.database,
                 serviceSecrets.outputs,
                 this.baseArgs.policyPacksBucket.bucket,
                 this.baseArgs.checkPointbucket.bucket,
-                accounts,
                 this.baseArgs.samlCertPrivateKey,
                 this.baseArgs.samlCertPublicKey,
                 logDriver?.outputs,
             ])
             .apply(([
-                database,
                 secrets,
                 policyBucket,
                 checkpointBucket,
-                accounts,
                 samlPrivateKey,
                 samlPublicKey,
                 logOutputs]) => {
 
-                const ecrAccountId = accounts.ecrRepoAccountId && accounts.ecrRepoAccountId !== "" ? accounts.ecrRepoAccountId : accounts.accountId;
+                const ecrAccountId = this.baseArgs.ecrRepoAccountId && this.baseArgs.ecrRepoAccountId !== "" ? this.baseArgs.ecrRepoAccountId : this.baseArgs.accountId;
 
                 const def = JSON.stringify([{
                     name: apiContainerName,
@@ -220,13 +220,14 @@ export class ApiService extends pulumi.ComponentResource {
                         containerPort: apiPort
                     }],
                     environment: this.constructEnvironmentVariables({
-                        databaseEndpoint: database.dbClusterEndpoint,
-                        databasePort: database.dbPort,
-                        databaseUser: database.dbUsername,
+                        databaseEndpoint: this.baseArgs.database.dbClusterEndpoint,
+                        databasePort: this.baseArgs.database.dbPort,
                         checkpointBucket: checkpointBucket,
                         policyPackBucket: policyBucket,
                         samlSsoPrivateCert: samlPrivateKey,
-                        samlSsoPublicCert: samlPublicKey
+                        samlSsoPublicCert: samlPublicKey,
+                        openSearchEndpoint: this.baseArgs.opensearch?.endpoint,
+                        openSearchUser: this.baseArgs.opensearch?.user
                     }),
                     secrets: secrets,
                     logConfiguration: logDriver && {
@@ -314,6 +315,9 @@ export class ApiService extends pulumi.ComponentResource {
             disableEmailLogin
         } = this.baseArgs;
 
+        // NOTE: the below use of property ?? "" is essential. As of 7/25/24 pulumi-aws will continuously show a diff if a property is undefined
+        // cant find a pulumi-aws issue, yet...
+
         return [
             {
                 name: "PULUMI_LICENSE_KEY",
@@ -334,10 +338,6 @@ export class ApiService extends pulumi.ComponentResource {
             {
                 name: "PULUMI_DATABASE_NAME",
                 value: "pulumi",
-            },
-            {
-                name: "PULUMI_DATABASE_USER_NAME",
-                values: args.databaseUser
             },
             {
                 name: "PULUMI_API_DOMAIN",
@@ -389,11 +389,11 @@ export class ApiService extends pulumi.ComponentResource {
             },
             {
                 name: "PULUMI_SEARCH_USER",
-                value: args.openSearchUser,
+                value: args.openSearchUser ?? "",
             },
             {
                 name: "PULUMI_SEARCH_DOMAIN",
-                value: args.openSearchDomain,
+                value: args.openSearchEndpoint ?? "",
             }
         ];
     }

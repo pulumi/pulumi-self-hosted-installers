@@ -60,6 +60,12 @@ export = async () => {
             rootDomain: `$${config.dns.route53Subdomain}.${config.dns.route53ZoneName}`,
             whiteListCidrBlocks: config.dns.whiteListCidrBlocks
         },
+        opensearch: {
+            domain: config.opensearch.domain,
+            endpoint: config.opensearch.endpoint,
+            password: config.opensearch.password,
+            user: config.opensearch.user
+        },
         endpointSecurityGroupId: config.endpointSecurityGroupId,
         imageTag: config.dockerHub.imageTag,
         kmsServiceKeyId: config.kmsServiceKeyId,

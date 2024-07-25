@@ -93,10 +93,10 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
         whiteListCidrBlocks: string[] | undefined
     },
     opensearch?: {
-        user: string,
-        password: string,
-        domain: string,
-        endpoint: string
+        user?: string,
+        password?: string,
+        domain?: string,
+        endpoint?: string
     }
     checkPointbucket: s3.Bucket,
     policyPacksBucket: s3.Bucket
@@ -130,13 +130,12 @@ export interface ConsoleServiceArgs extends ServiceBaseArgs {
 export interface ApiServiceEnvironmentArgs {
     databaseEndpoint: string,
     databasePort: number,
-    databaseUser: string,
     checkpointBucket: string,
     policyPackBucket: string,
     samlSsoPublicCert?: string | undefined,
     samlSsoPrivateCert?: string | undefined,
     openSearchUser?: string | undefined,
-    openSearchDomain?: string | undefined,
+    openSearchEndpoint?: string | undefined,
 }
 
 export interface MigrationsArgs extends ServiceBaseArgs {

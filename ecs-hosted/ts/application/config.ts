@@ -1,6 +1,7 @@
 import * as pulumi from "@pulumi/pulumi";
 import { getCallerIdentity } from "@pulumi/aws";
 import { toLogType } from "./utils";
+import { LogType } from "./logs/types";
 
 export async function hydrateConfig() {
     const awsConfig = new pulumi.Config("aws");
@@ -28,19 +29,6 @@ export async function hydrateConfig() {
     const dbSecurityGroupId = stackConfig.require("dbSecurityGroupId");
     const dbUsername = stackConfig.require("dbUsername");
     const dbPassword = stackConfig.require("dbPassword");
-
-    //const vpcId = pulumi.output(baseStackReference.requireOutputValue("vpcId")).apply(id => <string>id);
-    // const privateSubnetIds = pulumi.output(baseStackReference.requireOutputValue("privateSubnetIds")).apply(ids => <string[]>ids);
-    // const publicSubnetIds = pulumi.output(baseStackReference.requireOutputValue("publicSubnetIds")).apply(ids => <string[]>ids);
-    // const isolatedSubnetIds = pulumi.output(baseStackReference.requireOutputValue("isolatedSubnetIds")).apply(ids => <string[]>ids);
-
-    // Database
-    // const dbClusterEndpoint = pulumi.output(baseStackReference.requireOutputValue("dbClusterEndpoint")).apply(endpoint => <string>endpoint);
-    // const dbPort = pulumi.output(baseStackReference.requireOutputValue("dbPort")).apply(port => <number>port);
-    // const dbName = pulumi.output(baseStackReference.requireOutputValue("dbName")).apply(name => <string>name);
-    // const dbSecurityGroupId = pulumi.output(baseStackReference.requireOutputValue("dbSecurityGroupId")).apply(id => <string>id);
-    // const dbUsername = pulumi.output(baseStackReference.requireOutputValue("dbUsername")).apply(username => <string>username);
-    // const dbPassword = pulumi.output(baseStackReference.requireOutput("dbPassword")).apply(password => <string>password);
 
     // vpc endpoint security group
     const endpointSecurityGroupId = stackConfig.require("endpointSecurityGroupId");
@@ -93,8 +81,17 @@ export async function hydrateConfig() {
     const openSearchDomain = stackConfig.get("openSearchDomain");
 
     // logs
-    const logType = toLogType(stackConfig.get("logType"));
-    const logArgs: any = stackConfig.getObject("logArgs");
+    let logType = toLogType(stackConfig.get("logType"));
+    let logArgs: any = stackConfig.getObject("logArgs");
+
+    if (!logType) {
+        logType = LogType.awslogs;
+        logArgs ={
+            retentionInDays: 7,
+            region,
+            name: `${projectName}-${stackName}`
+        }
+    }
 
     // retrieve the present AWS Account ID for use by other components
     const account = await getCallerIdentity();
@@ -161,7 +158,7 @@ export async function hydrateConfig() {
             smtpPassword,
             smtpGenericSender
         },
-        resourceSearch: {
+        opensearch: {
             user: openSearchUser,
             password: openSearchPassword,
             domain: openSearchDomain,
