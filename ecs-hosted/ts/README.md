@@ -1,4 +1,5 @@
 # Self-Hosted Pulumi on AWS ECS Fargate - TypeScript
+
 This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
@@ -6,13 +7,15 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 > ℹ️ You will likely want to use one of the [Self-Managed Backends](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend) as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc) so that future updates will be straightforward for you and your colleagues.
 
 ## Revision History
+
 Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
 3 | 01/20/2023 | MySQL 8 support
+4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble.
 
-## User Guides:
+## User Guides
 
 - [Self-Hosted Pulumi Service][self-hosted-pulumi-user-guide]
 - [Pulumi API Service][pulumi-api-service-user-guide]
@@ -26,7 +29,7 @@ Version ID | Date | Note
   - Set AWS_PROFILE to your AWS profile of choice as defined in ~/.aws/config
   - Set PULUMI_CONFIG_PASSPHRASE to some secret passphrase for handling secrets.
 - [ECR][ecr] repositories which contain Pulumi API (service), Pulumi UI (console), and Pulumi Migration images. NOTE: the below `imageTag` configuration value corresponds to image tag in each ECR repo. Also, by default this program expects the ECR repos to be named after the Pulumi containers. Eg- `pulumi/service`, `pulumi/console`, `pulumi/migrations`.
-- [VPC][vpc] 
+- [VPC][vpc]
   - At least two public subnet available.
   - At least two private subnet available.
   - At least two isolated subnet available. In this case as `isolated` subnet is one which can only be connected to or from other instances in the same subnet. They do not route traffic to the internet, therefore, they do not require NAT gateways.
@@ -45,6 +48,7 @@ Version ID | Date | Note
 - [Route53][r53] - Managed DNS records.
 - [NLB][nlb] - Managed L4 / application traffic and SSL termination.
 - [ACM][acm] - Managed public TLS certificates.
+- [OpenSearch][OpenSearch] - Managed OpenSearch
 
 ## Architecture
 
@@ -65,7 +69,7 @@ Pulumi projects to decouple the database, its required services, and the Pulumi 
 
 ### Design Considerations
 
-The Pulumi services operate in Kubernetes with the following app properties.
+The Pulumi services operate in AWS Elastic Container Service (ECS) with the following app properties.
 
 - **Stateless**: Uses RDS and S3 for state management, which allows for rolling updates
   of the API and Console to occur with ease.
