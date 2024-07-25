@@ -1,4 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
+import { getCallerIdentity } from "@pulumi/aws";
 import { toLogType } from "./utils";
 
 export async function hydrateConfig() {
@@ -14,27 +15,35 @@ export async function hydrateConfig() {
     const licenseKey = stackConfig.require("licenseKey");
 
     // NOTE: We will assume all networking pieces are already created properly; this may change in the future to allow for networking to be created as part of this process.
-    const baseStackReference = new pulumi.StackReference(stackConfig.require("baseStackReference"));
+    // const baseStackReference = new pulumi.StackReference(stackConfig.require("baseStackReference"));
 
-    const vpcId: string = (await baseStackReference.getOutputDetails("vpcId")).value;
-    const privateSubnetIds: string[] = (await baseStackReference.getOutputDetails("privateSubnetIds")).value;
-    const publicSubnetIds: string[] = (await baseStackReference.getOutputDetails("publicSubnetIds")).value;
+    const vpcId = stackConfig.require("vpcId");
+    const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
+    const publicSubnetIds: string[] = stackConfig.requireObject("publicSubnetIds");
+    const isolatedSubnetIds: string[] | undefined = stackConfig.getObject("isolatedSubnetIds");
+
+    const dbClusterEndpoint = stackConfig.require("dbClusterEndpoint");
+    const dbPort = stackConfig.requireNumber("dbPort");
+    const dbName = stackConfig.require("dbName");
+    const dbSecurityGroupId = stackConfig.require("dbSecurityGroupId");
+    const dbUsername = stackConfig.require("dbUsername");
+    const dbPassword = stackConfig.require("dbPassword");
 
     //const vpcId = pulumi.output(baseStackReference.requireOutputValue("vpcId")).apply(id => <string>id);
     // const privateSubnetIds = pulumi.output(baseStackReference.requireOutputValue("privateSubnetIds")).apply(ids => <string[]>ids);
     // const publicSubnetIds = pulumi.output(baseStackReference.requireOutputValue("publicSubnetIds")).apply(ids => <string[]>ids);
-    const isolatedSubnetIds = pulumi.output(baseStackReference.requireOutputValue("isolatedSubnetIds")).apply(ids => <string[]>ids);
+    // const isolatedSubnetIds = pulumi.output(baseStackReference.requireOutputValue("isolatedSubnetIds")).apply(ids => <string[]>ids);
 
     // Database
-    const dbClusterEndpoint = pulumi.output(baseStackReference.requireOutputValue("dbClusterEndpoint")).apply(endpoint => <string>endpoint);
-    const dbPort = pulumi.output(baseStackReference.requireOutputValue("dbPort")).apply(port => <number>port);
-    const dbName = pulumi.output(baseStackReference.requireOutputValue("dbName")).apply(name => <string>name);
-    const dbSecurityGroupId = pulumi.output(baseStackReference.requireOutputValue("dbSecurityGroupId")).apply(id => <string>id);
-    const dbUsername = pulumi.output(baseStackReference.requireOutputValue("dbUsername")).apply(username => <string>username);
-    const dbPassword = pulumi.output(baseStackReference.requireOutput("dbPassword")).apply(password => <string>password);
+    // const dbClusterEndpoint = pulumi.output(baseStackReference.requireOutputValue("dbClusterEndpoint")).apply(endpoint => <string>endpoint);
+    // const dbPort = pulumi.output(baseStackReference.requireOutputValue("dbPort")).apply(port => <number>port);
+    // const dbName = pulumi.output(baseStackReference.requireOutputValue("dbName")).apply(name => <string>name);
+    // const dbSecurityGroupId = pulumi.output(baseStackReference.requireOutputValue("dbSecurityGroupId")).apply(id => <string>id);
+    // const dbUsername = pulumi.output(baseStackReference.requireOutputValue("dbUsername")).apply(username => <string>username);
+    // const dbPassword = pulumi.output(baseStackReference.requireOutput("dbPassword")).apply(password => <string>password);
 
     // vpc endpoint security group
-    const endpointSecurityGroupId = pulumi.output(baseStackReference.requireOutput("endpointSecurityGroupId")).apply(endpoint => <string>endpoint);
+    const endpointSecurityGroupId = stackConfig.require("endpointSecurityGroupId");
 
     const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey") ?? "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
     const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey") ?? "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
@@ -42,11 +51,11 @@ export async function hydrateConfig() {
     const samlCertPublicKey = stackConfig.getSecret("samlCertPublicKey");
     const samlCertPrivateKey = stackConfig.getSecret("samlCertPrivateKey");
 
-    const ecrRepoAccountId = pulumi.output(stackConfig.get("ecrRepoAccountId"));
+    const ecrRepoAccountId = stackConfig.get("ecrRepoAccountId");
     const imageTag = stackConfig.require("imageTag");
 
-    const route53ZoneName = stackConfig.require("route53ZoneName");
-    const route53Subdomain = stackConfig.get("route53Subdomain");
+    const route53ZoneName = stackConfig.require("domainName");
+    const route53Subdomain = stackConfig.get("subDomain") || "";
 
     // Load balancer
     // provide a list of valid cidr blocks will restrict LB access on both API and UI to those specific CIDRS
@@ -77,9 +86,18 @@ export async function hydrateConfig() {
     const smtpPassword = stackConfig.getSecret("smtpPassword");
     const smtpGenericSender = stackConfig.get("smtpGenericSender");
 
+    // Pulumi Insights (Resource Search)
+    const openSearchUser = stackConfig.get("openSearchUser");
+    const openSearchPassword = stackConfig.get("openSearchPassword");
+    const openSearchEndpoint = stackConfig.get("openSearchEndpoint");
+    const openSearchDomain = stackConfig.get("openSearchDomain");
+
     // logs
     const logType = toLogType(stackConfig.get("logType"));
     const logArgs: any = stackConfig.getObject("logArgs");
+
+    // retrieve the present AWS Account ID for use by other components
+    const account = await getCallerIdentity();
 
     if (logArgs) {
         // enrich with region just in case
@@ -88,6 +106,7 @@ export async function hydrateConfig() {
 
     return {
         region,
+        accountId: account.accountId,
         vpcId,
         privateSubnetIds,
         publicSubnetIds,
@@ -141,6 +160,12 @@ export async function hydrateConfig() {
             smtpUsername,
             smtpPassword,
             smtpGenericSender
+        },
+        resourceSearch: {
+            user: openSearchUser,
+            password: openSearchPassword,
+            domain: openSearchDomain,
+            endpoint: openSearchEndpoint
         },
         baseTags: {
             project: projectName,

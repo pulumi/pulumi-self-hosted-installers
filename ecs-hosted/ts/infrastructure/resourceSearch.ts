@@ -34,7 +34,7 @@ export class ResourceSearch extends pulumi.ComponentResource {
         // instance counts cannot be less than the amount of subnets provided
         validateNetworkConfiguration(args.subnetIds, args.instanceCount);
 
-        const options = pulumi.mergeOptions(opts, { parent: this });
+        const options = { parent: this };
         const openSearchOptions = pulumi.mergeOptions(options, {
             deleteBeforeReplace: true,
             customTimeouts: {
@@ -135,19 +135,19 @@ export class ResourceSearch extends pulumi.ComponentResource {
                     logType: "AUDIT_LOGS",
                 },
             ],
-            accessPolicies: JSON.stringify({
+            accessPolicies: pulumi.jsonStringify({
                 Version: "2012-10-17",
                 Statement: [
                     {
                         Effect: "Allow",
                         Principal: {
-                            AWS: "*",
+                            "AWS": "*"
                         },
                         Action: "es:*",
-                        Resource: `arn:aws:es:${args.accountId}:${args.region}:domain/${args.domainNname}/*`,
-                    },
-                ],
-            }),
+                        Resource: `arn:aws:es:${args.region}:${args.accountId}:domain/${name}/*`
+                    }
+                ]
+            })
         }, openSearchOptions);
 
         this.user = pulumi.output(un);
@@ -175,8 +175,12 @@ function createLogGroup(name: string, opts: pulumi.ComponentResourceOptions) {
                 Principal: {
                     Service: "es.amazonaws.com",
                 },
-                Action: "logs:PutLogEvents",
-                Resource: lg.arn,
+                Action: [
+                    "logs:PutLogEvents",
+                    "logs:PutLogEventsBatch",
+                    "logs:CreateLogStream"
+                ],
+                Resource: "arn:aws:logs:*",
             }],
         }),
     }, opts);

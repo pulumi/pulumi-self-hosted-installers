@@ -31,7 +31,7 @@ export class Database extends pulumi.ComponentResource {
     constructor(name: string, args: DatabaseArgs, opts?: pulumi.ComponentResourceOptions) {
         super(namespace, name, args, opts);
 
-        const options = pulumi.mergeOptions(opts, { parent: this });
+        const options = { parent: this };
 
         // don't allow any ingress by default; API service will need to create ingress for this sg.
         const securityGroup = new ec2.SecurityGroup(`${name}-sg`, {

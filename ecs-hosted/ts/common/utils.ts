@@ -16,6 +16,9 @@ export const getIamPolicyArn = (region: string, policyArn: string): string => {
     return policy;
 }
 
+/*
+Having the ability to create and update an environment based on a `pulumi up` would be a nice feature to have. Of course, this could be done via automation api as well...
+*/
 export const updateEnvironment = async (org: string, project: string, stack: string, envName: string, objectKeys: string[]) => {
     let pat = process.env.PULUMI_ACCESS_TOKEN;
     if (!pat) {

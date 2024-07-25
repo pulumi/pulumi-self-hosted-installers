@@ -1,11 +1,11 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as ec2 from "@pulumi/aws/ec2";
-import * as input from "@pulumi/aws/types/input";
-import * as kms from "@pulumi/aws/kms";
+import { ec2 } from "@pulumi/aws";
+import { input } from "@pulumi/aws/types";
+import { kms } from "@pulumi/aws";
 
 import { ContainerService } from "./containerService";
 import { MigrationService } from "./migrationsService";
-import { TaskDefinitionArgs, ApiServiceArgs, ApiServiceEnvironmentArgs } from "./types";
+import { TaskDefinitionArgs, ApiServiceArgs, ApiServiceEnvironmentArgs, Secret } from "./types";
 import { buildECRImageTag } from "../utils";
 import { LogFactory } from "../logs/logFactory";
 import { LogDriver, LogType } from "../logs/types";
@@ -64,35 +64,40 @@ export class ApiService extends pulumi.ComponentResource {
             }
         ];
 
+        const secretArgs: Secret[] = [
+            {
+                name: "SMTP_PASSWORD",
+                value: this.baseArgs.smtp?.smtpPassword
+            },
+            {
+                name: "RECAPTCHA_SECRET_KEY",
+                value: this.baseArgs.recaptchaSecretKey
+            },
+            {
+                name: "LOGIN_RECAPTCHA_SECRET_KEY",
+                value: this.baseArgs.recaptchaSecretKey
+            },
+            {
+                name: "SAML_CERTIFICATE_PRIVATE_KEY",
+                value: this.baseArgs.samlCertPrivateKey
+            },
+            {
+                name: "PULUMI_DATABASE_USER_PASSWORD",
+                value: pulumi.secret(this.baseArgs.database.dbPassword)
+            },
+        ];
+
+        if (args.opensearch) {
+            secretArgs.push({
+                name: "PULUMI_SEARCH_PASSWORD",
+                value: pulumi.secret(args.opensearch!.password)
+            });
+        }
+
         const serviceSecrets = new Secrets("service-secrets", {
             prefix: this.baseArgs.secretsManagerPrefix,
             kmsKeyId: this.baseArgs.kmsServiceKeyId,
-            secrets: [
-                {
-                    name: "SMTP_PASSWORD",
-                    value: this.baseArgs.smtp?.smtpPassword
-                },
-                {
-                    name: "RECAPTCHA_SECRET_KEY",
-                    value: this.baseArgs.recaptchaSecretKey
-                },
-                {
-                    name: "LOGIN_RECAPTCHA_SECRET_KEY",
-                    value: this.baseArgs.recaptchaSecretKey
-                },
-                {
-                    name: "SAML_CERTIFICATE_PRIVATE_KEY",
-                    value: this.baseArgs.samlCertPrivateKey
-                },
-                {
-                    name: "PULUMI_DATABASE_USER_NAME",
-                    value: this.baseArgs.database.dbUsername
-                },
-                {
-                    name: "PULUMI_DATABASE_USER_PASSWORD",
-                    value: this.baseArgs.database.dbPassword
-                }
-            ]
+            secrets: secretArgs,
         }, this.options);
 
         const taskArgs = this.constructTaskArgs(serviceSecrets);
@@ -187,7 +192,8 @@ export class ApiService extends pulumi.ComponentResource {
                 accounts,
                 this.baseArgs.samlCertPrivateKey,
                 this.baseArgs.samlCertPublicKey,
-                logDriver?.outputs])
+                logDriver?.outputs,
+            ])
             .apply(([
                 database,
                 secrets,
@@ -216,6 +222,7 @@ export class ApiService extends pulumi.ComponentResource {
                     environment: this.constructEnvironmentVariables({
                         databaseEndpoint: database.dbClusterEndpoint,
                         databasePort: database.dbPort,
+                        databaseUser: database.dbUsername,
                         checkpointBucket: checkpointBucket,
                         policyPackBucket: policyBucket,
                         samlSsoPrivateCert: samlPrivateKey,
@@ -329,6 +336,10 @@ export class ApiService extends pulumi.ComponentResource {
                 value: "pulumi",
             },
             {
+                name: "PULUMI_DATABASE_USER_NAME",
+                values: args.databaseUser
+            },
+            {
                 name: "PULUMI_API_DOMAIN",
                 value: dns.apiUrl,
             },
@@ -376,6 +387,14 @@ export class ApiService extends pulumi.ComponentResource {
                 name: "SAML_CERTIFICATE_PUBLIC_KEY",
                 value: args.samlSsoPublicCert ?? ""
             },
+            {
+                name: "PULUMI_SEARCH_USER",
+                value: args.openSearchUser,
+            },
+            {
+                name: "PULUMI_SEARCH_DOMAIN",
+                value: args.openSearchDomain,
+            }
         ];
     }
 }

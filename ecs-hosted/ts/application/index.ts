@@ -19,15 +19,10 @@ export = async () => {
     const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, { protect: true });
     const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true });
 
-    // retrieve the present AWS Account ID for use by other components
-    const accountId = pulumi
-        .output(aws.getCallerIdentity())
-        .apply(result => result.accountId);
-
     // Create infra related to handling traffic
     // ALB, HTTP & HTTPS listeners, empty target group, and ALB access logs if configuration says so
     const trafficManager = new TrafficManager("pulumi-tm", {
-        accountId: accountId,
+        accountId: config.accountId,
         certificateArn: config.dns.acmCertificateArn,
         publicSubnetIds: config.publicSubnetIds,
         region: config.region,
@@ -51,7 +46,7 @@ export = async () => {
     // Entry point to Pulumi API (service)
     // ECS Cluster/Service and all required infra will be created and attached to the LoadBalancer created above, via listneners and target groups
     new ApiService("pulumi-service", {
-        accountId: accountId,
+        accountId: config.accountId,
         containerCpu: config.api.apiContainerCpu,
         checkPointbucket: checkpointsBucket,
         containerMemoryReservation: config.api.apiContainerMemoryReservation,
@@ -89,7 +84,7 @@ export = async () => {
     // Entry point to Pulumi Console
     // ECS Cluster/Service and all required infra will be created and attached to the LoadBalancer created above, via listneners and target groups
     new ConsoleService("pulumi-console", {
-        accountId: accountId,
+        accountId: config.accountId,
         containerMemoryReservation: config.console.consoleContainerMemoryReservation,
         containerCpu: config.console.consoleContainerCpu,
         dns: {
