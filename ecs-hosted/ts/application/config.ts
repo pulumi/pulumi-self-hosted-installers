@@ -174,4 +174,3 @@ export async function hydrateConfig() {
         }
     };
 }
-

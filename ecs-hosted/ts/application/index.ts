@@ -123,7 +123,7 @@ export = async () => {
         checkpointsS3BucketName: checkpointsBucket.id,
         policyPacksS3BucketName: policyPacksBucket.id,
 
-        // the DNS project will use all these outputs to create a records
+        // the DNS project will use all these outputs to create A records
         apiLoadBalancerDnsName: trafficManager.api.loadBalancer.dnsName,
         apiLoadBalancerZoneId: trafficManager.api.loadBalancer.zoneId,
         consoleLoadBalancerDnsName: trafficManager.console.loadBalancer.dnsName,
