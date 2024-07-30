@@ -16,7 +16,11 @@ export async function hydrateConfig() {
     const licenseKey = stackConfig.require("licenseKey");
 
     // NOTE: We will assume all networking pieces are already created properly; this may change in the future to allow for networking to be created as part of this process.
-    // const baseStackReference = new pulumi.StackReference(stackConfig.require("baseStackReference"));
+
+    // Everything between vpcId and openSearchDomain was once retrieved via stack reference. This has been changed to retrieve all values directly from configuration, instead.
+    // The reason for this is to allow for more flexibility as config values are non-outputty whereas stack references are outputs (Output<T>).
+    // This pattern pairs very nicely with PulumI ESC and the use of stackConfig (environments).
+    // If ESC is ommitted, once can still set the configuration values as needed prior to executing the `application` program.
 
     const vpcId = stackConfig.require("vpcId");
     const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
@@ -32,6 +36,12 @@ export async function hydrateConfig() {
 
     // vpc endpoint security group
     const endpointSecurityGroupId = stackConfig.require("endpointSecurityGroupId");
+
+    // Pulumi Insights (Resource Search)
+    const openSearchUser = stackConfig.get("openSearchUser");
+    const openSearchPassword = stackConfig.get("openSearchPassword");
+    const openSearchEndpoint = stackConfig.get("openSearchEndpoint");
+    const openSearchDomain = stackConfig.get("openSearchDomain");
 
     const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey") ?? "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
     const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey") ?? "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
@@ -74,12 +84,7 @@ export async function hydrateConfig() {
     const smtpPassword = stackConfig.getSecret("smtpPassword");
     const smtpGenericSender = stackConfig.get("smtpGenericSender");
 
-    // Pulumi Insights (Resource Search)
-    const openSearchUser = stackConfig.get("openSearchUser");
-    const openSearchPassword = stackConfig.get("openSearchPassword");
-    const openSearchEndpoint = stackConfig.get("openSearchEndpoint");
-    const openSearchDomain = stackConfig.get("openSearchDomain");
-
+    
     // logs
     let logType = toLogType(stackConfig.get("logType"));
     let logArgs: any = stackConfig.getObject("logArgs");

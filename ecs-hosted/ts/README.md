@@ -13,7 +13,9 @@ Version ID | Date | Note
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
 3 | 01/20/2023 | MySQL 8 support
-4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble.
+4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other 
+configuration values, all prefixed OpenSearch are availble. 
+5 | 07/30/2024 | Use of Stack Refernces removed in favor of Stack Configuration. Note, [Pulumi ESC][esc] provides a seamless way to use stack outputs, as configuration, from a previously deployed stack. If ESC is ommitted, configuration needs to be manually set.
 
 ## User Guides
 
@@ -156,7 +158,21 @@ pulumi stack init # follow prompt
 
 ```bash
 region - AWS Region
-baseStackReference - Pulumi Stack Reference to base infrastructure Stack. Required for retrieve outputs.
+vpcId - Valid, pre-existing AWS VPC 
+publicSubnetIds - At least two subnet ID
+privateSubnetIds - At least two private subnet ID
+isolatedSubnetIds - At least two isolated subnet ID
+dbClusterEndpoint - RDS Cluster Enpoint
+dbPort - MySQL Port
+dbName - Database Name
+dbSecurityGroupId - Database Security Group ID
+dbUsername - Database Username for Pulumi Cloud
+dbPassword - Database Password for Pulumi Cloud
+endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints
+openSearchUser - AWS OpenSearch User for Pulumi Cloud
+openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
+openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
+openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
 imageTag - Specific Pulumi docker container image tag to be used for deployment. Note: Existing ECR repo w/ Pulumi images (api, ui, migrations) is required.
 route53ZoneName - Route 53 Hosted Zone Name of zone to be used for DNS records.
 route53Subdomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com.
@@ -175,6 +191,11 @@ apiContainerCpu - CPU alloted to the Pulumi API Container. Defaults to Task CPU 
 apiContainerMemoryReservation - Memory reserved for the Pulumi API Container. Defaults to Task memory amount.
 apiDisabledEmailLogin - See DISABLE_EMAIL_LOGIN api env variable.
 apiDisabledEmailSignup - See DISABLE_EMAIL_SIGNUP api env variable.
+
+openSearchUser - AWS OpenSearch User for Pulumi Cloud
+openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
+openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
+openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
 
 consoleDesiredNumberTasks - Desired number of ECS tasks for the UI. Default is 1.
 consoleTaskMemory - ECS Task level Memory. Default is 512mb.
@@ -198,7 +219,7 @@ logArgs - Arguments provided to log configuration. See Logging section below.
 
 ```bash
 pulumi config set aws:region us-west-2
-pulumi config set baseStackReference myorg/infrastructure/my-stack # NOTE: in the case of self-hosted S3 backend, use the stack name for the infrastructure stack
+pulumi config set imageTag 20220105-189-signed
 pulumi config set imageTag 20220105-189-signed
 pulumi config set acmCertificateArn arn:aws:acm:us-west-2:052848974346:certificate/ee6d246c-dd3a-4667-b58a-4568a0f72dd6
 pulumi config set kmsServiceKeyId f7f56e09-f568-447c-8540-cef8ba122a79
@@ -207,6 +228,13 @@ pulumi config set logType awslogs
 pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
 pulumi config set privateSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
 pulumi config set publicSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
+pulumi config set dbClusterEndpoint https://somedb.rds.endpoint.com
+pulumi config set dbPort - 3306
+pulumi config set dbName - Pulumi
+pulumi config set dbSecurityGroupId - SG_12345
+pulumi config set dbUsername - User
+pulumi config set dbPassword - Pass
+pulumi config set endpointSecurityGroupId - SG_1234
 pulumi config set route53Subdomain my-sub-domain
 pulumi config set route53ZoneName hosted-zone.com
 pulumi config set smtpGenericSender email@email.com
@@ -234,7 +262,11 @@ pulumi stack init # follow prompt
 
 ```bash
 region - AWS region
-appStackReference - stack reference to the application stack. This will be used to obtain the required ELB values. 
+route53ZoneName - Route 53 Zone Name 
+apiLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
+apiLoadBalancerZoneId - Application Load balancer Zone Id - API Load Balancer
+consoleLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
+consoleLoadBalancerZoneId - Application Load balancer Id - API Load Balancer
 ```
 
 ### Optional Configuration
@@ -247,7 +279,10 @@ none
 
 ```bash
 pulumi config set aws-region us-west-2
-pulumi config set appStackReference myorg/application/my-stack # NOTE: in the case of self-hosted S3 backend, use the stack name for the application stack
+pulumi config set apiLoadBalancerDnsName some.aws.lb.com
+pulumi config set apiLoadBalancerZoneId zoneIdHere
+pulumi config set consoleLoadBalancerDnsName some.aws.lb.com
+pulumi config set consoleLoadBalancerZoneId zoneIdHere
 ```
 
 ### Deploy
@@ -319,3 +354,4 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 [route53]: https://aws.amazon.com/route53/
 [kms]: https://aws.amazon.com/kms/
 [opensearch]: https://aws.amazon.com/opensearch-service/
+[esc]: https://www.pulumi.com/docs/esc/
