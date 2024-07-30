@@ -1,4 +1,5 @@
 # Self-Hosted Pulumi on AWS ECS Fargate - TypeScript
+
 This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 > ⚠️ Before proceeding, please take the provided installation code and commit it **as-is** to your own source control. As you make changes or customize it, please commit these to your repo as well. This will help keep track of customizations and updates.
@@ -6,13 +7,17 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 > ℹ️ You will likely want to use one of the [Self-Managed Backends](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend) as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc) so that future updates will be straightforward for you and your colleagues.
 
 ## Revision History
+
 Version ID | Date | Note
 ---|---|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
 3 | 01/20/2023 | MySQL 8 support
+4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other 
+configuration values, all prefixed OpenSearch are availble. 
+5 | 07/30/2024 | Use of Stack Refernces removed in favor of Stack Configuration. Note, [Pulumi ESC][esc] provides a seamless way to use stack outputs, as configuration, from a previously deployed stack. If ESC is ommitted, configuration needs to be manually set.
 
-## User Guides:
+## User Guides
 
 - [Self-Hosted Pulumi Service][self-hosted-pulumi-user-guide]
 - [Pulumi API Service][pulumi-api-service-user-guide]
@@ -26,7 +31,7 @@ Version ID | Date | Note
   - Set AWS_PROFILE to your AWS profile of choice as defined in ~/.aws/config
   - Set PULUMI_CONFIG_PASSPHRASE to some secret passphrase for handling secrets.
 - [ECR][ecr] repositories which contain Pulumi API (service), Pulumi UI (console), and Pulumi Migration images. NOTE: the below `imageTag` configuration value corresponds to image tag in each ECR repo. Also, by default this program expects the ECR repos to be named after the Pulumi containers. Eg- `pulumi/service`, `pulumi/console`, `pulumi/migrations`.
-- [VPC][vpc] 
+- [VPC][vpc]
   - At least two public subnet available.
   - At least two private subnet available.
   - At least two isolated subnet available. In this case as `isolated` subnet is one which can only be connected to or from other instances in the same subnet. They do not route traffic to the internet, therefore, they do not require NAT gateways.
@@ -45,6 +50,7 @@ Version ID | Date | Note
 - [Route53][r53] - Managed DNS records.
 - [NLB][nlb] - Managed L4 / application traffic and SSL termination.
 - [ACM][acm] - Managed public TLS certificates.
+- [OpenSearch][OpenSearch] - Managed OpenSearch
 
 ## Architecture
 
@@ -55,9 +61,9 @@ Version ID | Date | Note
 1. [application-infrastructure](./application)
 
     Deploy ECS Clusters and Services to run the Pulumi API and Pulumi UI
-    
+
 1. [dns-infrastructure](./dns)
-    
+
     Deploy Route 53 A Records for the Pulumi API and Pulumi UI
 
 The architecture is split up by functional responsibilities in separate
@@ -65,7 +71,7 @@ Pulumi projects to decouple the database, its required services, and the Pulumi 
 
 ### Design Considerations
 
-The Pulumi services operate in Kubernetes with the following app properties.
+The Pulumi services operate in AWS Elastic Container Service (ECS) with the following app properties.
 
 - **Stateless**: Uses RDS and S3 for state management, which allows for rolling updates
   of the API and Console to occur with ease.
@@ -76,171 +82,222 @@ The Pulumi services operate in Kubernetes with the following app properties.
 
 ## Install
 
-1.  Clone the repo and install dependencies:
+1. Clone the repo and install dependencies:
 
-    ```bash
-    git clone https://github.com/pulumi/self-hosted
-    cd fully-managed-aws-ecs/{ts|go}
-    ```
+```bash
+git clone https://github.com/pulumi/self-hosted
+cd fully-managed-aws-ecs/{ts|go}
+```
 
-2.  Login to your [Self-Managed Backend](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend).
+2. Login to your [Self-Managed Backend](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend).
 
-    ```bash
-    pulumi login s3://<bucket-name>
-    ```
+```bash
+pulumi login s3://<bucket-name>
+```
 
-3.  Navigate to `infrastructure` directory to initialize, configure, and deploy the base infrastructure resources required.
+3. Navigate to `infrastructure` directory to initialize, configure, and deploy the base infrastructure resources required.
 
-    ```bash
-    cd infrastructure
-    npm install
-    pulumi stack init # follow prompt
-    ```
+```bash
+cd infrastructure
+npm install
+pulumi stack init # follow prompt
+```
 
-    ### Required Configuration
-    ```
-    region - AWS Region
-    vpcId - Valid, pre-existing AWS VPC 
-    publicSubnetIds - At least two subnet ID
-    privateSubnetIds - At least two private subnet ID
-    isolatedSubnetIds - At least two isolated subnet ID
-    ```
+### Required Configuration
 
-    ### Optional Configuration
-    ```
-    dbInstanceType - RDS Database Instance Type (default is db.t3.small)
-    ```
+```bash
+region - AWS Region
+vpcId - Valid, pre-existing AWS VPC 
+publicSubnetIds - At least two subnet ID
+privateSubnetIds - At least two private subnet ID
+isolatedSubnetIds - At least two isolated subnet ID
+```
 
-    **Note: below configuration values are examples. Provide your own.**
-    ### Set Configuration Values
-    ```bash
-    pulumi config set aws:region us-west-2
-    pulumi config set vpcId vpc-12345789
-    pulumi config set publicSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
-    pulumi config set privateSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
-    pulumi config set isolatedSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
-    ```
+### Optional Configuration
 
-    Optionally, configure the DB Instance Type of your choice.
+```bash
+dbInstanceType - RDS Database Instance Type (default is db.t3.small)
+enableOpenSearch - Deploys an AWS OpenSearch Domain as part of the project
+openSearchInstanceType - AWS OpenSearch Instance Type (default is t3.medium.search)
+openSearchInstanceCount - AWS OpenSearch Instance Count (default is 2 && value cannot be less than 2)
+openSearchDomainName - AWS OpenSearch Domain Name (default is pulumi)
+openSearchDedicatedMasterCount - AWS OpenSearch Dedicated Master Count (default is no dedicated master nodes)
+```
 
-    ### Deploy
+**Note: below configuration values are examples. Provide your own.**
 
-    ```bash
-    pulumi up
-    ```
+### Set Configuration Values
 
-    Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the application project, will be outputted the base infrastructure project.
+```bash
+pulumi config set aws:region us-west-2
+pulumi config set vpcId vpc-12345789
+pulumi config set publicSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
+pulumi config set privateSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
+pulumi config set isolatedSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
+```
+
+Optionally, configure the DB Instance Type of your choice.
+
+### Deploy
+
+```bash
+pulumi up
+```
+
+Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the application project, will be outputted the base infrastructure project.
 
 4. Navigate to the `application` directory, to initialize, configure, and deploy the application infrastructure resources required.
 
-    ```bash
-    cd ../application
-    npm install
-    pulumi stack init # follow prompt
-    ```
+```bash
+cd ../application
+npm install
+pulumi stack init # follow prompt
+```
 
-    ### Required Configuration
-    ```
-    region - AWS Region
-    baseStackReference - Pulumi Stack Reference to base infrastructure Stack. Required for retrieve outputs.
-    imageTag - Specific Pulumi docker container image tag to be used for deployment. Note: Existing ECR repo w/ Pulumi images (api, ui, migrations) is required.
-    route53ZoneName - Route 53 Hosted Zone Name of zone to be used for DNS records.
-    route53Subdomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com.
-    acmCertificateArn - ACM Certificate ARN that covers the Route 53 Hosted Domain.
-    kmsServiceKeyId - KMS Key Id of KMS Key that will be used to secure secrets. Note: AWS user performing update will require access to modify key's IAM policy.
-    licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obtain).
-    ```
+### Required Configuration
 
-    ### Optional Configuration
-    ```
-    apiDesiredNumberTasks - Desired number of ECS tasks for the API. Default is 1.
-    apiTaskMemory - ECS Task level Memory. Default is 1024mb.
-    apiTaskCpu - ECS Task level CPU. Default is 512mb.
-    apiContainerCpu - CPU alloted to the Pulumi API Container. Defaults to Task CPU amount.
-    apiContainerMemoryReservation - Memory reserved for the Pulumi API Container. Defaults to Task memory amount.
-    apiDisabledEmailLogin - See DISABLE_EMAIL_LOGIN api env variable.
-    apiDisabledEmailSignup - See DISABLE_EMAIL_SIGNUP api env variable.
+```bash
+region - AWS Region
+vpcId - Valid, pre-existing AWS VPC 
+publicSubnetIds - At least two subnet ID
+privateSubnetIds - At least two private subnet ID
+isolatedSubnetIds - At least two isolated subnet ID
+dbClusterEndpoint - RDS Cluster Enpoint
+dbPort - MySQL Port
+dbName - Database Name
+dbSecurityGroupId - Database Security Group ID
+dbUsername - Database Username for Pulumi Cloud
+dbPassword - Database Password for Pulumi Cloud
+endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints
+openSearchUser - AWS OpenSearch User for Pulumi Cloud
+openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
+openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
+openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
+imageTag - Specific Pulumi docker container image tag to be used for deployment. Note: Existing ECR repo w/ Pulumi images (api, ui, migrations) is required.
+route53ZoneName - Route 53 Hosted Zone Name of zone to be used for DNS records.
+route53Subdomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com.
+acmCertificateArn - ACM Certificate ARN that covers the Route 53 Hosted Domain.
+kmsServiceKeyId - KMS Key Id of KMS Key that will be used to secure secrets. Note: AWS user performing update will require access to modify key's IAM policy.
+licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obtain).
+```
 
-    consoleDesiredNumberTasks - Desired number of ECS tasks for the UI. Default is 1.
-    consoleTaskMemory - ECS Task level Memory. Default is 512mb.
-    consoleTaskCpu - ECS Task level CPU. Default is 256mb.
-    consoleContainerCpu - CPU alloted to the Pulumi UI Container. Defaults to Task CPU amount.
-    consoleContainerMemoryReservation - Memory reserved for the Pulumi UI Container. Defaults to Task memory amount.
-    consoleHideEmailLogin - See HIDE_EMAIL_LOGIN UI env variable.
-    consoleHideEmailSignup - See HIDE_EMAIL_SIGNUP UI env variable.
+### Optional Configuration
 
-    smtpServer - Fully qualified address of SMTP server.
-    smtpUsername - SMTP username.
-    smtpPassword - SMTP password.
-    smtpGenericSender - Email to be used for sending emails from Pulumi API.
+```bash
+apiDesiredNumberTasks - Desired number of ECS tasks for the API. Default is 1.
+apiTaskMemory - ECS Task level Memory. Default is 1024mb.
+apiTaskCpu - ECS Task level CPU. Default is 512mb.
+apiContainerCpu - CPU alloted to the Pulumi API Container. Defaults to Task CPU amount.
+apiContainerMemoryReservation - Memory reserved for the Pulumi API Container. Defaults to Task memory amount.
+apiDisabledEmailLogin - See DISABLE_EMAIL_LOGIN api env variable.
+apiDisabledEmailSignup - See DISABLE_EMAIL_SIGNUP api env variable.
 
-    logType - Type of logs to be used. Default is no logging.
-    logArgs - Arguments provided to log configuration. See Logging section below.
-    ```
+openSearchUser - AWS OpenSearch User for Pulumi Cloud
+openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
+openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
+openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
 
-    **Note: below configuration values are examples. Provide your own.**
-    ### Set Configuration Values
-    ```bash
-    pulumi config set aws:region us-west-2
-    pulumi config set baseStackReference myorg/infrastructure/my-stack # NOTE: in the case of self-hosted S3 backend, use the stack name for the infrastructure stack
-    pulumi config set imageTag 20220105-189-signed
-    pulumi config set acmCertificateArn arn:aws:acm:us-west-2:052848974346:certificate/ee6d246c-dd3a-4667-b58a-4568a0f72dd6
-    pulumi config set kmsServiceKeyId f7f56e09-f568-447c-8540-cef8ba122a79
-    pulumi config set licenseKey {value} --secret
-    pulumi config set logType awslogs
-    pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
-    pulumi config set privateSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
-    pulumi config set publicSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
-    pulumi config set route53Subdomain my-sub-domain
-    pulumi config set route53ZoneName hosted-zone.com
-    pulumi config set smtpGenericSender email@email.com
-    pulumi config set smtpPassword {some-password} --secret
-    pulumi config set smtpServer email-smtp.us-west-2.amazonaws.com:587
-    pulumi config set region us-west-2
-    ```
+consoleDesiredNumberTasks - Desired number of ECS tasks for the UI. Default is 1.
+consoleTaskMemory - ECS Task level Memory. Default is 512mb.
+consoleTaskCpu - ECS Task level CPU. Default is 256mb.
+consoleContainerCpu - CPU alloted to the Pulumi UI Container. Defaults to Task CPU amount.
+consoleContainerMemoryReservation - Memory reserved for the Pulumi UI Container. Defaults to Task memory amount.
+consoleHideEmailLogin - See HIDE_EMAIL_LOGIN UI env variable.
+consoleHideEmailSignup - See HIDE_EMAIL_SIGNUP UI env variable.
 
-    ### Deploy
-    ```bash
-    pulumi up
-    ```
-    Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the application project, will be retrieved as Stack References from the infrastructure project.
+smtpServer - Fully qualified address of SMTP server.
+smtpUsername - SMTP username.
+smtpPassword - SMTP password.
+smtpGenericSender - Email to be used for sending emails from Pulumi API.
+
+logType - Type of logs to be used. Default is no logging.
+logArgs - Arguments provided to log configuration. See Logging section below.
+```
+
+**Note: below configuration values are examples. Provide your own.**
+### Set Configuration Values
+
+```bash
+pulumi config set aws:region us-west-2
+pulumi config set imageTag 20220105-189-signed
+pulumi config set imageTag 20220105-189-signed
+pulumi config set acmCertificateArn arn:aws:acm:us-west-2:052848974346:certificate/ee6d246c-dd3a-4667-b58a-4568a0f72dd6
+pulumi config set kmsServiceKeyId f7f56e09-f568-447c-8540-cef8ba122a79
+pulumi config set licenseKey {value} --secret
+pulumi config set logType awslogs
+pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
+pulumi config set privateSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
+pulumi config set publicSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
+pulumi config set dbClusterEndpoint https://somedb.rds.endpoint.com
+pulumi config set dbPort - 3306
+pulumi config set dbName - Pulumi
+pulumi config set dbSecurityGroupId - SG_12345
+pulumi config set dbUsername - User
+pulumi config set dbPassword - Pass
+pulumi config set endpointSecurityGroupId - SG_1234
+pulumi config set route53Subdomain my-sub-domain
+pulumi config set route53ZoneName hosted-zone.com
+pulumi config set smtpGenericSender email@email.com
+pulumi config set smtpPassword {some-password} --secret
+pulumi config set smtpServer email-smtp.us-west-2.amazonaws.com:587
+pulumi config set region us-west-2
+```
+
+### Deploy
+
+```bash
+pulumi up
+```
+Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the application project, will be retrieved as Stack References from the infrastructure project.
 
 5. Navigate to the `dns` directory initialize and create the route53 A records for the Pulumi API and Pulumi UI
 
-    ```bash
-    cd dns
-    npm install
-    pulumi stack init # follow prompt
-    ```
+```bash
+cd dns
+npm install
+pulumi stack init # follow prompt
+```
 
-    ### Required Configuration
-    
-    ```
-    region - AWS region
-    appStackReference - stack reference to the application stack. This will be used to obtain the required ELB values. 
-    ```
+### Required Configuration
 
-    ### Optional Configuration
-    
-    none
+```bash
+region - AWS region
+route53ZoneName - Route 53 Zone Name 
+apiLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
+apiLoadBalancerZoneId - Application Load balancer Zone Id - API Load Balancer
+consoleLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
+consoleLoadBalancerZoneId - Application Load balancer Id - API Load Balancer
+```
 
-    **Note: below configuration values are examples. Provide your own.**
-    ### Set Configuration Values
+### Optional Configuration
 
-    ```bash
-    pulumi config set aws-region us-west-2
-    pulumi config set appStackReference myorg/application/my-stack # NOTE: in the case of self-hosted S3 backend, use the stack name for the application stack
-    ```
+none
 
-    ### Deploy
-    ```bash
-    pulumi up
-    ```
-    Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the dns project, will be retrieved as Stack Reference Outputs from the application project.
+**Note: below configuration values are examples. Provide your own.**
+
+### Set Configuration Values
+
+```bash
+pulumi config set aws-region us-west-2
+pulumi config set apiLoadBalancerDnsName some.aws.lb.com
+pulumi config set apiLoadBalancerZoneId zoneIdHere
+pulumi config set consoleLoadBalancerDnsName some.aws.lb.com
+pulumi config set consoleLoadBalancerZoneId zoneIdHere
+```
+
+### Deploy
+
+```bash
+pulumi up
+```
+
+Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the dns project, will be retrieved as Stack Reference Outputs from the application project.
 
 ## Logging
+
 To enable logging configurations for your ECS services, you must specify at least one of the following logging configurations in the `application` stack configuration. NOTE: if no configuration is specified, application logging will not be enabled.
 - Cloudwatch (awslogs)
+
   ```bash
   pulumi config set logType awslogs
   pulumi config set logArgs '{"name": "your_log_base_name", "retentionDays": 3}' # NOTE: retentionDays defaults to 7 (days)
@@ -273,8 +330,9 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 # Updates and Upgrades
 
 ## Updating the Pulumi Service Images
-* Update the application project's configuration file to point at the latest pulumi docker image tags (imageTag).
-* Run the **Deploy Pulumi** steps described above.
+
+- Update the application project's configuration file to point at the latest pulumi docker image tags (imageTag).
+- Run the **Deploy Pulumi** steps described above.
 
 [get-started-aws]: https://www.pulumi.com/docs/get-started/aws/
 [s3-backend]: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-aws-s3-backend
@@ -295,3 +353,5 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 [vpc]: https://aws.amazon.com/vpc/
 [route53]: https://aws.amazon.com/route53/
 [kms]: https://aws.amazon.com/kms/
+[opensearch]: https://aws.amazon.com/opensearch-service/
+[esc]: https://www.pulumi.com/docs/esc/

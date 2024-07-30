@@ -4,13 +4,13 @@ import * as s3 from "@pulumi/aws/s3";
 export interface LoadBalancerArgs {
     accessLogsBucket?: s3.Bucket,
     accessLogsPrefix?: string,
-    accountId: pulumi.Output<string>,
+    accountId: string,
     certificateArn: string,
     enableAccessLogs?: boolean,
     idleTimeout?: number,
     internalLb?: boolean,
-    publicSubnetIds: pulumi.Output<string[]>,
+    publicSubnetIds: string[],
     region: string,
-    vpcId: pulumi.Output<string>,
+    vpcId: string,
     whiteListCidrBlocks: string[] | undefined
 }
