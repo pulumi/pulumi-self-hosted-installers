@@ -58,7 +58,7 @@ if [ ! -z "${DATABASE_CA_CERTIFICATE:-}" ]; then
 fi
 
 # If METADATA_LOCK_WAIT_TIMEOUT is set, then enable the special extensions we've added to our fork of
-# pulumi/golang-migrate to support timing out if metadata locks are held for too long waiting too start
+# pulumi/golang-migrate to support timing out if metadata locks are held for too long waiting to start
 # the migration.
 if [ -z "${METADATA_LOCK_WAIT_TIMEOUT:-}" ]; then
     DB_QUERY_STRING="${DB_QUERY_STRING}&x-metadata-lock-timeout=${METADATA_LOCK_WAIT_TIMEOUT}&x-metadata-lock-retries=${METADATA_LOCK_RETRIES:-20}"
