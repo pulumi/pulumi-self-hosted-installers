@@ -8,10 +8,8 @@ import { getIamPolicyArn } from "../common/utils";
 
 const namespace = "pulumi:auroraDatabase";
 const engine = "aurora-mysql";
-const engineVersion = "8.0.mysql_aurora.3.02.2";
-
-// standard mysql
-const databasePort = 3306;
+const engineVersion = "8.0.mysql_aurora.3.07.0";
+const dbOptionsFamily = "aurora-mysql8.0";
 
 export interface DatabaseArgs {
     vpcId: string,
@@ -33,7 +31,7 @@ export class Database extends pulumi.ComponentResource {
     constructor(name: string, args: DatabaseArgs, opts?: pulumi.ComponentResourceOptions) {
         super(namespace, name, args, opts);
 
-        const options = pulumi.mergeOptions(opts, { parent: this });
+        const options = { parent: this };
 
         // don't allow any ingress by default; API service will need to create ingress for this sg.
         const securityGroup = new ec2.SecurityGroup(`${name}-sg`, {
@@ -72,7 +70,7 @@ export class Database extends pulumi.ComponentResource {
         }, pulumi.mergeOptions(options, { protect: true }));
 
         const databaseInstanceOptions = new rds.ParameterGroup(`${name}-instance-options`, {
-            family: "aurora-mysql8.0",
+            family: dbOptionsFamily,
             parameters: [
                 // Enable the general and slow query logs and write them to files on the RDS instance.
                 { name: "slow_query_log", value: "1" },
