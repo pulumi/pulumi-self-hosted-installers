@@ -52,7 +52,7 @@ DB_QUERY_STRING='?'
 # This environment variable needs to be set to the value of the certificate and not a filepath. This was done this way in
 # order to be consistent with the way the database certificates are passed into the API service container, i.e. the value
 # of the cert not the file path.
-if [ ! -z "${DATABASE_CA_CERTIFICATE:-}" ]; then
+if [ -n "${DATABASE_CA_CERTIFICATE:-}" ]; then
     echo "${DATABASE_CA_CERTIFICATE}" > cacert.pem
     DB_QUERY_STRING="${DB_QUERY_STRING}&tls=custom&x-tls-ca=cacert.pem"
 fi
@@ -60,7 +60,7 @@ fi
 # If METADATA_LOCK_WAIT_TIMEOUT is set, then enable the special extensions we've added to our fork of
 # pulumi/golang-migrate to support timing out if metadata locks are held for too long waiting to start
 # the migration.
-if [ -z "${METADATA_LOCK_WAIT_TIMEOUT:-}" ]; then
+if [ -n "${METADATA_LOCK_WAIT_TIMEOUT:-}" ]; then
     DB_QUERY_STRING="${DB_QUERY_STRING}&x-metadata-lock-timeout=${METADATA_LOCK_WAIT_TIMEOUT}&x-metadata-lock-retries=${METADATA_LOCK_RETRIES:-20}"
 fi
 
