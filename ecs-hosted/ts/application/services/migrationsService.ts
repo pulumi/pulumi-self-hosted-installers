@@ -110,11 +110,11 @@ export class MigrationService extends pulumi.ComponentResource {
             secrets: [
                 {
                     name: "MYSQL_ROOT_USERNAME",
-                    value: this.baseArgs.database.dbUsername
+                    value: pulumi.secret(this.baseArgs.database.dbUsername)
                 },
                 {
                     name: "MYSQL_ROOT_PASSWORD",
-                    value: this.baseArgs.database.dbPassword
+                    value: pulumi.secret(this.baseArgs.database.dbPassword)
                 }
             ]
         }, this.baseOptions);

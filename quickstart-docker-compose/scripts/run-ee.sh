@@ -65,6 +65,24 @@ fi
 
 export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_HOST}:${PULUMI_LOCAL_DATABASE_PORT}"
 
+if [ -z "${PULUMI_SEARCH_HOST:-}" ]; then
+    PULUMI_SEARCH_HOST="http://opensearch"
+fi
+
+if [ -z "${PULUMI_SEARCH_PORT:-}" ]; then
+    PULUMI_SEARCH_PORT=9200
+fi
+
+export PULUMI_SEARCH_DOMAIN="${PULUMI_SEARCH_HOST}:${PULUMI_SEARCH_PORT}"
+
+if [ -z "${PULUMI_SEARCH_USER:-}" ]; then
+    export PULUMI_SEARCH_USER=admin
+fi
+
+if [ -z "${PULUMI_SEARCH_PASSWORD:-}" ]; then
+    export PULUMI_SEARCH_PASSWORD=admin
+fi
+
 if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" ]]; then
     echo "Checkpoint object storage configuration not found. Defaulting to local path..."
     export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"

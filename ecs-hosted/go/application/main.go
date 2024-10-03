@@ -3,8 +3,8 @@ package main
 import (
 	"strings"
 
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/s3"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
@@ -134,6 +134,10 @@ func main() {
 			TaskCpu:                    config.ApiTaskCpu,
 			TrafficManager:             trafficManager,
 			WhiteListCidrBlocks:        config.WhiteListCidrBlocks,
+			OpenSearchUser:             config.OpenSearchUser,
+			OpenSearchPassword:         config.OpenSearchPassword,
+			OpenSearchDomain:           config.OpenSearchDomain,
+			OpenSearchEndpoint:         config.OpenSearchEndpoint,
 		})
 
 		if err != nil {
@@ -201,12 +205,9 @@ func createSamlCerts(ctx *pulumi.Context, config *config.ConfigArgs, apiUrl stri
 
 	cert, err := tls.NewSelfSignedCert(ctx, "sso-cert", &tls.SelfSignedCertArgs{
 		AllowedUses:   pulumi.StringArray{pulumi.String("cert_signing")},
-		KeyAlgorithm:  pulumi.String("RSA"),
 		PrivateKeyPem: privateKey.PrivateKeyPem,
-		Subjects: tls.SelfSignedCertSubjectArray{
-			tls.SelfSignedCertSubjectArgs{
-				CommonName: pulumi.String(apiUrl),
-			},
+		Subject: tls.SelfSignedCertSubjectArgs{
+			CommonName: pulumi.String(apiUrl),
 		},
 		ValidityPeriodHours: pulumi.Int(365 * 24),
 	})

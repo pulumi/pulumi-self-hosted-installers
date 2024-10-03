@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
@@ -22,21 +22,21 @@ func main() {
 
 		// retrieve VPC to populate the CIDR block of the VPCE SG ingress
 		vpc, err := ec2.LookupVpc(ctx, &ec2.LookupVpcArgs{
-			Id: &config.vpcId,
+			Id: &config.VpcId,
 		})
 
 		if err != nil {
 			return err
 		}
 
-		name := config.commonName
+		name := config.CommonName
 
 		database, err := NewDatabase(ctx, getCommonName(name, "database"), &DatabaseArgs{
-			vpcId:             pulumi.String(config.vpcId),
-			isolatedSubnetIds: pulumi.ToStringArray(config.isolatedSubnetIds),
-			numberDbReplicas:  config.numberDbReplicas,
-			instanceType:      pulumi.String(config.dbInstanceType),
-			region:            config.region,
+			vpcId:             pulumi.String(config.VpcId),
+			isolatedSubnetIds: pulumi.ToStringArray(config.IsolatedSubnetIds),
+			numberDbReplicas:  config.NumberDbReplicas,
+			instanceType:      pulumi.String(config.DbInstanceType),
+			region:            config.Region,
 		})
 
 		if err != nil {
@@ -44,7 +44,7 @@ func main() {
 		}
 
 		endpointSecurityGroup, err := ec2.NewSecurityGroup(ctx, getCommonName(name, "endpoint-sg"), &ec2.SecurityGroupArgs{
-			VpcId: pulumi.String(config.vpcId),
+			VpcId: pulumi.String(config.VpcId),
 			Ingress: ec2.SecurityGroupIngressArray{
 				ec2.SecurityGroupIngressArgs{
 					Protocol:   pulumi.String("-1"),
@@ -59,9 +59,9 @@ func main() {
 			return err
 		}
 
-		s3ServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.s3", config.region))
+		s3ServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.s3", config.Region))
 		s3Endpoint, err := ec2.NewVpcEndpoint(ctx, getCommonName(name, "s3-endpoint"), &ec2.VpcEndpointArgs{
-			VpcId:       pulumi.String(config.vpcId),
+			VpcId:       pulumi.String(config.VpcId),
 			ServiceName: pulumi.String(s3ServiceName),
 		})
 
@@ -73,80 +73,97 @@ func main() {
 			PrefixListId: s3Endpoint.PrefixListId,
 		}, nil)
 
-		dkrServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.ecr.dkr", config.region))
+		dkrServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.ecr.dkr", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "ecr-dkr-endpoint"), &ec2.VpcEndpointArgs{
-			VpcId:             pulumi.String(config.vpcId),
+			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(dkrServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
 			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
-			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
+			SubnetIds:         pulumi.ToStringArray(config.PrivateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
-		ecrServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.ecr.api", config.region))
+		ecrServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.ecr.api", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "ecr-api-endpoint"), &ec2.VpcEndpointArgs{
-			VpcId:             pulumi.String(config.vpcId),
+			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(ecrServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
 			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
-			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
+			SubnetIds:         pulumi.ToStringArray(config.PrivateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
-		smServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.secretsmanager", config.region))
+		smServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.secretsmanager", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "secrets-manager-endpoint"), &ec2.VpcEndpointArgs{
-			VpcId:             pulumi.String(config.vpcId),
+			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(smServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
 			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
-			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
+			SubnetIds:         pulumi.ToStringArray(config.PrivateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
-		cwServiceName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.logs", config.region))
+		cwServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.logs", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "cloudwatch-endpoint"), &ec2.VpcEndpointArgs{
-			VpcId:             pulumi.String(config.vpcId),
+			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(cwServiceName),
 			VpcEndpointType:   pulumi.String("Interface"),
 			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
-			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
+			SubnetIds:         pulumi.ToStringArray(config.PrivateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
-		elbServicName := common.GetEnpointAddress(config.region, fmt.Sprintf("com.amazonaws.%s.elasticloadbalancing", config.region))
+		elbServicName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.elasticloadbalancing", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "elb-endpoint"), &ec2.VpcEndpointArgs{
-			VpcId:             pulumi.String(config.vpcId),
+			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(elbServicName),
 			VpcEndpointType:   pulumi.String("Interface"),
 			PrivateDnsEnabled: pulumi.BoolPtr(true),
 			SecurityGroupIds:  pulumi.StringArray{endpointSecurityGroup.ID()},
-			SubnetIds:         pulumi.ToStringArray(config.privateSubnetIds),
+			SubnetIds:         pulumi.ToStringArray(config.PrivateSubnetIds),
 		})
 
 		if err != nil {
 			return err
 		}
 
-		ctx.Export("vpcId", pulumi.String(config.vpcId))
-		ctx.Export("publicSubnetIds", pulumi.ToStringArray(config.publicSubnetIds))
-		ctx.Export("privateSubnetIds", pulumi.ToStringArray(config.privateSubnetIds))
-		ctx.Export("isolatedSubnetIds", pulumi.ToStringArray(config.isolatedSubnetIds))
+		OpenSearchArgs := &OpenSearchArgs{
+			DeployOpenSearch:     config.EnableOpenSearch,
+			InstanceType:         config.OpenSearchInstanceType,
+			InstanceCount:        config.OpenSearchInstanceCount,
+			DomainName:           config.OpenSearchDomainName,
+			DedicatedMasterCount: config.OpenSearchDedicatedMasterCount,
+			VpcId:                config.VpcId,
+			SubnetIds:            config.PrivateSubnetIds,
+			AccountId:            config.AccountId,
+			Region:               config.Region,
+		}
+
+		OpenSearchDomain, err := NewOpenSearch(ctx, getCommonName(name, "opensearch"), OpenSearchArgs)
+		if err != nil {
+			return err
+		}
+
+		ctx.Export("vpcId", pulumi.String(config.VpcId))
+		ctx.Export("publicSubnetIds", pulumi.ToStringArray(config.PublicSubnetIds))
+		ctx.Export("privateSubnetIds", pulumi.ToStringArray(config.PrivateSubnetIds))
+		ctx.Export("isolatedSubnetIds", pulumi.ToStringArray(config.IsolatedSubnetIds))
 		ctx.Export("dbClusterEndpoint", database.dbClusterEndpoint)
 		ctx.Export("dbPort", database.dbPort)
 		ctx.Export("dbName", database.dbName)
@@ -155,6 +172,10 @@ func main() {
 		ctx.Export("dbSecurityGroupId", database.dbSecurityGroupId)
 		ctx.Export("endpointSecurityGroupId", endpointSecurityGroup.ID())
 		ctx.Export("s3EndpointPrefixId", privateS3PrefixList.Id())
+		ctx.Export("opensearchDomain", OpenSearchDomain.Domain)
+		ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
+		ctx.Export("opensearchUser", OpenSearchDomain.User)
+		ctx.Export("opensearchPassword", OpenSearchDomain.Password)
 
 		return nil
 	})
