@@ -4,8 +4,6 @@ import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pul
 import { CustomResource } from "@pulumi/kubernetes/apiextensions"
 
 export interface OpenSearchArgs {
-    gcpProject: string,
-    gcpRegion: string,
     namespace: Output<string>,
     serviceAccount: Input<string>,
     intitialAdminPassword: Input<string>,

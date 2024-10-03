@@ -6,6 +6,9 @@
         "@pulumi/kubernetes": "4.18.1"
     },
     "files": [
+        "api.ts",
+        "console.ts",
+        "index.ts",
         "openSearch.ts"
     ]
 }
