@@ -1,18 +1,17 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as aws from "@pulumi/aws";
-import * as awsx from "@pulumi/awsx";
-
 import { ApplicationDns } from "./applicationDns";
 import { config } from "./config";
 
-const domain = pulumi
-    .all([config.route53ZoneName, config.route53Subdomain])
-    .apply(([zone, subdomain]) => {
-        return subdomain && subdomain != "" ?
-            `${subdomain}.${zone}` :
-            zone;
-    });
+const domain = config.route53Subdomain && config.route53Subdomain != "" ?
+    `${config.route53Subdomain}.${config.route53ZoneName}` :
+    config.route53ZoneName;
 
+// const domain = pulumi
+//     .all([config.route53ZoneName, config.route53Subdomain])
+//     .apply(([zone, subdomain]) => {
+//         return subdomain && subdomain != "" ?
+//             `${subdomain}.${zone}` :
+//             zone;
+//     });
 
 const appDns = new ApplicationDns("pulumi-dns", {
     region: config.region,

@@ -34,7 +34,7 @@ export const toLogType = (input: string | undefined): LogType | undefined => {
 }
 
 // the secrets manager polilcy the service and the migrations will use to interact and decrypt secrets
-export const generateSecretsManagerPolicy = (region: string, secretsPrefix: string, kmsKeyId: string, accountId: pulumi.Output<string>) => {
+export const generateSecretsManagerPolicy = (region: string, secretsPrefix: string, kmsKeyId: string, accountId: string) => {
 
     const key = kms.getKey({
         keyId: kmsKeyId

@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
-import * as ec2 from "@pulumi/aws/ec2";
-import * as input from "@pulumi/aws/types/input";
+import { ec2 } from "@pulumi/aws/";
+import { input } from "@pulumi/aws/types";
 
 import { ContainerService } from "./containerService";
 import { TaskDefinitionArgs, ConsoleServiceArgs } from "./types";

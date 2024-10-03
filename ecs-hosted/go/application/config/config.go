@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -66,6 +66,11 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		SecurityGroupId: stackRef.GetStringOutput(pulumi.String("dbSecurityGroupId")),
 	}
 
+	resource.OpenSearchUser = stackRef.GetStringOutput(pulumi.String("OpenSearchUser"))
+	resource.OpenSearchPassword = stackRef.GetStringOutput(pulumi.String("OpenSearchPassword"))
+	resource.OpenSearchDomain = stackRef.GetStringOutput(pulumi.String("OpenSearchDomain"))
+	resource.OpenSearchEndpoint = stackRef.GetStringOutput(pulumi.String("OpenSearchEndpoint"))
+
 	// this SG protects the VPCEs created in the infrastructure stack
 	resource.EndpointSecurityGroup = stackRef.GetStringOutput(pulumi.String("endpointSecurityGroupId"))
 
@@ -102,8 +107,8 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 
 	// values will be used to construct URLs for API and UI (console) services
 	// we only require the route53 zone, the subdomain is optional
-	resource.Route53ZoneName = appConfig.Require("route53ZoneName")
-	resource.Route53Subdomain = appConfig.Get("route53Subdomain")
+	resource.Route53ZoneName = appConfig.Require("domainName")
+	resource.Route53Subdomain = appConfig.Get("subdomainName")
 
 	// allow a provided white list of cidrs to be applied on the public load balancer
 	// we assume 0.0.0.0/0 if none is provided
@@ -112,6 +117,8 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	// gather values for our API and UI (console) services
 	hydrateApiValues(appConfig, &resource)
 	hydrateConsoleValues(appConfig, &resource)
+
+	// hydrateInsightsValues(appConfig, &resource)
 
 	// only populate our SMTP config if required values are present
 	smtpServer := appConfig.Get("smtpServer")
@@ -131,6 +138,100 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 
 	return &resource, nil
 }
+
+type ConfigArgs struct {
+	// AWS Values
+	Region    string
+	Profile   string
+	AccountId string
+
+	// Project Values
+	ProjectName string
+	StackName   string
+
+	// Pre-Existing AWS Resources
+	AcmCertificateArn     string
+	KmsServiceKeyId       string
+	LicenseKey            string
+	VpcId                 pulumi.StringOutput
+	PublicSubnetIds       pulumi.StringArrayOutput
+	PrivateSubnetIds      pulumi.StringArrayOutput
+	IsolatedSubnetIds     pulumi.StringArrayOutput
+	DatabaseArgs          *DatabaseArgs
+	EndpointSecurityGroup pulumi.StringOutput
+	PrefixListId          pulumi.StringOutput
+
+	ImagePrefix        string
+	ImageTag           string
+	RecaptchaSiteKey   string
+	RecaptchaSecretKey string
+	EcrRepoAccountId   string
+
+	Route53ZoneName     string
+	Route53Subdomain    string
+	WhiteListCidrBlocks []string
+
+	EnablePrivateLoadBalancerAndLimitEgress bool
+
+	// API Related Values
+	ApiDesiredNumberTasks         int
+	ApiTaskMemory                 int
+	ApiTaskCpu                    int
+	ApiContainerCpu               int
+	ApiContainerMemoryReservation int
+	ApiDisableEmailLogin          bool
+	ApiDisableEmailSign           bool
+	ApiExecuteMigrations          bool
+
+	// Console Related Values
+	ConsoleDesiredNumberTasks         int
+	ConsoleTaskMemory                 int
+	ConsoleTaskCpu                    int
+	ConsoleContainerCpu               int
+	ConsoleContainerMemoryReservation int
+	ConsoleHideEmailLogin             bool
+	ConsoleHideEmailSignup            bool
+
+	// Insights Related Values
+	OpenSearchUser     pulumi.StringOutput
+	OpenSearchPassword pulumi.StringOutput
+	OpenSearchDomain   pulumi.StringOutput
+	OpenSearchEndpoint pulumi.StringOutput
+
+	// Configuration for Both
+	SamlArgs *SamlArgs
+	SmtpArgs *SmtpArgs
+
+	LogType log.LogType
+	LogArgs string
+}
+
+// func hydrateInsightsValues(appConfig *config.Config, resource *ConfigArgs) {
+// 	resource.OpenSearchInstanceType = appConfig.Get("OpenSearchInstanceType")
+// 	if resource.OpenSearchInstanceType == "" {
+// 		resource.OpenSearchInstanceType = "t3.medium.search"
+// 	}
+
+// 	resource.OpenSearchInstanceCount = appConfig.GetInt("OpenSearchInstanceCount")
+// 	if resource.OpenSearchInstanceCount == 0 {
+// 		resource.OpenSearchInstanceCount = 2
+// 	}
+
+// 	resource.OpenSearchVolumeSize = appConfig.GetInt("OpenSearchVolumeSize")
+// 	if resource.OpenSearchVolumeSize == 0 {
+// 		resource.OpenSearchVolumeSize = 10
+// 	}
+
+// 	resource.OpenSearchDashboardsMemory = appConfig.GetInt("OpenSearchDashboardsMemory")
+// 	if resource.OpenSearchDashboardsMemory == 0 {
+// 		resource.OpenSearchDashboardsMemory = 512
+// 	}
+
+// 	resource.OpenSearchDashboardsCpu = appConfig.GetInt("OpenSearchDashboardsCpu")
+// 	if resource.OpenSearchDashboardsCpu == 0 {
+// 		resource.OpenSearchDashboardsCpu = 256
+// 	}
+// }
 
 func hydrateApiValues(appConfig *config.Config, resource *ConfigArgs) {
 	resource.ApiDesiredNumberTasks = appConfig.GetInt("apiDesiredNumberTasks")
@@ -203,67 +304,6 @@ func OutputToStringArray(output pulumi.AnyOutput) pulumi.StringArrayOutput {
 		}
 		return res
 	}).(pulumi.StringArrayOutput)
-}
-
-type ConfigArgs struct {
-	// AWS Values
-	Region    string
-	Profile   string
-	AccountId string
-
-	// Project Values
-	ProjectName string
-	StackName   string
-
-	// Pre-Existing AWS Resources
-	AcmCertificateArn     string
-	KmsServiceKeyId       string
-	LicenseKey            string
-	VpcId                 pulumi.StringOutput
-	PublicSubnetIds       pulumi.StringArrayOutput
-	PrivateSubnetIds      pulumi.StringArrayOutput
-	IsolatedSubnetIds     pulumi.StringArrayOutput
-	DatabaseArgs          *DatabaseArgs
-	EndpointSecurityGroup pulumi.StringOutput
-	PrefixListId          pulumi.StringOutput
-
-	ImagePrefix        string
-	ImageTag           string
-	RecaptchaSiteKey   string
-	RecaptchaSecretKey string
-	EcrRepoAccountId   string
-
-	Route53ZoneName     string
-	Route53Subdomain    string
-	WhiteListCidrBlocks []string
-
-	EnablePrivateLoadBalancerAndLimitEgress bool
-
-	// API Related Values
-	ApiDesiredNumberTasks         int
-	ApiTaskMemory                 int
-	ApiTaskCpu                    int
-	ApiContainerCpu               int
-	ApiContainerMemoryReservation int
-	ApiDisableEmailLogin          bool
-	ApiDisableEmailSign           bool
-	ApiExecuteMigrations          bool
-
-	// Console Related Values
-	ConsoleDesiredNumberTasks         int
-	ConsoleTaskMemory                 int
-	ConsoleTaskCpu                    int
-	ConsoleContainerCpu               int
-	ConsoleContainerMemoryReservation int
-	ConsoleHideEmailLogin             bool
-	ConsoleHideEmailSignup            bool
-
-	// Configuration for Both
-	SamlArgs *SamlArgs
-	SmtpArgs *SmtpArgs
-
-	LogType log.LogType
-	LogArgs string
 }
 
 type DatabaseArgs struct {

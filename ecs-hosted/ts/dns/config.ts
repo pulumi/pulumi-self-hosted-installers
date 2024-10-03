@@ -8,14 +8,14 @@ const projectName = pulumi.getProject();
 const stackName = pulumi.getStack();
 
 // retrieve the application stack to grab info for our loadBalancers
-const appStack = new pulumi.StackReference(stackConfig.require("appStackReference"));
-const route53ZoneName = pulumi.output(appStack.requireOutputValue("route53ZoneName")).apply(r => <string>r);
-const apiLoadBalancerDnsName = pulumi.output(appStack.requireOutputValue("apiLoadBalancerDnsName")).apply(r => <string>r);
-const apiLoadBalancerZoneId = pulumi.output(appStack.requireOutputValue("apiLoadBalancerZoneId")).apply(r => <string>r);
-const consoleLoadBalancerDnsName = pulumi.output(appStack.requireOutputValue("consoleLoadBalancerDnsName")).apply(r => <string>r);
-const consoleLoadBalancerZoneId = pulumi.output(appStack.requireOutputValue("consoleLoadBalancerZoneId")).apply(r => <string>r);
+// const appStack = new pulumi.StackReference(stackConfig.require("appStackReference"));
+const route53ZoneName = stackConfig.require("route53ZoneName");
+const apiLoadBalancerDnsName = stackConfig.require("apiLoadBalancerDnsName");
+const apiLoadBalancerZoneId = stackConfig.require("apiLoadBalancerZoneId");
+const consoleLoadBalancerDnsName = stackConfig.require("consoleLoadBalancerDnsName");
+const consoleLoadBalancerZoneId = stackConfig.require("consoleLoadBalancerZoneId");
 
-const route53Subdomain = pulumi.output(appStack.getOutputValue("route53Subdomain")).apply(r => r ? <string>r : undefined);
+const route53Subdomain = stackConfig.get("route53Subdomain");
 
 export const config = {
     region,

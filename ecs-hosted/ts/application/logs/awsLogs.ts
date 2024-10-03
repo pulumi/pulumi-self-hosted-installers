@@ -35,7 +35,11 @@ export class AwsLogs extends pulumi.ComponentResource implements LogDriver {
     }
 
     // return specific "configuration" for this types logs
-    getConfiguration(ids: string[]): any {
+    getConfiguration(ids: pulumi.UnwrappedArray<string> | undefined): any {
+        if (!ids) {
+            return undefined;
+        }
+        
         return {
             "awslogs-region": this.args.region,
             "awslogs-group": ids[0],

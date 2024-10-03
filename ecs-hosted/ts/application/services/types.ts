@@ -36,13 +36,13 @@ export interface TaskDefinitionArgs {
 }
 
 export interface ServiceBaseArgs {
-    accountId: pulumi.Output<string>,
+    accountId: string,
     cluster?: ecs.Cluster,
     kmsServiceKeyId?: string,
-    privateSubnetIds: pulumi.Output<string[]>,
+    privateSubnetIds: string[],
     region: string,
     secretsManagerPrefix?: string,
-    vpcId: pulumi.Output<string>,
+    vpcId: string,
 }
 
 export interface ServiceArgs extends ServiceBaseArgs {
@@ -57,8 +57,8 @@ export interface ServiceArgs extends ServiceBaseArgs {
 export interface ApiServiceArgs extends ServiceBaseArgs {
     containerMemoryReservation?: number,
     containerCpu?: number,
-    ecrRepoAccountId?: pulumi.Output<string | undefined>,
-    endpointSecurityGroupId: pulumi.Output<string>,
+    ecrRepoAccountId?: string | undefined,
+    endpointSecurityGroupId: string,
     imageTag: string,
     licenseKey: string,
     logType?: LogType,
@@ -73,12 +73,12 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     disableEmailSignup: boolean,
     disableEmailLogin: boolean,
     database: {
-        dbClusterEndpoint: pulumi.Output<string>,
-        dbPort: pulumi.Output<number>,
-        dbName: pulumi.Output<string>,
-        dbSecurityGroupId: pulumi.Output<string>,
-        dbUsername: pulumi.Output<string>,
-        dbPassword: pulumi.Output<string>
+        dbClusterEndpoint: string,
+        dbPort: number,
+        dbName: string,
+        dbSecurityGroupId: string,
+        dbUsername: string,
+        dbPassword: string
     },
     smtp?: {
         smtpServer?: string,
@@ -92,6 +92,12 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
         rootDomain: string,
         whiteListCidrBlocks: string[] | undefined
     },
+    opensearch?: {
+        user?: string,
+        password?: string,
+        domain?: string,
+        endpoint?: string
+    }
     checkPointbucket: s3.Bucket,
     policyPacksBucket: s3.Bucket
 }
@@ -99,8 +105,8 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
 export interface ConsoleServiceArgs extends ServiceBaseArgs {
     containerMemoryReservation?: number,
     containerCpu?: number,
-    ecrRepoAccountId?: pulumi.Output<string | undefined>,
-    endpointSecurityGroupId: pulumi.Output<string>,
+    ecrRepoAccountId?: string | undefined,
+    endpointSecurityGroupId: string,
     imageTag: string,
     logType?: LogType,
     logArgs?: any,
@@ -126,19 +132,21 @@ export interface ApiServiceEnvironmentArgs {
     databasePort: number,
     checkpointBucket: string,
     policyPackBucket: string,
-    samlSsoPublicCert: string,
-    samlSsoPrivateCert: string
+    samlSsoPublicCert?: string | undefined,
+    samlSsoPrivateCert?: string | undefined,
+    openSearchUser?: string | undefined,
+    openSearchEndpoint?: string | undefined,
 }
 
 export interface MigrationsArgs extends ServiceBaseArgs {
-    ecrRepoAccountId?: pulumi.Output<string | undefined>,
+    ecrRepoAccountId?: string | undefined,
     database: {
-        dbClusterEndpoint: pulumi.Output<string>,
-        dbPort: pulumi.Output<number>,
-        dbName: pulumi.Output<string>,
-        dbSecurityGroupId: pulumi.Output<string>,
-        dbUsername: pulumi.Output<string>,
-        dbPassword: pulumi.Output<string>
+        dbClusterEndpoint: string,
+        dbPort: number,
+        dbName: string,
+        dbSecurityGroupId: string,
+        dbUsername: string,
+        dbPassword: string
     },
     migrationsImageTag: string,
 }

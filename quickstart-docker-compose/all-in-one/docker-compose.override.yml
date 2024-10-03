@@ -2,8 +2,6 @@
 # The overrides the build context so that it uses the local sources
 # to build an image rather than the published image.
 
-version: "3.0"
-
 networks:
   pulumi-self-hosted-installers:
     # Setting external to true will prevent docker-compose from creating the
@@ -16,7 +14,7 @@ services:
 
   api:
     ports:
-      - 8080:8080
+      - "8080:8080"
     image: "pulumi/service:scratch"
     build:
       context: ../../../
@@ -24,7 +22,7 @@ services:
 
   console:
     ports:
-      - 3000:3000
+      - "3000:3000"
     image: "pulumi/console:scratch"
     build:
       context: ../../../cmd/console2

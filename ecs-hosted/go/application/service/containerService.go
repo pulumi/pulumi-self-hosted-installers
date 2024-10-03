@@ -1,15 +1,14 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/appautoscaling"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ec2"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/ecs"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/iam"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/kms"
-	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/lb"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/appautoscaling"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ecs"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/iam"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/kms"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/lb"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -342,28 +341,23 @@ func NewSecretsManagerPolicy(ctx *pulumi.Context, name string, region string, se
 
 	return key.Arn.ApplyT(func(s string) (string, error) {
 		secretsArn := common.GetIamPolicyArn(region, fmt.Sprintf("arn:aws:secretsmanager:%s:%s:secret:%s/*", region, accountId, secretsPrefix))
-		doc, err := json.Marshal(map[string]any{
+		doc := fmt.Sprintf(`{
 			"Version": "2012-10-17",
-			"Statement": []map[string]any{
+			"Statement": [
 				{
 					"Effect": "Allow",
-					"Action": []string{
+					"Action": [
 						"secretsmanager:GetSecretValue",
-						"kms:Decrypt",
-					},
-					"Resource": []string{
-						secretsArn,
-						s,
-					},
-				},
-			},
-		})
+						"kms:Decrypt"
+					],
+					"Resource": [
+						"%s",
+						"%s"
+					]
+				}]
+		}`, secretsArn, s)
 
-		if err != nil {
-			return "", err
-		}
-
-		return string(doc), nil
+		return doc, nil
 	}).(pulumi.StringOutput), nil
 }
 

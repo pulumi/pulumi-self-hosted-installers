@@ -42,7 +42,7 @@ export class TrafficManager extends pulumi.ComponentResource {
         this.console = new PulumiLoadBalancer(`${name}-console-lb`, consoleLoadBalancerArgs, baseOptions);
     }
 
-    createAccessLogBucket(region: string,name: string, prefix: string, accountId: pulumi.Output<string>, options: pulumi.ComponentResourceOptions): s3.Bucket {
+    createAccessLogBucket(region: string,name: string, prefix: string, accountId: string, options: pulumi.ComponentResourceOptions): s3.Bucket {
 
         const accessLogsBucket = new s3.Bucket(`${name}-access-logs`, {}, pulumi.mergeOptions(options, { protect: true }));
         const serviceAccount = getServiceAccount();

@@ -24,10 +24,10 @@ if [ -z "${PULUMI_LICENSE_KEY:-}" ]; then
     exit 1
 fi
 
-# PULUMI_DATA_PATH is a stable filesystem path where Pulumi will store the 
+# PULUMI_DATA_PATH is a stable filesystem path where Pulumi will store the
 # checkpoint objects.
 if [ -z "${PULUMI_DATA_PATH:-}" ]; then
-    echo "PULUMI_DATA_PATH was not set. Defaulting to ${PULUMI_DATA_PATH}"
+    echo "PULUMI_DATA_PATH was not set. Defaulting to ${DEFAULT_DATA_PATH}"
     test -w "${DEFAULT_DATA_PATH_BASE}" || {
         echo "Error: Tried to use the default path for the data dir but you lack write permissions to ${DEFAULT_DATA_PATH_BASE}"
         echo ""
@@ -65,6 +65,24 @@ fi
 
 export PULUMI_DATABASE_ENDPOINT="${PULUMI_LOCAL_DATABASE_HOST}:${PULUMI_LOCAL_DATABASE_PORT}"
 
+if [ -z "${PULUMI_SEARCH_HOST:-}" ]; then
+    PULUMI_SEARCH_HOST="http://opensearch"
+fi
+
+if [ -z "${PULUMI_SEARCH_PORT:-}" ]; then
+    PULUMI_SEARCH_PORT=9200
+fi
+
+export PULUMI_SEARCH_DOMAIN="${PULUMI_SEARCH_HOST}:${PULUMI_SEARCH_PORT}"
+
+if [ -z "${PULUMI_SEARCH_USER:-}" ]; then
+    export PULUMI_SEARCH_USER=admin
+fi
+
+if [ -z "${PULUMI_SEARCH_PASSWORD:-}" ]; then
+    export PULUMI_SEARCH_PASSWORD=admin
+fi
+
 if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" ]]; then
     echo "Checkpoint object storage configuration not found. Defaulting to local path..."
     export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"
@@ -77,18 +95,18 @@ fi
 
 docker_compose_stop() {
     if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
-        docker-compose stop
+        docker compose stop
     else
-        docker-compose ${DOCKER_COMPOSE_ARGS} stop
+        docker compose ${DOCKER_COMPOSE_ARGS} stop
     fi
 }
 
 trap docker_compose_stop SIGINT SIGTERM ERR EXIT
 
 if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
-    docker-compose up --build
+    docker compose up --build
 else
     # Don't add quotes around the variable below. We might pass multiple args and the quotes
     # will make multiple args look like a single arg.
-    docker-compose ${DOCKER_COMPOSE_ARGS} up --build
+    docker compose ${DOCKER_COMPOSE_ARGS} up --build
 fi
