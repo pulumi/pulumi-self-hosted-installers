@@ -7,6 +7,7 @@
     },
     "files": [
         "api.ts",
+        "cert-manager.ts",
         "console.ts",
         "index.ts",
         "openSearch.ts"
