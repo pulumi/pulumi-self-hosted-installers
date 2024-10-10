@@ -1,3 +1,3 @@
-name: selfhosted-03-database
+name: selfhosted-20-database
 description: Used to create database resources for the eks selfhosted installer.
 runtime: nodejs
