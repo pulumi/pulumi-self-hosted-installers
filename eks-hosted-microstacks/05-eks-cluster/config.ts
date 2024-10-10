@@ -5,10 +5,10 @@ const pulumiConfig = new pulumi.Config();
 // IAM stack reference - if applicable
 // If config not set for the iam stack reference, then require the applicable values to be provided
 const iamStackName = pulumiConfig.get("iamStackName");
-let eksInstanceRoleName: string | pulumi.Output<string>;
-let instanceProfileName: string | pulumi.Output<string>;
-let eksServiceRoleName: string | pulumi.Output<string>;
-let ssoRoleArn: string | pulumi.Output<string>;
+let eksInstanceRoleName: string | pulumi.Output<string> | pulumi.Output<any>;
+let instanceProfileName: string | pulumi.Output<string> | pulumi.Output<any>;
+let eksServiceRoleName: string | pulumi.Output<string> | pulumi.Output<any>;
+let ssoRoleArn: string | pulumi.Output<string> | pulumi.Output<any>;
 
 if (!iamStackName) {
 
@@ -31,10 +31,10 @@ if (!iamStackName) {
 // Networking Stack reference - if applicable.
 // If config not set for the networking stack reference, then require the applicable values to be provided
 const networkingStackName = pulumiConfig.get("networkingStackName");
-let vpcId: string | pulumi.Output<string>;
-let publicSubnetIds: string[] | pulumi.Output<string>[] = [];
-let privateSubnetIds: string[] | pulumi.Output<string>[] = [];
-let clusterName: string | pulumi.Output<string>;
+let vpcId: string | pulumi.Output<string> | pulumi.Output<any>;
+let publicSubnetIds: string[] | pulumi.Output<string>[] | pulumi.Output<any> = [];
+let privateSubnetIds: string[] | pulumi.Output<string>[] | pulumi.Output<any>  = [];
+let clusterName: string | pulumi.Output<string> | pulumi.Output<any>;
 
 if (!networkingStackName) {
     // Get the provided cluster name

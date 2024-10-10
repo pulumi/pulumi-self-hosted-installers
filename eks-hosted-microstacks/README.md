@@ -41,6 +41,7 @@ These instructions assume you are using "prod" for the name of your stacks.
 The process is the same for each microstack:
 - cd to the given project folder (e.g. `01-iam`)
 - `npm install` to install the package dependencies
+- Run `pulumi stack init prod` (or whatever name of stack you want to use)
 - copy "Pulumi.EXAMPLE.yaml" to a file where "EXAMPLE" is replaced with the name of your stack.
   - For example, if you are naming the stacks "prod", then you would run `cp Pulumi.EXAMPLE.yaml Pulumi.prod.yaml`
 - edit "Pulumi.prod.yaml" and follow the instructions in the file about setting configuration values.

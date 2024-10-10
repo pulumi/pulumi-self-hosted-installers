@@ -5,11 +5,11 @@ config:
 
   # Set a base name to be used when creating the resources.
   # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
-  baseName: pulumiselfhost
+  baseName: mitchselfhost
 
   # Set the name of the EKS cluster to create.
   # This is needed to allow subnet matching for the k8s workloads.
-  eksClusterName: pulumiselfhost-eks
+  eksClusterName: mitchselfhost-eks
 
   # Set the CIDR block for the VPC and related subnets.
   networkCidrBlock: 172.16.0.0/16 

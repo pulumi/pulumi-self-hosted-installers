@@ -12,6 +12,7 @@ const vpc = new awsx.ec2.Vpc(`${config.baseName}-vpc`,
     {
         cidrBlock: config.networkCidrBlock,
         numberOfAvailabilityZones: 3,
+        subnetStrategy: awsx.ec2.SubnetAllocationStrategy.Auto,
         subnetSpecs: [
             // Any non-null value is valid.
             { type: "Public", tags: {"kubernetes.io/role/elb": "1", [clusterNameTag]:  "shared" }},
