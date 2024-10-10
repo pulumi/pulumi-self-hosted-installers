@@ -1,0 +1,13 @@
+config:
+  baseName: mitchselfhost
+
+  ### OPTIONAL: 
+  # If using the 02-networking stack, then set "networkingStackFullyQualifiedName this to the fully qualified name of that stack.
+  # If managing networking outside of Pulumi, then DO NOT SET the networkignStackFullyQualifiedName configuration value, and instead set the subnetIds as shown. 
+  networkingStackFullyQualifiedName: organization/02-networking/dev # "organization" literal is used if using a self-managed backend (e.g. S3 bucket)
+  # privateSubnetIds:
+  #   - subnet-xxxxxx
+  #   - subnet-yyyyyy
+  #   - subnet-zzzzzz
+
+

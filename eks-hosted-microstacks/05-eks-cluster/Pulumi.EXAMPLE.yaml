@@ -1,0 +1,55 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  # Set a cluster version for the EKS cluster. If not set a default (see config.ts) will be used.
+  clusterVersion: "1.30"
+
+  # EKS cluster settings. If not set, defaults (see config.ts) will be used.
+  instanceType: "t3.xlarge"
+  standardNodeGroupDesiredCapacity: 2
+  standardNodeGroupMinSize: 2
+  standardNodeGroupMaxSize: 5
+
+  pulumiNodeGroupInstanceType: "t3.xlarge"
+  pulumiNodeGroupDesiredCapacity: 3
+  pulumiNodeGroupMinSize: 3
+  pulumiNodeGroupMaxSize: 5
+
+  #######
+  # IF you deployed the `01-iam` stack, set this value to the name of that stack using the full name (e.g. `organization/01-iam/prod`) 
+  iamStackName: organization/01-iam/prod
+
+  ### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
+  ## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
+  ## config that would have otherwise been provided by the iam stack.
+  # eksInstanceRoleName: eksinstanrole
+  # instanceProfileName: instanerole
+  # eksServiceRoleName: eksservicerole
+  # ssoRoleArn: arn:aws:iam::123456789012:role/SSO-Role-Name
+
+
+  #######
+  # IF you deployed the `02-networking` stack, set this value to the name of that stack using the full name (e.g. `organization/02-networking/prod`)
+  networkingStackName: organization/02-networking/prod
+
+  ### BRINGING YOUR OWN NETWORKING INFRASTRUCTURE ###
+  ## IF YOU ARE NOT USING THE `02-networking` stack, then remove the `networkingStackName` config item above and instead set the following 
+  ## config that would have otherwise been provided by the networking stack.
+  
+  ## This should match the cluster name tagged to the VPC and subnets
+  # eksClusterName: pulumiselfhost-eks
+
+  ## The subnets to use for the EKS cluster
+  # privateSubnets:
+  #   - subnet-xxxxxxxxxxxxxxxxx
+  #   - subnet-yyyyyyyyyyyyyyyyy
+  #   - subnet-zzzzzzzzzzzzzzzzz
+
+  # Set the name of the EKS cluster to create.
+  # This should match the output from the 02-networking stack or 

@@ -1,0 +1,8 @@
+build/
+*.license
+*-config.yaml
+*kubeconfig*
+*.cert
+*.key
+node_modules
+package-lock.json
