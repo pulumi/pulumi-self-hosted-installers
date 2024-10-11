@@ -8,6 +8,19 @@ const clusterSvcsStackRef = new pulumi.StackReference(pulumiConfig.require("clus
 const dbStackRef = new pulumi.StackReference(pulumiConfig.require("dbStackName"));
 const statePolicyStackRef = new pulumi.StackReference(pulumiConfig.require("statePolicyStackName"));
 
+const iamStackName = pulumiConfig.get("iamStackName");
+let eksInstanceRoleName: string | pulumi.Output<string> | pulumi.Output<any>;
+if (!iamStackName) {
+
+    eksInstanceRoleName = pulumiConfig.require("eksInstanceRoleName");
+
+} else {
+
+    const iamStackRef = new pulumi.StackReference(iamStackName);
+    eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
+
+}
+
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
 
@@ -31,6 +44,9 @@ export const config = {
     // Database stack outputs
     dbConn: dbStackRef.requireOutput("dbConn"),
 
+    // EKS Instance role
+    eksInstanceRoleName: eksInstanceRoleName,
+
     // DNS Hosted Zone and subdomain to operate on and use with ALB and ACM.
     hostedZoneDomainName: pulumiConfig.require("hostedZoneDomainName"),
     hostedZoneDomainSubdomain: pulumiConfig.require("hostedZoneDomainSubdomain"),
@@ -41,7 +57,10 @@ export const config = {
     licenseKey: licenseKey,
     apiReplicas: pulumiConfig.getNumber("apiReplicas") ?? 2,
     consoleReplicas: pulumiConfig.getNumber("consoleReplicas") ?? 2,
-    awsKMSKeyArn: pulumiConfig.get("KMSKey"),
+    
+    // One of these two needs to be set. See Pulumi.README.yaml for more information.
+    awsKMSKeyArn: pulumiConfig.get("awsKMSKeyArn"),
+    encryptionKey: pulumiConfig.get("encryptionKey"),
 
     // SMTP Config
     smtpServer: pulumiConfig.get("smtpServer"),

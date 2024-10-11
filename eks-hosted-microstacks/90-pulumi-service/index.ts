@@ -24,7 +24,7 @@ const consoleReplicas = config.consoleReplicas;
 
 ////////////
 // Create Kubernetes namespaces for the services.
-const appsNamespace = new k8s.core.v1.Namespace(config.appsNamespaceName, {metadata: {name: config.appsNamespaceName}}, { provider: k8sprovider, protect: true });
+const appsNamespace = new k8s.core.v1.Namespace(config.appsNamespaceName, { metadata: { name: config.appsNamespaceName } }, { provider: k8sprovider, protect: true });
 export const appsNamespaceName = appsNamespace.metadata.name;
 
 const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
@@ -399,45 +399,3 @@ const serviceDnsRecord = new aws.route53.Record("serviceEndDnsRecord", {
   ttl: 300,
   records: [ serviceLoadbalancerDnsName]
 })
-
-
-/////////////
-// With self-hosted installations, there is currently an issue where a WebKey is created in the DB such that it interferes with subsequent
-// upgrades. This is a workaround to delete the WebKey from the DB.
-const webkeysCleanup = new k8s.batch.v1.Job("webkeys-cleanup", {
-    metadata: {
-        namespace: config.appsNamespaceName,
-    },
-    spec: {
-        template: {
-            spec: {
-                containers: [{
-                    name: "webkeys-cleanup",
-                    image: "alpine",
-                    resources: { requests: { cpu: "10m", memory: "10Mi" } },
-                    command: [
-                        "sh", 
-                        "-c", 
-                        "apk add mysql-client && mysql -h $(MYSQL_HOST) -u $(MYSQL_ROOT_USERNAME) -p$(MYSQL_ROOT_PASSWORD) -D pulumi -e 'delete from WebKeys';"
-                    ],
-                    env: [
-                        {
-                            name: "MYSQL_HOST",
-                            valueFrom: dbConnSecret.asEnvValue("host"),
-                        },
-                        {
-                            name: "MYSQL_ROOT_USERNAME",
-                            valueFrom: dbConnSecret.asEnvValue("username"),
-                        },
-                        {
-                            name: "MYSQL_ROOT_PASSWORD",
-                            valueFrom: dbConnSecret.asEnvValue("password"),
-                        },
-                    ],
-                }],
-                restartPolicy: "Never", // Ensure the pod does not restart
-            },
-        },
-        backoffLimit: 0, // Number of retries before considering the job as failed
-    },
-}, { provider: k8sprovider, dependsOn:[apiDeployment] });

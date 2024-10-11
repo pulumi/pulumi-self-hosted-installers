@@ -5,7 +5,7 @@ config:
   selfhosted-90-pulumi-service:apiDisableEmailLogin: "false"
   selfhosted-90-pulumi-service:apiDisableEmailSignup: "false"
   selfhosted-90-pulumi-service:apiReplicas: "2"
-  selfhosted-90-pulumi-service:awsKMSKeyArn: 
+  selfhosted-90-pulumi-service:awsKMSKeyArn: ""
   selfhosted-90-pulumi-service:baseName: mitchselfhost
   selfhosted-90-pulumi-service:clusterStackName: MitchGerdisch/selfhosted-05-ekscluster/dev
   selfhosted-90-pulumi-service:clusterSvcsStackName: MitchGerdisch/selfhosted-10-cluster-services/dev
@@ -21,8 +21,16 @@ config:
   selfhosted-90-pulumi-service:recaptchaSecretKey: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
   selfhosted-90-pulumi-service:recaptchaSiteKey: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
   selfhosted-90-pulumi-service:samlSsoEnabled: "true"
-  selfhosted-90-pulumi-service:smtpGenericSender: 
-  selfhosted-90-pulumi-service:smtpPassword: 
-  selfhosted-90-pulumi-service:smtpServer: 
-  selfhosted-90-pulumi-service:smtpUsername: 
+  selfhosted-90-pulumi-service:smtpGenericSender: ""
+  selfhosted-90-pulumi-service:smtpPassword: ""
+  selfhosted-90-pulumi-service:smtpServer: ""
+  selfhosted-90-pulumi-service:smtpUsername: ""
   selfhosted-90-pulumi-service:statePolicyStackName: MitchGerdisch/selfhosted-15-state-policies-mgmt/dev
+  selfhosted-90-pulumi-service:encryptionKey:
+    secure: AAABABGTk57gsHgUmYYPsuEW0HfLbvCfVMe9TpmscJoLqYw1O4wLLIDDdjVAbYZ5AYy4AStWVRLx5gdmF3VAyQ==
+  selfhosted-90-pulumi-service:iamStackName: MitchGerdisch/selfhosted-01-iam/dev
+
+### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
+## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
+## config that would have otherwise been provided by the iam stack.
+# eksInstanceRoleName: eksinstancerole

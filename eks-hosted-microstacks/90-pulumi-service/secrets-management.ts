@@ -1,3 +1,5 @@
+import { AwsExecReadAcl } from "@pulumi/aws/s3";
+import * as aws from "@pulumi/aws";
 import * as kx from "@pulumi/kubernetesx";
 import * as random from "@pulumi/random";
 
@@ -13,6 +15,11 @@ interface secretsIntegrationPoints {
 // configurePulumiSecretProvider will use provided configuration to set an environment variable for secret
 // management and create and specify file to be mounted to the container, if needed.
 export function configurePulumiSecretProvider(config: any, provider: any): secretsIntegrationPoints {
+    // Throw an error if neither a KMS key nor a local key is provided.
+    if (!config.awsKMSKeyArn && !config.encryptionKey) {
+        throw new Error("\n**** ERROR ****\nEither an AWS KMS key ARN or a local encryption key must be provided.\n See Pulumi.README.yaml for more information.\n********");
+    }
+
     // If this stack's configuration specified an AWS KMS key, use that for
     // managing the Pulumi Service's secrets.
     if (config.awsKMSKeyArn) {
@@ -23,15 +30,10 @@ export function configurePulumiSecretProvider(config: any, provider: any): secre
         }
     };
 
-    // If no KMS key use local implementation.
-    // Create 32 bytes of random data and place it in a Secret.
-    const localKeys = new random.RandomPassword("localKeys", { length: 32 }, {
-        additionalSecretOutputs: ["result"],
-        protect: true,
-    });
+    // If no KMS key use the provided local key
     const localKeysSecret = new kx.Secret("localkeys", {
         metadata: { namespace: config.appsNamespaceName },
-        stringData: { localkeys: localKeys.result }
+        stringData: { localkeys: config.encryptionKey}
     }, {
         provider,
         protect: true,

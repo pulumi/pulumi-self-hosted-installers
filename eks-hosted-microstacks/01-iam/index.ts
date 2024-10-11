@@ -48,6 +48,7 @@ const rpaAlbPolicy = new aws.iam.RolePolicyAttachment("albPolicy", {
     policyArn: albControllerPolicy.arn,
     role: instanceRole
 })
+
 export const eksInstanceRoleName = instanceRole.name;
 
 const instanceProfile =  new aws.iam.InstanceProfile("ng-standard", {role: eksInstanceRoleName})
