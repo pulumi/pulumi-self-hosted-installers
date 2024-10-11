@@ -17,12 +17,12 @@ config:
  ##### BRINGING YOUR OWN NETWOKRING INFRASTRUCTURE ###
   # If you are not using the `02-networking` stack, then set the commented out values that would have otherwise been provided by the stack.
   # The stack will then "pretend" it created the resources and output the values for the other stacks to use.
-  vpcId:  #"vpc-aaaaaaaaaa"
-  privateSubnetIds: 
+  # vpcId:  #"vpc-aaaaaaaaaa"
+  # privateSubnetIds: 
     #- "subnet-fdafafsadasdfddd"
     #- "subnet-dfdfasddsafdsfsd"
     #- "subnet-dsfdsfdsfsdasadf"
-  publicSubnetIds : 
+  # publicSubnetIds : 
     #- "subnet-dsafdfsadfdsafas"
     #- "subnet-sasdfsadfsdsdafd"
     #- "subnet-dasdfdssdafffdsf"

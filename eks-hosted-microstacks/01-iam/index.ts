@@ -52,17 +52,39 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.instancePr
             "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
         ],
     });
+
     // S3 policy used by Pulumi services
     const instanceRoleS3Policy = new aws.iam.RolePolicyAttachment("instanceRoleS3Policy", {
         policyArn: "arn:aws:iam::aws:policy/AmazonS3FullAccess",
         role: instanceRole 
     })
+
     // ALB management used by ingress controller
     const albControllerPolicy = new aws.iam.Policy("albControllerPolicy", {
         policy: albControllerPolicyStatement
     });
     const rpaAlbPolicy = new aws.iam.RolePolicyAttachment("albPolicy", {
         policyArn: albControllerPolicy.arn,
+        role: instanceRole
+    })
+
+    // Opensearch access
+    const opensearchPolicy = new aws.iam.Policy("opensearchPolicy", {
+        policy: {
+            Version: "2012-10-17",
+            Statement: [
+                {
+                    Action: [
+                        "es:*"
+                    ],
+                    Effect: "Allow",
+                    Resource: "*"
+                }
+            ]
+        }
+    });
+    const openSearchPolicyAttachment = new aws.iam.RolePolicyAttachment("opensearchPolicy", {
+        policyArn: opensearchPolicy.arn,
         role: instanceRole
     })
 
