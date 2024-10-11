@@ -1,0 +1,28 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+  selfhosted-90-pulumi-service:apiDisableEmailLogin: "false"
+  selfhosted-90-pulumi-service:apiDisableEmailSignup: "false"
+  selfhosted-90-pulumi-service:apiReplicas: "2"
+  selfhosted-90-pulumi-service:awsKMSKeyArn: 
+  selfhosted-90-pulumi-service:baseName: mitchselfhost
+  selfhosted-90-pulumi-service:clusterStackName: MitchGerdisch/selfhosted-05-ekscluster/dev
+  selfhosted-90-pulumi-service:clusterSvcsStackName: MitchGerdisch/selfhosted-10-cluster-services/dev
+  selfhosted-90-pulumi-service:consoleHideEmailLogin: "false"
+  selfhosted-90-pulumi-service:consoleHideEmailSignup: "false"
+  selfhosted-90-pulumi-service:consoleReplicas: "2"
+  selfhosted-90-pulumi-service:dbStackName: MitchGerdisch/selfhosted-20-database/dev
+  selfhosted-90-pulumi-service:hostedZoneDomainName: pulumi-ce.team
+  selfhosted-90-pulumi-service:hostedZoneDomainSubdomain: mitchselfhosted
+  selfhosted-90-pulumi-service:imageTag: latest
+  selfhosted-90-pulumi-service:licenseKey:
+    secure: AAABAHWSOE6k3BMyijtIehLV/c5XWR8qyPocl+xzxS4gD0GCNYAk8Keswf3PqaDQMFlSfq7xhoq6mDjxzxpVXw/Bsdaah9ErjJuz1oV8ykO3AbAz4vt/MknkGDqE6qtT+H/EfTsqvSzUGqTOimzrlmSkrY/dn3Db/U9Q2kYP6nr78LKlZ5ZnduQopzLLfgMPJ+dFcko0NVGiv3a1tV8Ls3ACO75svNmJDiQoRJhXOfQSF0SxSg3S4sSFK3fq1RXruzIvQuE53Hkc+4SPH38B0cdzQWtrjauhLgTjEdVvKzQs55Fanu7NKyOi21tR2NEf0p1zXdRZtQXJN87y1ARpb5BnS4xiiQLENn8F9A8Tsd9T/TNtkpLsOzwV+lZmY8Nwyk5HHyrdm/C6lXkPhvvUmtI2PCS+dazJD3sl6FSLee9BPr/Kc3TP2kwrectEhNFn0RzVjzc/ga6AzmGDjfzWrYL/vkeE0MgoJzpzYYdzZpaZa5Vacr0qGRbPnuw/wcE/jz2ugMLLHBe+qJ0SSK0AAAovDGBv6XpwaufZP9AUQbngk7s+t7dE2gX06g8jcSDSj6aBnGStyrfuXJuE+8xZ79y2WK3flGhEG38DXl2mIu2MQF9Ojz5ozOqbVhqqvE9SBXFYJ70oGwRLis9ScIMsT18WiMU1W4JYtAcveIb9Js0i7YOa3JZdNm6vxKL+tKAprpnsSCe3PisShDcC125l4KSAjDcLAC8h+BYgxwgHnIGW2HeSQCmFiuN3KgSQRj5SuWlBy3rORFnI84MLWlp1rzwtpKtsuWSvKcWUuc+MnBJ1DdUv1PNG8pMSX+JdNqQX4fFV77QWCIqwW+pktFQUpwMInAxc/vw2fHN9Z8R48xjlfXPvI9NX1oEnAXiQnCHXuzEPrqkC+gYMj8GO74IUuMp8NyDDzZS8Hq3Pr4ZcfO+bfHqwF8axxFaLuGWTrgfdT06rxxADtoxYzT6JihgTA6A6lfKM1Vllwu0XrUaJMH7utWsHk40RLx1BbadCRyXrTWbonXNZHmSa5FVieF8zC78aAKE7GvhL5tyevI+ERX4er0aDwWr4yfV3K8xO/GyDEk7HwVwFUbBHbiZQt7YSw+kHI7wfb+EQMpULZgb9OEie0uEHTlwE5uA+JWbQ+dsBXiqREguUg9xdIocmaHShZoDwPGavfIJb0L1k+R73JLnD3RhgAVI8oXAgdN0BVlZdeSQqUVXThktHd+4xjZaQH2Do9Eo24zGLEPG1cW6LovaS9DO1ByTXu5C0c6EGEYxuIzpFhWHMSiAAeA004xEj5k0ZYS2eKjiMQRkpqQtO+FDbG26Y0Tlt0o7AlzqVJwK+9tkLdogZFlx2NQfa5ukBXUAJaCtQUkQnV4QcYCGRAELWUmeDkFJ7UAB/q4cvB63exXsTp7BS7VqfNMqQ4h9zkCMEorrcV52sLCq5osVaSmHleFEzNZo9+RRbmLAZB7yaxGGqN3VJbs0edu9ZqZV0jvDjr/jpakvRn1YECKUnQNItqnIrhI0HYURiaZUP7CqEmhpaap4sfd4NP3CUkIF2sYoDwqAMJM7qgv2Zx/CwHvF+PeBESGIZqa62za3bqFbgGuVvyIwgIVSxG+w+KVp0zVnUFwPR9MRJ52OPPhNENRfEp7bLTvR92n76TnR1eMJrNVV1LZfurhwf3+vxL41IyaIkeVMO9qSwyojZHIIAR2KwJciPtGutS2z8wgajUNMJWecYnXClJIQh40MWBE/6FzFUtjgFwiEP0pnKOPGoITF7ADTesxp2eh5e/6fYJHZFZNa53XQdlqch5+k8zB2ipY3cz/F/5dYSc4b3o/EEPDg3/8ouYJCIbQVhaabnFZRqTqyxEt4+PsA=
+  selfhosted-90-pulumi-service:recaptchaSecretKey: 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+  selfhosted-90-pulumi-service:recaptchaSiteKey: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+  selfhosted-90-pulumi-service:samlSsoEnabled: "true"
+  selfhosted-90-pulumi-service:smtpGenericSender: 
+  selfhosted-90-pulumi-service:smtpPassword: 
+  selfhosted-90-pulumi-service:smtpServer: 
+  selfhosted-90-pulumi-service:smtpUsername: 
+  selfhosted-90-pulumi-service:statePolicyStackName: MitchGerdisch/selfhosted-15-state-policies-mgmt/dev

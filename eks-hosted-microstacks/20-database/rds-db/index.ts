@@ -5,11 +5,10 @@ import * as random from "@pulumi/random";
 export type RdsDatabaseOptions = {
     privateSubnetIds: pulumi.Input<pulumi.Input<string>[]>;
     securityGroupId: pulumi.Input<string>;
-    replicas: pulumi.Input<number>;
+    replicas: number;
     instanceType: pulumi.Input<string>;
+    databaseMonitoringRoleArn: pulumi.Input<string>;
 };
-
-const pulumiComponentNamespace: string = "pulumi:RdsDatabase";
 
 export class RdsDatabase extends pulumi.ComponentResource {
     public readonly dbSubnets: aws.rds.SubnetGroup;
@@ -21,7 +20,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
         args: RdsDatabaseOptions,
         opts?: pulumi.ComponentResourceOptions,
     ) {
-        super(pulumiComponentNamespace, name, args, opts);
+        super("selfhosted:RdsDatabase", name, args, opts);
 
         // Generate a strong password.
         this.password = new random.RandomPassword(`${name}-password`, {
@@ -46,7 +45,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
         });
 
         const engine = "aurora-mysql";
-        const engineVersion = "8.0.mysql_aurora.3.02.2";
+        const engineVersion = "8.0.mysql_aurora.3.07.1";
 
         let engineMode: aws.rds.EngineMode | undefined;
         this.db = new aws.rds.Cluster(`${name}-cluster`, {
@@ -78,17 +77,18 @@ export class RdsDatabase extends pulumi.ComponentResource {
             tags,
         });
 
-        // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html.
-        let databaseMonitoringRole = new aws.iam.Role("databaseInstanceMonitoringRole", {
-            assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "monitoring.rds.amazonaws.com" }),
-            tags,
-        });
+        /// MOD - moved to iam project ///
+        // // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html.
+        // let databaseMonitoringRole = new aws.iam.Role("databaseInstanceMonitoringRole", {
+        //     assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "monitoring.rds.amazonaws.com" }),
+        //     tags,
+        // });
 
-        let databaseMonitoringRolePolicy = new aws.iam.RolePolicyAttachment("databaseInstanceMonitoringRolePolicy", {
-            role: databaseMonitoringRole,
-            // value is not found: policyArn: aws.iam.AmazonRDSEnhancedMonitoringRole,
-            policyArn: "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
-        });
+        // let databaseMonitoringRolePolicy = new aws.iam.RolePolicyAttachment("databaseInstanceMonitoringRolePolicy", {
+        //     role: databaseMonitoringRole,
+        //     // value is not found: policyArn: aws.iam.AmazonRDSEnhancedMonitoringRole,
+        //     policyArn: "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+        // });
 
         // Add a second database instance. This ensures we have instances
         // spread across multiple AZs. If there is a problem with the primary instance, Aurora will
@@ -96,7 +96,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
         //
         // See: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Replication.html
         // for more information on how Auora handles failover and read replicas.
-        const instancesToCreate = [];
+        let instancesToCreate: string[] = [];
         for (let i = 0; i < args.replicas; i++) {
             instancesToCreate.push(`databaseInstance-${i}`);
         }
@@ -110,10 +110,14 @@ export class RdsDatabase extends pulumi.ComponentResource {
                     instanceClass: args.instanceType,
                     dbParameterGroupName: databaseInstanceOptions.name,
                     monitoringInterval: 5,
-                    monitoringRoleArn: databaseMonitoringRole.arn,
+                    monitoringRoleArn: args.databaseMonitoringRoleArn,
                     tags,
                 },
-                { dependsOn: [databaseMonitoringRolePolicy], protect: true },
+                { protect: true },
+                /// MOD not needed ///
+                //{ dependsOn: [databaseMonitoringRolePolicy], protect: true },
+                ///
+
             );
         }
     }

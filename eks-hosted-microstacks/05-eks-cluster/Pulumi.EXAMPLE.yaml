@@ -50,6 +50,3 @@ config:
   #   - subnet-xxxxxxxxxxxxxxxxx
   #   - subnet-yyyyyyyyyyyyyyyyy
   #   - subnet-zzzzzzzzzzzzzzzzz
-
-  # Set the name of the EKS cluster to create.
-  # This should match the output from the 02-networking stack or 

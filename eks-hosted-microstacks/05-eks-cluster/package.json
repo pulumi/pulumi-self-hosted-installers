@@ -1,11 +1,11 @@
 {
-  "name": "k8s-aws-cluster",
+  "name": "eks-installer-cluster",
   "devDependencies": {
     "typescript": "^3.0.0"
   },
   "dependencies": {
     "@pulumi/aws": "^6.54.0",
-    "@pulumi/pulumi": "^3.135.0",
+    "@pulumi/pulumi": "^3.136.0",
     "@pulumi/eks": "^2.8.1"
   }
 }

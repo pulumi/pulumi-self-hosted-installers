@@ -5,24 +5,41 @@ config:
 
   # Set a base name to be used when creating the resources.
   # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
-  baseName: pulumiselfhost
+  baseName: mitchselfhost
+
+  # Database configuration settings.
+  # If not set, defaults will be used (see config.ts).
+  dbReplicas: 2
+  dbInstanceType: "db.r5.large"
 
   # Cluster stack name in the format of `<organization>/<project>/<stack>`
   # Currently requiring that you use the 05-eks-cluster project to deploy the cluster.
   # If you cannot use that project to deploy the cluster, then look at the BYO infratrucutre installer (https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/deployment-options/byo-infra-hosted/)
-  clusterStackName: organization/selfhosted-05-ekscluster/prod
+  clusterStackName: MitchGerdisch/selfhosted-05-ekscluster/dev
+
+  #######
+  # IF you deployed the `01-iam` stack, set this value to the name of that stack using the full name (e.g. `organization/01-iam/prod`) 
+  iamStackName: MitchGerdisch/selfhosted-01-iam/dev
+
+  ### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
+  ## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
+  ## config that would have otherwise been provided by the iam stack.
+  # databaseMonitoringRoleArn: mymonitoringrole
 
   #######
   # IF you deployed the `02-networking` stack, set this value to the name of that stack using the full name (e.g. `organization/02-networking/prod`)
-  networkingStackName: organization/selfhosted-02-networking/prod
+  networkingStackName: MitchGerdisch/selfhosted-02-networking/dev
 
   ### BRINGING YOUR OWN NETWORKING INFRASTRUCTURE ###
   ## IF YOU ARE NOT USING THE `02-networking` stack, then remove the `networkingStackName` config item above and instead set the following 
   ## config that would have otherwise been provided by the networking stack.
-
+  
   ## This should match the cluster name tagged to the VPC and subnets
   # eksClusterName: pulumiselfhost-eks
 
-  ## The vpc ID
-  # vpcId: vpc-aaaaaaaaaaaaaaaaa
+  ## The subnets to use for the EKS cluster
+  # privateSubnets:
+  #   - subnet-xxxxxxxxxxxxxxxxx
+  #   - subnet-yyyyyyyyyyyyyyyyy
+  #   - subnet-zzzzzzzzzzzzzzzzz
 

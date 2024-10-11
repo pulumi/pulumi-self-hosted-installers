@@ -7,6 +7,7 @@ import { RdsDatabase } from "./rds-db";
 const rds = new RdsDatabase("rds-aurora-db", {
     privateSubnetIds: config.privateSubnetIds,
     securityGroupId : config.nodeSecurityGroupId,
+    databaseMonitoringRoleArn: config.databaseMonitoringRoleArn,
     replicas: config.dbReplicas,
     instanceType: config.dbInstanceType,
 });

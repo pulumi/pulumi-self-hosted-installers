@@ -1,0 +1,62 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  # License key for the service.
+  # Configure as a secret using `pulumi config set licenseKey --secret`
+  licenseKey: licenseKey
+
+  # Image tag to use to retrieve the API and Console (and Migration) service images.
+  imageTag: latest
+  
+  # Number of replicas to deploy for the API and Console services.
+  apiReplicas: 2
+  consoleReplicas: 2
+
+  # Cluster stack name in the format of `<organization>/<project>/<stack>`
+  # Currently requiring that you use the 05-eks-cluster project to deploy the cluster.
+  # If you cannot use that project to deploy the cluster, then look at the BYO infratrucutre installer (https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/deployment-options/byo-infra-hosted/)
+  clusterStackName: organization/selfhosted-05-ekscluster/prod
+
+  # cluster-svcs stack name in the format of `<organization>/<project>/<stack>`
+  clusterSvcsStackName: organization/selfhosted-10-cluster-services/prod
+
+  # state-policies mgmt stack name in the format of `<organization>/<project>/<stack>`
+  statePolicyStackName: organization/selfhosted-15-state-policies-mgmt/prod
+
+  # Database stack name in the format of `<organization>/<project>/<stack>`
+  dbStackName: organization/selfhosted-20-database/prod
+
+  # DNS Hosted Zone and subdomain to operate on and use with ALB and ACM.
+  hostedZoneDomainName: mydomain.com
+  hostedZoneDomainSubdomain: pulumiservice 
+
+  # Set the AWS KMS Key ARN to use for encrypting secrets.
+  awsKMSKeyArn: 
+
+  # SMTP Config config to allow the service to send emails.
+  smtpServer: 
+  smtpUsername: 
+  smtpPassword: 
+  smtpGenericSender: 
+
+  # reCAPTCHA Config
+  # Uses test values if not set in config.
+  # See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
+  recaptchaSiteKey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+  recaptchaSecretKey: "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+
+  # SAML SSO Setting:
+  # Whether or not SAML SSO should be able to be enabled in the console.
+  samlSsoEnabled: "true"
+
+  # Email Login Settings
+  consoleHideEmailSignup: "false"
+  consoleHideEmailLogin: "false"
+  apiDisableEmailSignup: "false"
+  apiDisableEmailLogin: "false"
