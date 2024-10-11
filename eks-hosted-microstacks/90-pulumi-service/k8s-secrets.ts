@@ -31,6 +31,7 @@ export const dbConnSecret = new kx.Secret("aurora-db-conn",
     { provider: k8sprovider },
 );
 
+// Capture the secrets related to SMTP integration.
 export let smtpConfig = {}
 if (config.smtpServer) {
     const smtpSecret = new kx.Secret("smtp-conn",
@@ -52,6 +53,7 @@ if (config.smtpServer) {
     }
 }
 
+// Secrets for SSO support
 const ssoPrivateKey = new tls.PrivateKey("ssoPrivateKey", { algorithm: "RSA", rsaBits: 2048 })
 const ssoCert = new tls.SelfSignedCert("ssoCert", {
     allowedUses: ["cert_signing"],
@@ -75,6 +77,7 @@ export const samlSsoConfig = {
     "SAML_CERTIFICATE_PRIVATE_KEY": samlSsoSecret.asEnvValue("privatekey"),
 }
 
+// Secrets for reCAPTCHA support
 const recaptchaSecret = new kx.Secret("recaptcha", 
 {
     metadata: { namespace: config.appsNamespaceName },
@@ -91,6 +94,23 @@ export const recaptchaServiceConfig = {
 export const recaptchaConsoleConfig = {
     "RECAPTCHA_SITE_KEY": recaptchaSecret.asEnvValue("siteKey"),
     "LOGIN_RECAPTCHA_SITE_KEY": recaptchaSecret.asEnvValue("siteKey"),
+}
+
+// Secrets for accessing OpenSearch domain
+const openSearchPasswordSecret = new kx.Secret("opensearch-secrets", 
+{
+    metadata: { namespace: config.appsNamespaceName },
+    stringData: {
+        openSearchUser: config.openSearchUser,
+        openSearchPassword: config.openSearchPassword
+
+    },
+
+}, { provider: k8sprovider })
+export const openSearchConfig = {
+    "PULUMI_SEARCH_PASSWORD": openSearchPasswordSecret.asEnvValue("openSearchPassword"),
+    "PULUMI_SEARCH_USER": config.openSearchUser,
+    "PULUMI_SEARCH_DOMAIN": config.openSearchEndpoint,
 }
 
 // Currently any non-empty value for the disable/hide email env variables will be treated as a "true"

@@ -7,7 +7,7 @@ import EnvMap = types.EnvMap;
 import { config } from "./config";
 
 // Set up the K8s secrets used by the applications.
-import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  secretsIntegration } from "./k8s-secrets";
+import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  openSearchConfig, secretsIntegration } from "./k8s-secrets";
 
 const migrationsImage = `pulumi/migrations:${config.imageTag}`;
 const apiImage = `pulumi/service:${config.imageTag}`;
@@ -39,8 +39,8 @@ const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
 // Environment variables for the API service.
 const awsRegion = pulumi.output(aws.getRegion())
 const serviceEnv = pulumi
-    .all([config.checkpointsS3BucketName, config.policyPacksS3BucketName, config.escBucketName, awsRegion.name])
-    .apply(([cBucket, pBucket, eBucket, regionName]) => {
+    .all([config.checkpointsS3BucketName, config.policyPacksS3BucketName, config.eventsS3BucketName, config.escBucketName, awsRegion.name])
+    .apply(([cBucket, pBucket, evBucket, eBucket, regionName]) => {
         const envVars = {
             "AWS_REGION": regionName,
             "PULUMI_LICENSE_KEY": licenseKeySecret.asEnvValue("key"),
@@ -51,12 +51,14 @@ const serviceEnv = pulumi
             "MYSQL_ROOT_USERNAME": dbConnSecret.asEnvValue("username"),
             "MYSQL_ROOT_PASSWORD": dbConnSecret.asEnvValue("password"),
             "PULUMI_DATABASE_NAME": "pulumi",
-            "PULUMI_OBJECTS_BUCKET": cBucket,
-            "PULUMI_POLICY_PACK_BUCKET": pBucket,
+            "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT": `s3://${cBucket}`,
+            "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT": `s3://${pBucket}`,
+            "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT": `s3://${evBucket}`,
             "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT": `s3://${eBucket}`,
             ...smtpConfig,
             ...samlSsoConfig,
             ...recaptchaServiceConfig,
+            ...openSearchConfig,
             ...apiEmailLoginConfig,
         } as EnvMap;
 

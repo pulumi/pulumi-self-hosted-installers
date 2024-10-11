@@ -18,3 +18,8 @@ const resourceSearch = new ResourceSearch(`${baseName}-search`, {
   subnetIds: config.privateSubnetIds,
   dedicatedMasterCount: config.openSearchDedicatedMasterCount
 });
+
+export const openSearchDomainName = resourceSearch.domain
+export const openSearchEndpoint = resourceSearch.endpoint
+export const openSearchUser = resourceSearch.user
+export const openSearchPassword = resourceSearch.password

@@ -1,4 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
+import { eventsS3BucketName } from "../15-state-policies-mgmt";
+import { openSearchDomainName, openSearchEndpoint, openSearchUser } from "../25-insights";
 
 const pulumiConfig = new pulumi.Config();
 
@@ -13,6 +15,7 @@ const clusterStackRef = new pulumi.StackReference(`${orgName}/selfhosted-05-eksc
 const clusterSvcsStackRef = new pulumi.StackReference(`${orgName}/selfhosted-10-cluster-services/${stackName}`);
 const statePolicyStackRef = new pulumi.StackReference(`${orgName}/selfhosted-15-state-policies-mgmt/${stackName}`);
 const dbStackRef = new pulumi.StackReference(`${orgName}/selfhosted-20-database/${stackName}`);
+const insightsStackRef = new pulumi.StackReference(`${orgName}/selfhosted-25-insights/${stackName}`);
 const escStackRef = new pulumi.StackReference(`${orgName}/selfhosted-30-esc/${stackName}`);
 
 // Pulumi license key.
@@ -31,9 +34,10 @@ export const config = {
     // Cluster Services
     albSecurityGroupId: clusterSvcsStackRef.requireOutput("albSecurityGroupId"),
 
-    // state and policy buckets
+    // state and policy and events buckets
     checkpointsS3BucketName: statePolicyStackRef.requireOutput("checkpointsS3BucketName"),
     policyPacksS3BucketName: statePolicyStackRef.requireOutput("policyPacksS3BucketName"),
+    eventsS3BucketName: statePolicyStackRef.requireOutput("eventsS3BucketName"),
     
     // Database stack outputs
     dbConn: dbStackRef.requireOutput("dbConn"),
@@ -70,6 +74,12 @@ export const config = {
     // See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
     recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
     recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
+
+    // Insights Config
+    openSearchDomainName: insightsStackRef.requireOutput("openSearchDomainName"),
+    openSearchEndpoint: insightsStackRef.requireOutput("openSearchEndpoint"),
+    openSearchUser: insightsStackRef.requireOutput("openSearchUser"),
+    openSearchPassword: insightsStackRef.requireOutput("openSearchPassword"),
 
     // SAML SSO Setting:
     samlSsoEnabled: pulumiConfig.get("samlSsoEnabled") ?? 'false',
