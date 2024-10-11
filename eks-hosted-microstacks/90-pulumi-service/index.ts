@@ -39,8 +39,8 @@ const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
 // Environment variables for the API service.
 const awsRegion = pulumi.output(aws.getRegion())
 const serviceEnv = pulumi
-    .all([config.checkpointsS3BucketName, config.policyPacksS3BucketName, awsRegion.name])
-    .apply(([cBucket, pBucket, regionName]) => {
+    .all([config.checkpointsS3BucketName, config.policyPacksS3BucketName, config.escBucketName, awsRegion.name])
+    .apply(([cBucket, pBucket, eBucket, regionName]) => {
         const envVars = {
             "AWS_REGION": regionName,
             "PULUMI_LICENSE_KEY": licenseKeySecret.asEnvValue("key"),
@@ -53,6 +53,7 @@ const serviceEnv = pulumi
             "PULUMI_DATABASE_NAME": "pulumi",
             "PULUMI_OBJECTS_BUCKET": cBucket,
             "PULUMI_POLICY_PACK_BUCKET": pBucket,
+            "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT": eBucket,
             ...smtpConfig,
             ...samlSsoConfig,
             ...recaptchaServiceConfig,

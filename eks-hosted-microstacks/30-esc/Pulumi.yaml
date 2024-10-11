@@ -1,0 +1,3 @@
+name: selfhosted-30-esc
+description: Used to create the resources needed for ECS. 
+runtime: nodejs

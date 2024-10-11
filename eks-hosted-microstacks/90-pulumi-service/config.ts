@@ -11,8 +11,9 @@ const stackName = pulumi.getStack();
 const iamStackRef = new pulumi.StackReference(`${orgName}/selfhosted-01-iam/${stackName}`);
 const clusterStackRef = new pulumi.StackReference(`${orgName}/selfhosted-05-ekscluster/${stackName}`);
 const clusterSvcsStackRef = new pulumi.StackReference(`${orgName}/selfhosted-10-cluster-services/${stackName}`);
-const dbStackRef = new pulumi.StackReference(`${orgName}/selfhosted-20-database/${stackName}`);
 const statePolicyStackRef = new pulumi.StackReference(`${orgName}/selfhosted-15-state-policies-mgmt/${stackName}`);
+const dbStackRef = new pulumi.StackReference(`${orgName}/selfhosted-20-database/${stackName}`);
+const escStackRef = new pulumi.StackReference(`${orgName}/selfhosted-30-esc/${stackName}`);
 
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
@@ -36,6 +37,9 @@ export const config = {
     
     // Database stack outputs
     dbConn: dbStackRef.requireOutput("dbConn"),
+
+    // ESC infra
+    escBucketName: escStackRef.requireOutput("escBucketName"),
 
     // EKS Instance role
     eksInstanceRoleName: iamStackRef.requireOutput("eksInstanceRoleName"),
