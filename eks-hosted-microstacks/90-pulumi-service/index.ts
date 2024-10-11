@@ -53,7 +53,7 @@ const serviceEnv = pulumi
             "PULUMI_DATABASE_NAME": "pulumi",
             "PULUMI_OBJECTS_BUCKET": cBucket,
             "PULUMI_POLICY_PACK_BUCKET": pBucket,
-            "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT": eBucket,
+            "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT": `s3://${eBucket}`,
             ...smtpConfig,
             ...samlSsoConfig,
             ...recaptchaServiceConfig,
