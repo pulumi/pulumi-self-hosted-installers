@@ -2,24 +2,17 @@ import * as pulumi from "@pulumi/pulumi";
 
 const pulumiConfig = new pulumi.Config();
 
+// Used to create the needed stack references
+// The assumption is that all stacks are in the same organization and use the same stack name (e.g. dev or prod, etc)
+const orgName = pulumi.getOrganization();
+const stackName = pulumi.getStack();
+
 // Stack references 
-const clusterStackRef = new pulumi.StackReference(pulumiConfig.require("clusterStackName"));
-const clusterSvcsStackRef = new pulumi.StackReference(pulumiConfig.require("clusterSvcsStackName"));
-const dbStackRef = new pulumi.StackReference(pulumiConfig.require("dbStackName"));
-const statePolicyStackRef = new pulumi.StackReference(pulumiConfig.require("statePolicyStackName"));
-
-const iamStackName = pulumiConfig.get("iamStackName");
-let eksInstanceRoleName: string | pulumi.Output<string> | pulumi.Output<any>;
-if (!iamStackName) {
-
-    eksInstanceRoleName = pulumiConfig.require("eksInstanceRoleName");
-
-} else {
-
-    const iamStackRef = new pulumi.StackReference(iamStackName);
-    eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
-
-}
+const iamStackRef = new pulumi.StackReference(`${orgName}/selfhosted-01-iam/${stackName}`);
+const clusterStackRef = new pulumi.StackReference(`${orgName}/selfhosted-05-ekscluster/${stackName}`);
+const clusterSvcsStackRef = new pulumi.StackReference(`${orgName}/selfhosted-10-cluster-services/${stackName}`);
+const dbStackRef = new pulumi.StackReference(`${orgName}/selfhosted-20-database/${stackName}`);
+const statePolicyStackRef = new pulumi.StackReference(`${orgName}/selfhosted-15-state-policies-mgmt/${stackName}`);
 
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
@@ -45,7 +38,7 @@ export const config = {
     dbConn: dbStackRef.requireOutput("dbConn"),
 
     // EKS Instance role
-    eksInstanceRoleName: eksInstanceRoleName,
+    eksInstanceRoleName: iamStackRef.requireOutput("eksInstanceRoleName"),
 
     // DNS Hosted Zone and subdomain to operate on and use with ALB and ACM.
     hostedZoneDomainName: pulumiConfig.require("hostedZoneDomainName"),

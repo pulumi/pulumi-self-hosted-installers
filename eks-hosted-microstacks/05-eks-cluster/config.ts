@@ -2,62 +2,29 @@ import * as pulumi from "@pulumi/pulumi";
 
 const pulumiConfig = new pulumi.Config();
 
-// IAM stack reference - if applicable
-// If config not set for the iam stack reference, then require the applicable values to be provided
-const iamStackName = pulumiConfig.get("iamStackName");
-let eksInstanceRoleName: string | pulumi.Output<string> | pulumi.Output<any>;
-let instanceProfileName: string | pulumi.Output<string> | pulumi.Output<any>;
-let eksServiceRoleName: string | pulumi.Output<string> | pulumi.Output<any>;
-let ssoRoleArn: string | pulumi.Output<string> | pulumi.Output<any>;
+// Used to create the needed stack references
+// The assumption is that all stacks are in the same organization and use the same stack name (e.g. dev or prod, etc)
+const orgName = pulumi.getOrganization();
+const stackName = pulumi.getStack();
 
-if (!iamStackName) {
+// IAM stack values
+const iamStackRef = new pulumi.StackReference(`${orgName}/selfhosted-01-iam/${stackName}`);
+const eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
+const instanceProfileName = iamStackRef.requireOutput("instanceProfileName");
+const eksServiceRoleName = iamStackRef.requireOutput("eksServiceRoleName");
+const ssoRoleArn = iamStackRef.requireOutput("ssoRoleArn");
 
-    eksInstanceRoleName = pulumiConfig.require("eksInstanceRoleName");
-    instanceProfileName = pulumiConfig.require("instanceProfileName");
-    eksServiceRoleName = pulumiConfig.require("eksServiceRoleName");
-    ssoRoleArn = pulumiConfig.requireSecret("ssoRoleArn");
+// Networking Stack values
+// Get the needed values from the networking stack.
+const networkingStackRef = new pulumi.StackReference(`${orgName}/selfhosted-02-networking/${stackName}`);
 
-} else {
+// Get the cluster name used for the vpc tagging in the networking stack
+const clusterName = networkingStackRef.requireOutput("clusterName");
 
-    const iamStackRef = new pulumi.StackReference(iamStackName);
-    eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
-    instanceProfileName = iamStackRef.requireOutput("instanceProfileName");
-    eksServiceRoleName = iamStackRef.requireOutput("eksServiceRoleName");
-    ssoRoleArn = iamStackRef.requireOutput("ssoRoleArn");
-
-}
-
-
-// Networking Stack reference - if applicable.
-// If config not set for the networking stack reference, then require the applicable values to be provided
-const networkingStackName = pulumiConfig.get("networkingStackName");
-let vpcId: string | pulumi.Output<string> | pulumi.Output<any>;
-let publicSubnetIds: string[] | pulumi.Output<string>[] | pulumi.Output<any> = [];
-let privateSubnetIds: string[] | pulumi.Output<string>[] | pulumi.Output<any>  = [];
-let clusterName: string | pulumi.Output<string> | pulumi.Output<any>;
-
-if (!networkingStackName) {
-    // Get the provided cluster name
-    clusterName =  pulumiConfig.require("clusterName");
-
-    // Then networking is being managed elsewhere and so user must provide related values
-    vpcId = pulumiConfig.require("vpcId");
-    publicSubnetIds = pulumiConfig.requireObject("publicSubnetIds");
-    privateSubnetIds = pulumiConfig.requireObject("privateSubnetIds");
-
-} else {
-    // Get the needed values from the networking stack.
-    const networkingStackRef = new pulumi.StackReference(networkingStackName);
-
-    // Get the cluster name used for the vpc tagging in the networking stack
-    clusterName = networkingStackRef.requireOutput("clusterName");
-
-    // Get the networking values from the networking stack.
-    vpcId = networkingStackRef.requireOutput("vpcId");
-    publicSubnetIds = networkingStackRef.requireOutput("publicSubnetIds");
-    privateSubnetIds = networkingStackRef.requireOutput("privateSubnetIds");
-
-}
+// Get the networking values from the networking stack.
+const vpcId = networkingStackRef.requireOutput("vpcId");
+const publicSubnetIds = networkingStackRef.requireOutput("publicSubnetIds");
+const privateSubnetIds = networkingStackRef.requireOutput("privateSubnetIds");
 
 
 // Build the config object used by the code

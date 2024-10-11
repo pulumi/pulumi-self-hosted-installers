@@ -18,29 +18,6 @@ config:
   apiReplicas: 2
   consoleReplicas: 2
 
-  #######
-  # IF you deployed the `01-iam` stack, set this value to the name of that stack using the full name (e.g. `organization/01-iam/prod`) 
-  iamStackName: organization/selfhosted-01-iam/prod
-
-  ### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
-  ## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
-  ## config that would have otherwise been provided by the iam stack.
-  # eksInstanceRoleName: eksinstancerole
-
-  # Cluster stack name in the format of `<organization>/<project>/<stack>`
-  # Currently requiring that you use the 05-eks-cluster project to deploy the cluster.
-  # If you cannot use that project to deploy the cluster, then look at the BYO infratrucutre installer (https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/deployment-options/byo-infra-hosted/)
-  clusterStackName: organization/selfhosted-05-ekscluster/prod
-
-  # cluster-svcs stack name in the format of `<organization>/<project>/<stack>`
-  clusterSvcsStackName: organization/selfhosted-10-cluster-services/prod
-
-  # state-policies mgmt stack name in the format of `<organization>/<project>/<stack>`
-  statePolicyStackName: organization/selfhosted-15-state-policies-mgmt/prod
-
-  # Database stack name in the format of `<organization>/<project>/<stack>`
-  dbStackName: organization/selfhosted-20-database/prod
-
   # DNS Hosted Zone and subdomain to operate on and use with ALB and ACM.
   hostedZoneDomainName: mydomain.com
   hostedZoneDomainSubdomain: pulumiservice 

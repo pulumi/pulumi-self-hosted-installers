@@ -21,32 +21,32 @@ config:
   pulumiNodeGroupMinSize: 3
   pulumiNodeGroupMaxSize: 5
 
-  #######
-  # IF you deployed the `01-iam` stack, set this value to the name of that stack using the full name (e.g. `organization/01-iam/prod`) 
-  iamStackName: organization/selfhosted-01-iam/prod
+  # #######
+  # # IF you deployed the `01-iam` stack, set this value to the name of that stack using the full name (e.g. `organization/01-iam/prod`) 
+  # iamStackName: organization/selfhosted-01-iam/prod
 
-  ### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
-  ## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
-  ## config that would have otherwise been provided by the iam stack.
-  # eksInstanceRoleName: eksinstanrole
-  # instanceProfileName: instanerole
-  # eksServiceRoleName: eksservicerole
-  # ssoRoleArn: arn:aws:iam::123456789012:role/SSO-Role-Name
+  # ### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
+  # ## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
+  # ## config that would have otherwise been provided by the iam stack.
+  # # eksInstanceRoleName: eksinstanrole
+  # # instanceProfileName: instanerole
+  # # eksServiceRoleName: eksservicerole
+  # # ssoRoleArn: arn:aws:iam::123456789012:role/SSO-Role-Name
 
 
-  #######
-  # IF you deployed the `02-networking` stack, set this value to the name of that stack using the full name (e.g. `organization/02-networking/prod`)
-  networkingStackName: organization/selfhosted-02-networking/prod
+  # #######
+  # # IF you deployed the `02-networking` stack, set this value to the name of that stack using the full name (e.g. `organization/02-networking/prod`)
+  # networkingStackName: organization/selfhosted-02-networking/prod
 
-  ### BRINGING YOUR OWN NETWORKING INFRASTRUCTURE ###
-  ## IF YOU ARE NOT USING THE `02-networking` stack, then remove the `networkingStackName` config item above and instead set the following 
-  ## config that would have otherwise been provided by the networking stack.
+  # ### BRINGING YOUR OWN NETWORKING INFRASTRUCTURE ###
+  # ## IF YOU ARE NOT USING THE `02-networking` stack, then remove the `networkingStackName` config item above and instead set the following 
+  # ## config that would have otherwise been provided by the networking stack.
   
-  ## This should match the cluster name tagged to the VPC and subnets
-  # eksClusterName: pulumiselfhost-eks
+  # ## This should match the cluster name tagged to the VPC and subnets
+  # # eksClusterName: pulumiselfhost-eks
 
-  ## The subnets to use for the EKS cluster
-  # privateSubnets:
-  #   - subnet-xxxxxxxxxxxxxxxxx
-  #   - subnet-yyyyyyyyyyyyyyyyy
-  #   - subnet-zzzzzzzzzzzzzzzzz
+  # ## The subnets to use for the EKS cluster
+  # # privateSubnets:
+  # #   - subnet-xxxxxxxxxxxxxxxxx
+  # #   - subnet-yyyyyyyyyyyyyyyyy
+  # #   - subnet-zzzzzzzzzzzzzzzzz

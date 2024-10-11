@@ -31,8 +31,11 @@ Each subfolder is it's own Pulumi project (and by extension stack). The numberin
 
 ### BYO Infrastructure Notes
 
-If you are skipping some of the installer stacks and deploying the analogous infrastructure outside of Pulumi, then you'll want to look at the following for the given project you are skipping:
-- Review the `Pulumi.EXAMPLE.yaml` file to understand some of the inputs for the given stack.
+Currently, these installers support the case where one brings their own IAM resources and/or VPC and subnet resources.
+
+If you are brining your own IAM or Networking resources, you will still run the given stacks (i.e. `01-iam` and `02-networking`) but you will provide the values for the resources your created - see the project's `Pulumi.README.yaml` for details.
+The stack will then pretend to create the resources and output the values so that downstream stacks can use the values as needed.
+- Review the `Pulumi.README.yaml` file to understand some of the inputs for the given stack.
 - Review `index.ts` and any related files to understand how the given infrastructure is created.
 
 ### Deployment Instructions

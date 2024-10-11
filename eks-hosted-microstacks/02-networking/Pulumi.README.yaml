@@ -13,3 +13,16 @@ config:
 
   # Set the CIDR block for the VPC and related subnets.
   networkCidrBlock: 172.16.0.0/16 
+
+  ##### BRINGING YOUR OWN NETWOKRING INFRASTRUCTURE ###
+  # If you are not using the `02-networking` stack, then set the commented out values that would have otherwise been provided by the stack.
+  # The stack will then "pretend" it created the resources and output the values for the other stacks to use.
+  vpcId:  #"vpc-aaaaaaaaaa"
+  privateSubnetIds: 
+    #- "subnet-fdafafsadasdfddd"
+    #- "subnet-dfdfasddsafdsfsd"
+    #- "subnet-dsfdsfdsfsdasadf"
+  publicSubnetIds : 
+    #- "subnet-dsafdfsadfdsafas"
+    #- "subnet-sasdfsadfsdsdafd"
+    #- "subnet-dasdfdssdafffdsf"

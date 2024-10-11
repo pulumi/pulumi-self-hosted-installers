@@ -1,23 +1,16 @@
 import * as pulumi from "@pulumi/pulumi";
 
+// Used to create the needed stack references
+// The assumption is that all stacks are in the same organization and use the same stack name (e.g. dev or prod, etc)
+const orgName = pulumi.getOrganization();
+const stackName = pulumi.getStack();
+
 let pulumiConfig = new pulumi.Config();
 
-const networkingStackName = pulumiConfig.get("networkingStackName");
-let vpcId: string | pulumi.Output<string> | pulumi.Output<any>;
+// Networking Stack reference
+const networkingStackRef = new pulumi.StackReference(`${orgName}/selfhosted-02-networking/${stackName}`);
 
-if (!networkingStackName) {
-    // Then networking is being managed elsewhere and so user must provide related values
-    vpcId = pulumiConfig.require("vpcId");
-
-} else {
-    // Get the needed values from the networking stack.
-    const networkingStackRef = new pulumi.StackReference(networkingStackName);
-
-    // Get the networking values from the networking stack.
-    vpcId = networkingStackRef.requireOutput("vpcId");
-}
-
-// Get the cluster stack reference 
+// Cluster stack reference 
 const clusterStackRef = new pulumi.StackReference(pulumiConfig.require("clusterStackName"));
 
 export const config = {
@@ -28,5 +21,5 @@ export const config = {
     nodeSecurityGroupId: clusterStackRef.requireOutput("nodeSecurityGroupId"),
 
     // VPC 
-    vpcId: vpcId
+    vpcId: networkingStackRef.requireOutput("vpcId"),
 };
