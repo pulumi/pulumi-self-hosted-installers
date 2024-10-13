@@ -70,17 +70,19 @@ To deploy entire stack, run the following in your terminal:
 ## 02-kubernetes
 - `cd ../02-kubernetes`
 - `npm install`
-- `pulumi config set azureDnsZoneName {DNS_ZONE_NAME}`
-- `pulumi config set azureDnsZoneResourceGroup {DNS_ZONE_RESOURCE_GROUP_NAME}`
 - `pulumi stack init {stackName2}` - see note above about NO NUMBERS in stack name
+- `pulumi config set azure-native:location {azure region}`
+- `pulumi config set azureDnsZoneName {DNS_ZONE_NAME}`
+- `pulumi config set azureDnsZoneResourceGroupName {DNS_ZONE_RESOURCE_GROUP_NAME}`
 - `pulumi config set stackName1 {stackName1}` 
   
 The following settings are optional. 
-- `pulumi config set disableAzureDnsCertManagement true` **NOTE** this disables the cert-manager deployment which hanldes SSL certificates. 03-application will need TLS certificates.
+- `pulumi config set disableAzureDnsCertManagement true` **NOTE** this disables the cert-manager deployment which handles SSL certificates. 03-application will need TLS certificates.
 - `pulumi config set privateIpAddress {private_ip_from_vnet}` - this will disable the ingress services public IP address and deploy an internal load balancer. This blocks all public access to the Pulumi self-hosted app.
 
-## 03-application
 - `pulumi up`
+
+## 03-application
 - `cd ../03-application`
 - `npm install`
 - `pulumi stack init {stackName3}` - see note above about NO NUMBERS in stack name
@@ -106,6 +108,7 @@ Note if not set, "forgot password" and email invites will not work but sign ups 
 - `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
 - `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the set up to be open to the internet). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range) 
 - `pulumi config set certManagerEmail {email}` (email address that will be used for certificate expirations purposes from letsencrypt)
+
 - `pulumi up`
 
 ### Configure DNS

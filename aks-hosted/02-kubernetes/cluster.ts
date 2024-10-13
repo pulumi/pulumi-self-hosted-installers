@@ -32,7 +32,7 @@ export class KubernetesCluster extends ComponentResource {
     ).publicKeyOpenssh;
 
     const nodeRgName = `${name}-aks-nodes-rg`;
-    const clusterArgs: containerservice.v20230102preview.ManagedClusterArgs = {
+    const clusterArgs: containerservice.v20230401.ManagedClusterArgs = {
       resourceGroupName: args.resourceGroupName,
       servicePrincipalProfile: {
         clientId: args.aDApplicationId,
@@ -67,7 +67,7 @@ export class KubernetesCluster extends ComponentResource {
           ],
         },
       },
-      kubernetesVersion: "1.26.3",
+      kubernetesVersion: "1.29.4",
       nodeResourceGroup: nodeRgName,
       networkProfile: {
         networkPlugin: "azure",
@@ -92,7 +92,7 @@ export class KubernetesCluster extends ComponentResource {
     }
 
     // Must use a shorter name due to https://aka.ms/aks-naming-rules.
-    const cluster = new containerservice.v20230102preview.ManagedCluster(
+    const cluster = new containerservice.v20230401.ManagedCluster(
       `${name}-aks`,
       clusterArgs,
       {
@@ -102,7 +102,7 @@ export class KubernetesCluster extends ComponentResource {
         replaceOnChanges: ["servicePrincipalProfile"]
       }
     );
-  
+
     const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
     const credentials = containerservice.listManagedClusterAdminCredentialsOutput({
       resourceGroupName: args.resourceGroupName,
@@ -133,7 +133,7 @@ export class KubernetesCluster extends ComponentResource {
     name: string,
     nodeResourceGroup: Output<string>,
     tags: Input<{ [key: string]: Input<string> }>,
-    cluster: containerservice.v20230102preview.ManagedCluster): Output<string> {
+    cluster: containerservice.v20230401.ManagedCluster): Output<string> {
     const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
       resourceGroupName: nodeResourceGroup,
       publicIPAllocationMethod: "Static",
