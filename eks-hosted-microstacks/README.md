@@ -1,7 +1,7 @@
 # EKS Installer (microstacks)
 
 **NOTE NOTE NOTE**   
-**THIS IS VERY MUCH A WORK IN PROGRESS AND SHOULD NOT BE USED AT THIS TIME**
+**THIS IS A WORK IN PROGRESS AND SHOULD NOT BE USED WITHOUT ASKING**
 
 This version of the EKS installer for Pulumi self-hosted is broken into smaller, individual stacks.
 
@@ -19,7 +19,9 @@ This architecture does impose some design requirements:
 
 ### State Management
 
-It is generally assumed one is using an S3 state backend (see [AWS S3 state Backend](https://www.pulumi.com/docs/iac/concepts/state-and-backends/#aws-s3)). That said, one can use Pulumi Cloud for the state backend as well. However, these instructions will assume an S3 backend is being used.
+It is generally assumed one is using an S3 state backend.
+See [AWS S3 state Backend](https://www.pulumi.com/docs/iac/concepts/state-and-backends/#aws-s3) for instructions on how to set up and login to an s3 backend. 
+That said, one can use Pulumi Cloud for the state backend as well. However, these instructions will assume an S3 backend is being used.
 
 ### Configuration
 
@@ -48,6 +50,7 @@ The process is the same for each microstack:
 - copy "Pulumi.README.yaml" to a file where "README" is replaced with the name of your stack.
   - For example, if you are naming the stacks "prod", then you would run `cp Pulumi.README.yaml Pulumi.prod.yaml`
 - edit "Pulumi.prod.yaml" and follow the instructions in the file about setting configuration values.
+  - In a number of cases you can use the default values copied from "Pulumi.README.yaml".
 - Run `pulumi up` to deploy the infrastructure.
 - Move to the next project folder and repeat the above steps.
 
