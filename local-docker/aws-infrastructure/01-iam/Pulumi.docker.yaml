@@ -1,0 +1,5 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+  selfhosted-01-iam:baseName: mitchselfhostdocker

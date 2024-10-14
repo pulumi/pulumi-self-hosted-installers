@@ -1,0 +1,3 @@
+name: selfhosted-01-iam
+description: Used to create iam resources for the eks selfhosted installer.
+runtime: nodejs

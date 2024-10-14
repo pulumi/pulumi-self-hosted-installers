@@ -1,0 +1,13 @@
+{
+    "name": "selfhosted-05-dockerhost",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/aws": "^6.55.0",
+        "@pulumi/command": "^1.0.1",
+        "@pulumi/pulumi": "^3.113.0"
+    }
+}

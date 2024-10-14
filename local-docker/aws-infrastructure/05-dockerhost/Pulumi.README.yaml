@@ -1,0 +1,23 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  # docker host settings. If not set, defaults (see config.ts) will be used.
+  dockerHostInstanceType: "t3.large"
+
+  # ssh key pair to use to connect to the docker host
+  # use the following commands to create and set the key pair values.
+  # * ssh-keygen -f ./dockerhost_key
+  # * cat ./dockerhost_key | pulumi config set dockerHostPrivateKey --secret
+  # * cat ./dockerhost_key.pub | pulumi config set dockerHostPublicKey --secret
+  # If you need to recreate the private key file, you can use `pulumi config get dockerHostPrivateKey > ./dockerhost_key` and use that to ssh into the docker host
+  dockerHostPrivateKey: 
+  dockerHostPublicKey:
+
+
+

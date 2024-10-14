@@ -1,0 +1,4 @@
+/bin/
+/node_modules/
+dockerhost_key
+dockerhost_key.*

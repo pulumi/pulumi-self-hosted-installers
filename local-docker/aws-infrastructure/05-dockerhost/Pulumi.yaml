@@ -1,0 +1,10 @@
+name: selfhosted-05-dockerhost
+description: Deploy docker host for selfhosted docker install.
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript

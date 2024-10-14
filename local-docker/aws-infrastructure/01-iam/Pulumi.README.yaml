@@ -1,0 +1,16 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  #### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
+  # If you are not using the `01-iam` stack, then set the following values that would have otherwise been provided by the iam stack.
+  # The stack will then "pretend" it created the resources and output the values for the other stacks to use.
+  databaseMonitoringRoleArn: 
+  instanceRoleName:      
+  instanceProfileName:
+
