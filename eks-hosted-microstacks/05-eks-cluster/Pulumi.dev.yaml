@@ -20,36 +20,3 @@ config:
   pulumiNodeGroupDesiredCapacity: 3
   pulumiNodeGroupMinSize: 3
   pulumiNodeGroupMaxSize: 5
-
-  #######
-  # IF you deployed the `01-iam` stack, set this value to the name of that stack using the full name (e.g. `organization/01-iam/prod`) 
-  iamStackName: MitchGerdisch/selfhosted-01-iam/dev
-
-  ### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
-  ## IF YOU ARE NOT USING the `01-iam` stack, then remove the `iamStackName` config item above and instead set the following
-  ## config that would have otherwise been provided by the iam stack.
-  # eksInstanceRoleName: eksinstanrole
-  # instanceProfileName: instanerole
-  # eksServiceRoleName: eksservicerole
-  # ssoRoleArn: arn:aws:iam::123456789012:role/SSO-Role-Name
-
-
-  #######
-  # IF you deployed the `02-networking` stack, set this value to the name of that stack using the full name (e.g. `organization/02-networking/prod`)
-  networkingStackName: MitchGerdisch/selfhosted-02-networking/dev
-
-  ### BRINGING YOUR OWN NETWORKING INFRASTRUCTURE ###
-  ## IF YOU ARE NOT USING THE `02-networking` stack, then remove the `networkingStackName` config item above and instead set the following 
-  ## config that would have otherwise been provided by the networking stack.
-  
-  ## This should match the cluster name tagged to the VPC and subnets
-  # eksClusterName: pulumiselfhost-eks
-
-  ## The subnets to use for the EKS cluster
-  # privateSubnets:
-  #   - subnet-xxxxxxxxxxxxxxxxx
-  #   - subnet-yyyyyyyyyyyyyyyyy
-  #   - subnet-zzzzzzzzzzzzzzzzz
-
-  # Set the name of the EKS cluster to create.
-  # This should match the output from the 02-networking stack or 

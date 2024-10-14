@@ -77,19 +77,6 @@ export class RdsDatabase extends pulumi.ComponentResource {
             tags,
         });
 
-        /// MOD - moved to iam project ///
-        // // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html.
-        // let databaseMonitoringRole = new aws.iam.Role("databaseInstanceMonitoringRole", {
-        //     assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "monitoring.rds.amazonaws.com" }),
-        //     tags,
-        // });
-
-        // let databaseMonitoringRolePolicy = new aws.iam.RolePolicyAttachment("databaseInstanceMonitoringRolePolicy", {
-        //     role: databaseMonitoringRole,
-        //     // value is not found: policyArn: aws.iam.AmazonRDSEnhancedMonitoringRole,
-        //     policyArn: "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
-        // });
-
         // Add a second database instance. This ensures we have instances
         // spread across multiple AZs. If there is a problem with the primary instance, Aurora will
         // do an automated failover. We can also manually fail-over ourselves via the AWS Console.
@@ -114,9 +101,6 @@ export class RdsDatabase extends pulumi.ComponentResource {
                     tags,
                 },
                 { protect: true },
-                /// MOD not needed ///
-                //{ dependsOn: [databaseMonitoringRolePolicy], protect: true },
-                ///
 
             );
         }
