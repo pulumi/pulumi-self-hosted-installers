@@ -10,7 +10,7 @@ config:
   # docker host settings. If not set, defaults (see config.ts) will be used.
   dockerHostInstanceType: "t3.large"
 
-  # ssh key pair to use to connect to the docker host
+  # ssh key pair to use to connect to the docker host server
   # use the following commands to create and set the key pair values.
   # * ssh-keygen -f ./dockerhost_key
   # * cat ./dockerhost_key | pulumi config set dockerHostPrivateKey --secret
