@@ -104,6 +104,12 @@ export class ApiService extends pulumi.ComponentResource {
             secrets: secretArgs,
         }, this.options);
 
+        const migrationService = new MigrationService(`${name}-migrations`, {
+            ...args,
+            migrationsImageTag: args.imageTag,
+            database: args.database,
+        }, this.options);
+
         const taskArgs = this.constructTaskArgs(serviceSecrets);
         this.apiService = new ContainerService(`${name}-api`, {
             ...args,
@@ -113,13 +119,7 @@ export class ApiService extends pulumi.ComponentResource {
             pulumiLoadBalancer: trafficManager.api,
             targetPort: apiPort,
             taskDefinitionArgs: taskArgs,
-        }, this.options);
-
-        const migrationService = new MigrationService(`${name}-migrations`, {
-            ...args,
-            migrationsImageTag: args.imageTag,
-            database: args.database,
-        }, this.options);
+        }, pulumi.mergeOptions(this.options, { dependsOn: [migrationService]}));
 
         // connection from api service to db is required
         // using SG ingress rules
@@ -287,11 +287,29 @@ export class ApiService extends pulumi.ComponentResource {
                     }]
                 })
             });
+        
+        // Opensearch access policy
+        const domain = this.baseArgs.opensearch?.domain;
+        let openSearchPolicyDoc = pulumi.output("");
+        if (domain) {
+            openSearchPolicyDoc = pulumi.output(JSON.stringify(
+                {
+                    Version: "2012-10-17",
+                    Statement: [
+                      {
+                        Effect: "Allow",
+                        Action: "es:*",
+                        Resource: `arn:aws:es:${this.baseArgs.region}:${this.baseArgs.accountId}:domain/${domain}/*`
+                      }
+                    ]
+                }
+            ))
+        }
 
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
-            taskRolePolicyDocs: [s3AccessPolicyDoc, kmsKeyPolicyDoc],
+            taskRolePolicyDocs: [s3AccessPolicyDoc, kmsKeyPolicyDoc, openSearchPolicyDoc],
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
             memory: taskMemory,

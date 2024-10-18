@@ -38,10 +38,10 @@ export async function hydrateConfig() {
     const endpointSecurityGroupId = stackConfig.require("endpointSecurityGroupId");
 
     // Pulumi Insights (Resource Search)
-    const openSearchUser = stackConfig.get("openSearchUser");
-    const openSearchPassword = stackConfig.get("openSearchPassword");
-    const openSearchEndpoint = stackConfig.get("openSearchEndpoint");
-    const openSearchDomain = stackConfig.get("openSearchDomain");
+    const openSearchUser = stackConfig.get("opensearchUser");
+    const openSearchPassword = stackConfig.get("opensearchPassword");
+    const openSearchEndpoint = stackConfig.get("opensearchEndpoint");
+    const openSearchDomainName = stackConfig.get("opensearchDomainName");
 
     const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey") ?? "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
     const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey") ?? "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
@@ -166,7 +166,7 @@ export async function hydrateConfig() {
         opensearch: {
             user: openSearchUser,
             password: openSearchPassword,
-            domain: openSearchDomain,
+            domain: openSearchDomainName,
             endpoint: openSearchEndpoint
         },
         baseTags: {

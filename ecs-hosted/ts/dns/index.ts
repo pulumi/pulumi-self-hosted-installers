@@ -1,3 +1,4 @@
+import * as pulumi from "@pulumi/pulumi";
 import { ApplicationDns } from "./applicationDns";
 import { config } from "./config";
 
@@ -23,5 +24,5 @@ const appDns = new ApplicationDns("pulumi-dns", {
     consoleLoadBalancerZoneId: config.consoleLoadBalancerZoneId
 });
 
-export const apiUrl = appDns.apiFqdn;
-export const consoleUrl = appDns.consoleFqdn;
+export const apiUrl = pulumi.interpolate`https://${appDns.apiFqdn}`;
+export const consoleUrl = pulumi.interpolate`https://${appDns.consoleFqdn}`;

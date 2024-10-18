@@ -22,7 +22,8 @@ export class ResourceSearch extends pulumi.ComponentResource {
     public readonly user: pulumi.Output<string> | undefined;
     public readonly password: pulumi.Output<string> | undefined;
     public readonly endpoint: pulumi.Output<string> | undefined;
-    public readonly domain: pulumi.Output<string> | undefined;
+    public readonly domainEndpoint: pulumi.Output<string> | undefined;
+    public readonly domainName: pulumi.Output<string> | undefined;
 
     constructor(name: string, args: OpensearchArgs, opts?: pulumi.ComponentResourceOptions) {
         super(namespace, name, args, opts);
@@ -152,7 +153,7 @@ export class ResourceSearch extends pulumi.ComponentResource {
 
         this.user = pulumi.output(un);
         this.password = pw.result;
-        this.domain = domain.endpoint;
+        this.domainName = domain.domainName;
         this.endpoint = pulumi.interpolate`https://${domain.endpoint}`;
     }
 }
