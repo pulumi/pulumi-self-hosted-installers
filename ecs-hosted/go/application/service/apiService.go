@@ -299,6 +299,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		secrets.Secrets,
 		args.CheckPointbucket.Bucket,
 		args.PolicyPacksBucket.Bucket,
+		args.MetadataBucket.Bucket,
 		args.LogDriver,
 		args.OpenSearchUser,
 		args.OpenSearchEndpoint,
@@ -318,13 +319,14 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		secretsOutput := applyArgs[2].([]map[string]any)
 		checkpointBucket := applyArgs[3].(string)
 		policypackBucket := applyArgs[4].(string)
-		logDriver := applyArgs[5].(log.LogDriver)
-		OpenSearchUser := applyArgs[6].(string)
-		OpenSearchEndpoint := applyArgs[7].(string)
+		metadataBucket := applyArgs[5].(string)
+		logDriver := applyArgs[6].(log.LogDriver)
+		OpenSearchUser := applyArgs[7].(string)
+		OpenSearchEndpoint := applyArgs[8].(string)
 
 		samlCertPublicKey := ""
-		if len(inputs) > 6 {
-			samlCertPublicKey = applyArgs[6].(string)
+		if len(inputs) > 7 {
+			samlCertPublicKey = applyArgs[7].(string)
 		}
 
 		envArgs := &ApiContainerEnvironment{
@@ -333,6 +335,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 			DbPort:             dbPort,
 			CheckPointBucket:   checkpointBucket,
 			PolicyPackBucket:   policypackBucket,
+			MetadataBucket:     metadataBucket,
 			SamlPublicKey:      samlCertPublicKey,
 			OpenSearchUser:     OpenSearchUser,
 			OpenSearchEndpoint: OpenSearchEndpoint,
@@ -369,13 +372,15 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		return string(containerJson), nil
 	}).(pulumi.StringOutput)
 
-	s3AccessPolicyDoc := pulumi.All(args.CheckPointbucket.Bucket, args.PolicyPacksBucket.Bucket).ApplyT(func(applyArgs []any) (string, error) {
+	s3AccessPolicyDoc := pulumi.All(args.CheckPointbucket.Bucket, args.PolicyPacksBucket.Bucket, args.MetadataBucket.Bucket).ApplyT(func(applyArgs []any) (string, error) {
 
 		checkpointBucket := applyArgs[0].(string)
 		policypackBucket := applyArgs[1].(string)
+		metadataBucket := applyArgs[2].(string)
 
 		checkpointBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", checkpointBucket))
 		policypackBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", policypackBucket))
+		metadataBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", metadataBucket))
 
 		policyDoc, err := json.Marshal(map[string]any{
 			"Version": "2012-10-17",
@@ -388,6 +393,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 						fmt.Sprintf("%s/*", checkpointBucketArn),
 						policypackBucketArn,
 						fmt.Sprintf("%s/*", policypackBucketArn),
+						metadataBucketArn,
+						fmt.Sprintf("%s/*", metadataBucketArn),
 					},
 				},
 			},
@@ -454,8 +461,9 @@ func newApiEnvironmentVariables(environmentArgs ApiContainerEnvironment) []map[s
 		CreateEnvVar("PULUMI_DATABASE_NAME", "pulumi"),
 		CreateEnvVar("PULUMI_API_DOMAIN", args.ApiUrl),
 		CreateEnvVar("PULUMI_CONSOLE_DOMAIN", args.ConsoleUrl),
-		CreateEnvVar("PULUMI_OBJECTS_BUCKET", environmentArgs.CheckPointBucket),
-		CreateEnvVar("PULUMI_POLICY_PACK_BUCKET", environmentArgs.PolicyPackBucket),
+		CreateEnvVar("PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.CheckPointBucket),
+		CreateEnvVar("PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.PolicyPackBucket),
+		CreateEnvVar("PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.MetadataBucket),
 		CreateEnvVar("PULUMI_KMS_KEY", args.KmsServiceKeyId),
 		CreateEnvVar("AWS_REGION", args.Region),
 		CreateEnvVar("PULUMI_SEARCH_USER", environmentArgs.OpenSearchUser),
@@ -516,10 +524,11 @@ type ApiContainerServiceArgs struct {
 	WhiteListCidrBlocks        []string
 	CheckPointbucket           *s3.Bucket
 	PolicyPacksBucket          *s3.Bucket
+	MetadataBucket             *s3.Bucket
 	ExecuteMigrations          bool
 	OpenSearchUser             pulumi.StringOutput
 	OpenSearchPassword         pulumi.StringOutput
-	OpenSearchDomain           pulumi.StringOutput
+	OpenSearchDomainName       pulumi.StringOutput
 	OpenSearchEndpoint         pulumi.StringOutput
 }
 
@@ -535,6 +544,7 @@ type ApiContainerEnvironment struct {
 	DbPort             int
 	CheckPointBucket   string
 	PolicyPackBucket   string
+	MetadataBucket     string
 	SamlPublicKey      string
 	OpenSearchUser     string
 	OpenSearchEndpoint string

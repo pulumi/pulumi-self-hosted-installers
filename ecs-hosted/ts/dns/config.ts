@@ -15,7 +15,7 @@ const apiLoadBalancerZoneId = stackConfig.require("apiLoadBalancerZoneId");
 const consoleLoadBalancerDnsName = stackConfig.require("consoleLoadBalancerDnsName");
 const consoleLoadBalancerZoneId = stackConfig.require("consoleLoadBalancerZoneId");
 
-const route53Subdomain = stackConfig.get("route53Subdomain");
+const route53Subdomain = stackConfig.require("route53Subdomain");
 
 export const config = {
     region,
