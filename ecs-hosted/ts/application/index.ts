@@ -124,6 +124,7 @@ export = async () => {
     return {
         checkpointsS3BucketName: checkpointsBucket.id,
         policyPacksS3BucketName: policyPacksBucket.id,
+        metadataS3BucketName: metadataBucket.id,
 
         // the DNS project will use all these outputs to create A records
         apiLoadBalancerDnsName: trafficManager.api.loadBalancer.dnsName,
