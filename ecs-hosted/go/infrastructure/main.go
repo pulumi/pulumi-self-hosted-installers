@@ -172,7 +172,7 @@ func main() {
 		ctx.Export("dbSecurityGroupId", database.dbSecurityGroupId)
 		ctx.Export("endpointSecurityGroupId", endpointSecurityGroup.ID())
 		ctx.Export("s3EndpointPrefixId", privateS3PrefixList.Id())
-		ctx.Export("opensearchDomain", OpenSearchDomain.Domain)
+		ctx.Export("opensearchDomainName", OpenSearchDomain.DomainName)
 		ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
 		ctx.Export("opensearchUser", OpenSearchDomain.User)
 		ctx.Export("opensearchPassword", OpenSearchDomain.Password)

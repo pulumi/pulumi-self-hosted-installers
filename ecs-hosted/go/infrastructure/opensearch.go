@@ -199,7 +199,7 @@ func NewOpenSearch(ctx *pulumi.Context, name string, args *OpenSearchArgs, opts 
 
 	resource.User = pulumi.String(un).ToStringOutput()
 	resource.Password = pw.Result
-	resource.Domain = domain.Endpoint
+	resource.DomainName = domain.DomainName
 	resource.Endpoint = domain.Endpoint.ApplyT(func(endpoint string) string {
 		return fmt.Sprintf("https://%s", endpoint)
 	}).(pulumi.StringOutput)
@@ -254,7 +254,7 @@ func newLogGroup(ctx *pulumi.Context, name string, opts ...pulumi.ResourceOption
 type OpenSearch struct {
 	pulumi.ResourceState
 
-	Domain   pulumi.StringOutput
+	DomainName   pulumi.StringOutput
 	Endpoint pulumi.StringOutput
 	Password pulumi.StringOutput
 	User     pulumi.StringOutput

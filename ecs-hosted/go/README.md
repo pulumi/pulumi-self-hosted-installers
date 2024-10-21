@@ -16,6 +16,7 @@ Version ID | Date | Note
 4 | 05/10/2022 | Optional configuration parameter `imagePrefix` added for the Application project.
 5 | 01/20/2023 | MySQL 8 support.
 6 | 07/17/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble.
+7 | 10/20/2024 | Add ESC deployment to the installer.
 
 ## User Guides
 

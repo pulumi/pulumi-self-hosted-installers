@@ -104,6 +104,12 @@ export class ApiService extends pulumi.ComponentResource {
             secrets: secretArgs,
         }, this.options);
 
+        const migrationService = new MigrationService(`${name}-migrations`, {
+            ...args,
+            migrationsImageTag: args.imageTag,
+            database: args.database,
+        }, this.options);
+
         const taskArgs = this.constructTaskArgs(serviceSecrets);
         this.apiService = new ContainerService(`${name}-api`, {
             ...args,
@@ -113,13 +119,7 @@ export class ApiService extends pulumi.ComponentResource {
             pulumiLoadBalancer: trafficManager.api,
             targetPort: apiPort,
             taskDefinitionArgs: taskArgs,
-        }, this.options);
-
-        const migrationService = new MigrationService(`${name}-migrations`, {
-            ...args,
-            migrationsImageTag: args.imageTag,
-            database: args.database,
-        }, this.options);
+        }, pulumi.mergeOptions(this.options, { dependsOn: [migrationService]}));
 
         // connection from api service to db is required
         // using SG ingress rules
@@ -192,6 +192,7 @@ export class ApiService extends pulumi.ComponentResource {
                 serviceSecrets.outputs,
                 this.baseArgs.policyPacksBucket.bucket,
                 this.baseArgs.checkPointbucket.bucket,
+                this.baseArgs.metadataBucket.bucket,
                 this.baseArgs.samlCertPrivateKey,
                 this.baseArgs.samlCertPublicKey,
                 logDriver?.outputs,
@@ -200,6 +201,7 @@ export class ApiService extends pulumi.ComponentResource {
                 secrets,
                 policyBucket,
                 checkpointBucket,
+                metadataBucket,
                 samlPrivateKey,
                 samlPublicKey,
                 logOutputs]) => {
@@ -224,6 +226,7 @@ export class ApiService extends pulumi.ComponentResource {
                         databasePort: this.baseArgs.database.dbPort,
                         checkpointBucket: checkpointBucket,
                         policyPackBucket: policyBucket,
+                        metadataBucket: metadataBucket,
                         samlSsoPrivateCert: samlPrivateKey,
                         samlSsoPublicCert: samlPublicKey,
                         openSearchEndpoint: this.baseArgs.opensearch?.endpoint,
@@ -242,14 +245,17 @@ export class ApiService extends pulumi.ComponentResource {
 
         // IAM policy doc will be given to ECS service to allow Pulumi API (service) to interact with S3 buckets
         const s3AccessPolicyDoc = pulumi
-            .all([this.baseArgs.policyPacksBucket.bucket, this.baseArgs.checkPointbucket.bucket])
-            .apply(([policyBucket, checkpointBucket]) => {
+            .all([this.baseArgs.policyPacksBucket.bucket, this.baseArgs.checkPointbucket.bucket, this.baseArgs.metadataBucket.bucket])
+            .apply(([policyBucket, checkpointBucket, metadataBucket]) => {
 
                 const policyBucketArn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${policyBucket}`);
                 pulumi.log.debug(`construct policy bucket arn: ${policyBucketArn}`);
 
                 const checkpointBucketArn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${checkpointBucket}`);
                 pulumi.log.debug(`constructed checkpoint bucket arn: ${checkpointBucketArn}`);
+
+                const metadataBucketArn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${metadataBucket}`);
+                pulumi.log.debug(`constructed metadata bucket arn: ${metadataBucketArn}`);
 
                 return JSON.stringify({
                     Version: "2012-10-17",
@@ -260,7 +266,9 @@ export class ApiService extends pulumi.ComponentResource {
                             policyBucketArn,
                             `${policyBucketArn}/*`,
                             checkpointBucketArn,
-                            `${checkpointBucketArn}/*`
+                            `${checkpointBucketArn}/*`,
+                            metadataBucketArn,
+                            `${metadataBucketArn}/*`
                         ]
                     }]
                 })
@@ -287,11 +295,29 @@ export class ApiService extends pulumi.ComponentResource {
                     }]
                 })
             });
+        
+        // Opensearch access policy
+        const domain = this.baseArgs.opensearch?.domain;
+        let openSearchPolicyDoc = pulumi.output("");
+        if (domain) {
+            openSearchPolicyDoc = pulumi.output(JSON.stringify(
+                {
+                    Version: "2012-10-17",
+                    Statement: [
+                      {
+                        Effect: "Allow",
+                        Action: "es:*",
+                        Resource: `arn:aws:es:${this.baseArgs.region}:${this.baseArgs.accountId}:domain/${domain}/*`
+                      }
+                    ]
+                }
+            ))
+        }
 
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
-            taskRolePolicyDocs: [s3AccessPolicyDoc, kmsKeyPolicyDoc],
+            taskRolePolicyDocs: [s3AccessPolicyDoc, kmsKeyPolicyDoc, openSearchPolicyDoc],
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
             memory: taskMemory,
@@ -348,12 +374,16 @@ export class ApiService extends pulumi.ComponentResource {
                 value: dns.consoleUrl,
             },
             {
-                name: "PULUMI_OBJECTS_BUCKET",
-                value: args.checkpointBucket,
+                name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
+                value: `s3://${args.checkpointBucket}`,
             },
             {
-                name: "PULUMI_POLICY_PACK_BUCKET",
-                value: args.policyPackBucket,
+                name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
+                value: `s3://${args.policyPackBucket}`,
+            },
+            {
+                name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
+                value: `s3://${args.metadataBucket}`,
             },
             {
                 name: "PULUMI_KMS_KEY",

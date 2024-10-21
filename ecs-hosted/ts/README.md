@@ -15,7 +15,8 @@ Version ID | Date | Note
 3 | 01/20/2023 | MySQL 8 support
 4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other 
 configuration values, all prefixed OpenSearch are availble. 
-5 | 07/30/2024 | Use of Stack Refernces removed in favor of Stack Configuration. Note, [Pulumi ESC][esc] provides a seamless way to use stack outputs, as configuration, from a previously deployed stack. If ESC is ommitted, configuration needs to be manually set.
+5 | 07/30/2024 | Use of Stack References removed in favor of Stack Configuration. 
+6 | 10/15/2024 | Add ESC deployment to the installer.
 
 ## User Guides
 
@@ -23,11 +24,12 @@ configuration values, all prefixed OpenSearch are availble.
 - [Pulumi API Service][pulumi-api-service-user-guide]
 - [Pulumi Console Service][pulumi-console-service-user-guide]
 
-## Requirements
+## Prerequisites 
 
 - [Get Started with Pulumi and AWS][get-started-aws].
+- AWS Access Environment Variables:
+  - Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN (if using temporary tokens) as environment variables.
 - [S3 State Backend][s3-backend]
-  - Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.
   - Set AWS_PROFILE to your AWS profile of choice as defined in ~/.aws/config
   - Set PULUMI_CONFIG_PASSPHRASE to some secret passphrase for handling secrets.
 - [ECR][ecr] repositories which contain Pulumi API (service), Pulumi UI (console), and Pulumi Migration images. NOTE: the below `imageTag` configuration value corresponds to image tag in each ECR repo. Also, by default this program expects the ECR repos to be named after the Pulumi containers. Eg- `pulumi/service`, `pulumi/console`, `pulumi/migrations`.
@@ -81,6 +83,9 @@ The Pulumi services operate in AWS Elastic Container Service (ECS) with the foll
   availability zones ensuring redudancy in your applications. RDS Database can also be configured with multiple replicas, across different availability zones.
 
 ## Install
+
+**WARNING**  
+Be sure you have set up and created all the items in [Prerequisites](prerequisites).
 
 1. Clone the repo and install dependencies:
 
@@ -263,6 +268,7 @@ pulumi stack init # follow prompt
 ```bash
 region - AWS region
 route53ZoneName - Route 53 Zone Name 
+route53Subdomain - Subdomain
 apiLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
 apiLoadBalancerZoneId - Application Load balancer Zone Id - API Load Balancer
 consoleLoadBalancerDnsName - Application Load balancer Name - API Load Balancer

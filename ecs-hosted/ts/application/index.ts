@@ -18,6 +18,7 @@ export = async () => {
     // Pulumi API (service) needs to be able to read/write to these buckets via IAM policy
     const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, { protect: true });
     const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true });
+    const metadataBucket= new aws.s3.Bucket(`pulumi-service-metadata`, {}, { protect: true });
 
     // Create infra related to handling traffic
     // ALB, HTTP & HTTPS listeners, empty target group, and ALB access logs if configuration says so
@@ -72,6 +73,7 @@ export = async () => {
         licenseKey: config.api.licenseKey,
         logArgs: config.logs.logArgs,
         logType: config.logs.logType,
+        metadataBucket: metadataBucket,
         numberDesiredTasks: config.api.apiDesiredNumberTasks,
         policyPacksBucket: policyPacksBucket,
         privateSubnetIds: config.privateSubnetIds,
@@ -122,6 +124,7 @@ export = async () => {
     return {
         checkpointsS3BucketName: checkpointsBucket.id,
         policyPacksS3BucketName: policyPacksBucket.id,
+        metadataS3BucketName: metadataBucket.id,
 
         // the DNS project will use all these outputs to create A records
         apiLoadBalancerDnsName: trafficManager.api.loadBalancer.dnsName,
