@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 import { CustomResource } from "@pulumi/kubernetes/apiextensions"
+import { EnvVar } from "./types"
 
 export interface OpenSearchArgs {
     namespace: Output<string>,
@@ -11,6 +12,7 @@ export interface OpenSearchArgs {
 
 export class OpenSearch extends ComponentResource {
     public namespace: Output<string>;
+    public envVars: EnvVar[];
     // public dashboardService: Output<k8s.core.v1.Service>;
     // public customResourceName: Output<string>;
 
@@ -102,7 +104,7 @@ export class OpenSearch extends ComponentResource {
                 extraEnvs: [
                     {
                         name: "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
-                        value: "ChangeMe1234!"
+                        value: args.intitialAdminPassword,
                     }
                 ],
                 rbac: {
@@ -116,6 +118,21 @@ export class OpenSearch extends ComponentResource {
 
         this.namespace = pulumi.output(args.namespace)
 
+        this.envVars = [
+            {
+                name: "PULUMI_SEARCH_DOMAIN",
+                value: "https://opensearch-cluster-master:9200"
+            },
+            {
+                name: "PULUMI_SEARCH_USER",
+                value: "admin"
+            },
+            {
+                name: "PULUMI_SEARCH_PASSWORD",
+                value: args.intitialAdminPassword.toString(),
+            }
+        ]
+
         // this.dashboardService = args.namespace.apply(namespace => k8s.core.v1.Service.get(
         //     "opensearch-dashboard", 
         //     `${namespace}/osr-opensearch-operator-controller-manager-metrics-service`,
@@ -123,7 +140,8 @@ export class OpenSearch extends ComponentResource {
         // ))
         // this.customResourceName = osc.metadata.name
         this.registerOutputs({
-            namespace: this.namespace
+            namespace: this.namespace,
+            envVars: this.envVars,
         })
     }
 }
