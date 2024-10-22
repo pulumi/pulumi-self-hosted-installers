@@ -79,6 +79,7 @@ export const config = {
     openSearchEndpoint: insightsStackRef.requireOutput("openSearchEndpoint"),
     openSearchUser: insightsStackRef.requireOutput("openSearchUser"),
     openSearchPassword: insightsStackRef.requireOutput("openSearchPassword"),
+    openSearchNamespaceName: insightsStackRef.requireOutput("openSearchNamespaceName"),
 
     // SAML SSO Setting:
     samlSsoEnabled: pulumiConfig.get("samlSsoEnabled") ?? 'false',

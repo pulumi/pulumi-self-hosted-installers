@@ -18,7 +18,9 @@ const openSearch = new OpenSearch(`${baseName}-search`, {
   intitialAdminPassword: config.intitialAdminPassword,
 }, {provider: k8sProvider});
 
-export const openSearchEndpoint = pulumi.interpolate`https://opensearch-cluster-master.${openSearchNamespace.metadata.name}:9200`
+// The endpoint is currently hardcoded as shown. 
+// Once opensearch cluster can be deployed in it's own namespace, the endpoint will need to be updated to: pulumi.interpolate`https://opensearch-cluster-master.${openSearchNamespace.metadata.name}:9200`
+export const openSearchEndpoint = `https://opensearch-cluster-master:9200`
 export const openSearchUser = "admin"
 export const openSearchPassword = config.intitialAdminPassword
 export const openSearchNamespaceName = openSearchNamespace.metadata.name
