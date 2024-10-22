@@ -25,11 +25,17 @@ export function createAlbIngressController(name: string, args: AlbIngressControl
     }
   }, {provider: args.k8sprovider})
 
+  // If you are not able to access the repository, you can use reference it as a local chart by doing the following:
+  // 1. helm repo add aws https://aws.github.io/eks-charts
+  // 2. mkdir alb-ingress-chart-local && cd alb-ingress-chart-local
+  // 3. helm pull aws/aws-load-balancer-controller --untar
+  // Then comment the repositoryOpts and chart and uncomment the chart line below.
   const albHelm = new k8s.helm.v3.Release("albhelm", {
-    repositoryOpts: {
-        repo: "https://aws.github.io/eks-charts"
-    },
-    chart: "aws-load-balancer-controller",
+    // repositoryOpts: {
+    //     repo: "https://aws.github.io/eks-charts"
+    // },
+    // chart: "aws-load-balancer-controller",
+    chart: "./alb-ingress-chart-local/aws-load-balancer-controller",
     namespace: "kube-system",
     values: {
         clusterName: args.clusterName,

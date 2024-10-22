@@ -23,9 +23,16 @@ const apiReplicas = config.apiReplicas;
 const consoleReplicas = config.consoleReplicas;
 
 ////////////
-// Create Kubernetes namespaces for the services.
-const appsNamespace = new k8s.core.v1.Namespace(config.appsNamespaceName, { metadata: { name: config.appsNamespaceName } }, { provider: k8sprovider, protect: true });
-export const appsNamespaceName = appsNamespace.metadata.name;
+// Create Kubernetes namespace for the services.
+// Since the 25-insights stack may have created the namespace, we need to check if the namespaces used by insights matches this one.
+// If it does not, we need to create a new namespace.
+// Once 25-insights is updated to use a different namespace, remove this check.
+export const appsNamespaceName = config.appsNamespaceName;
+config.openSearchNamespaceName.apply(openSearchNamespaceName => {
+    if (appsNamespaceName != openSearchNamespaceName) {
+        const appsNamespace = new k8s.core.v1.Namespace(appsNamespaceName, { metadata: { name: appsNamespaceName } }, { provider: k8sprovider, protect: true });
+    }
+})
 
 const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
     metadata: {
@@ -80,7 +87,8 @@ const serviceEnv = pulumi
 // https://www.pulumi.com/docs/guides/self-hosted/console/
 const apiResources = { requests: { cpu: "2048m", memory: "1024Mi" } };
 const migrationResources = { requests: { cpu: "128m", memory: "128Mi" } };
-const consoleResources = { requests: { cpu: "1024m", memory: "512Mi" } };
+// const consoleResources = { requests: { cpu: "1024m", memory: "512Mi" } };
+const consoleResources = { requests: { cpu: "512m", memory: "512Mi" } };
 
 // Deploy the API service.
 const apiPodBuilder = new kx.PodBuilder({

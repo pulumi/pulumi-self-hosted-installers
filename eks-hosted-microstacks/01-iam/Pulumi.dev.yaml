@@ -1,7 +1,0 @@
-config:
-  # Set the AWS region to deploy the infrastructure to.
-  # This should be the same for all the stacks.
-  aws:region: us-east-1
-  selfhosted-01-iam:baseName: mitchselfhost
-  selfhosted-01-iam:ssoRoleArn:
-    secure: AAABAISZyWzmZ6THHDgc/mSy+8d8WBE4kBinhxGiXA1osC6Sa7kLDtXH5WlrUQMRFottreEQjCO+6eq2qThNaFnCw6LoQhAPrO03FlFSQ543cK89Hydk3BCGELhbLszn+th8Wfaav2woUpYE+feooZtRVPt0BZVMWf0VQXSnRoPifn4o/uawyFh3mrErsqFEc3Tx2UoXLuSWKEY=

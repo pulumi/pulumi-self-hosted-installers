@@ -11,7 +11,7 @@ let pulumiConfig = new pulumi.Config();
 const networkingStackRef = new pulumi.StackReference(`${orgName}/selfhosted-02-networking/${stackName}`);
 
 // Cluster stack reference 
-const clusterStackRef = new pulumi.StackReference(pulumiConfig.require("clusterStackName"));
+const clusterStackRef = new pulumi.StackReference(`${orgName}/selfhosted-05-ekscluster/${stackName}`);
 
 export const config = {
     baseName: pulumiConfig.require("baseName"),
