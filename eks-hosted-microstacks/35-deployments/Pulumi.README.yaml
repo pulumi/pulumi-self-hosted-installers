@@ -1,3 +1,5 @@
+#### Deployments Installer to be provided ####
+
 config:
   # Set the AWS region to deploy the infrastructure to.
   # This should be the same for all the stacks.
@@ -5,12 +7,6 @@ config:
 
   # Set a base name to be used when creating the resources.
   # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
-  baseName: mitchselfhost
-
-  # Opensearch configuration
-  # Note: the domain name is derived from the baseName. See config.ts
-  openSearchInstanceType: t3.medium.search
-  openSearchInstanceCount: 3
-  openSearchDedicatedMasterCount: 0
+  baseName: pulumiselfhost
 
   

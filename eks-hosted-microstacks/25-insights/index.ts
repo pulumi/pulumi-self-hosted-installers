@@ -1,25 +1,24 @@
-import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import * as k8s from "@pulumi/kubernetes";
+import { OpenSearchArgs, OpenSearch } from "../../components-microstacks/openSearch";
 import { config } from "./config";
-import { ResourceSearchArgs, ResourceSearch } from "./resourceSearch";
 
 const baseName = config.baseName 
 
-///////////////
-// Resources for Insights.
-// Currently this is just an open search domain.
+const k8sProvider = new k8s.Provider("k8s-provider", {kubeconfig: config.kubeconfig});
 
-const resourceSearch = new ResourceSearch(`${baseName}-search`, {
-  deployOpenSearch: config.enableOpenSearch,
-  domainNname: config.openSearchDomainName,
-  instanceType: config.openSearchInstanceType,
-  instanceCount: config.openSearchInstanceCount,
-  vpcId: config.vpcId,
-  subnetIds: config.privateSubnetIds,
-  dedicatedMasterCount: config.openSearchDedicatedMasterCount
-});
+// Deploy opensearch cluster on the k8s cluster.
+const openSearchNamespace = new k8s.core.v1.Namespace(`${baseName}-opensearch-ns`, {
+  metadata: {name: config.namespace},
+}, {provider: k8sProvider});
 
-export const openSearchDomainName = resourceSearch.domain
-export const openSearchEndpoint = resourceSearch.endpoint
-export const openSearchUser = resourceSearch.user
-export const openSearchPassword = resourceSearch.password
+const openSearch = new OpenSearch(`${baseName}-search`, {
+  namespace: openSearchNamespace.metadata.name,
+  serviceAccount: config.serviceAccount,
+  intitialAdminPassword: config.intitialAdminPassword,
+}, {provider: k8sProvider});
+
+export const openSearchEndpoint = pulumi.interpolate`https://opensearch-cluster-master.${openSearchNamespace.metadata.name}:9200`
+export const openSearchUser = "admin"
+export const openSearchPassword = config.intitialAdminPassword
+export const openSearchNamespaceName = openSearchNamespace.metadata.name

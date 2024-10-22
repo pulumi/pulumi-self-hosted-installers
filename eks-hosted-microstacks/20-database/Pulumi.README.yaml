@@ -11,5 +11,5 @@ config:
   # If not set, defaults will be used (see config.ts).
   dbReplicas: 2
   dbInstanceType: "db.r5.large"
-
+  
   

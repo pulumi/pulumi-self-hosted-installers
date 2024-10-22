@@ -24,8 +24,8 @@ const consoleReplicas = config.consoleReplicas;
 
 ////////////
 // Create Kubernetes namespaces for the services.
+export const appsNamespaceName = config.appsNamespaceName;
 const appsNamespace = new k8s.core.v1.Namespace(config.appsNamespaceName, { metadata: { name: config.appsNamespaceName } }, { provider: k8sprovider, protect: true });
-export const appsNamespaceName = appsNamespace.metadata.name;
 
 const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
     metadata: {
@@ -80,7 +80,8 @@ const serviceEnv = pulumi
 // https://www.pulumi.com/docs/guides/self-hosted/console/
 const apiResources = { requests: { cpu: "2048m", memory: "1024Mi" } };
 const migrationResources = { requests: { cpu: "128m", memory: "128Mi" } };
-const consoleResources = { requests: { cpu: "1024m", memory: "512Mi" } };
+// const consoleResources = { requests: { cpu: "1024m", memory: "512Mi" } };
+const consoleResources = { requests: { cpu: "512m", memory: "512Mi" } };
 
 // Deploy the API service.
 const apiPodBuilder = new kx.PodBuilder({

@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import { eventsS3BucketName } from "../15-state-policies-mgmt";
-import { openSearchDomainName, openSearchEndpoint, openSearchUser } from "../25-insights";
+import { openSearchNamespaceName } from "../25-insights";
 
 const pulumiConfig = new pulumi.Config();
 
@@ -76,7 +76,6 @@ export const config = {
     recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
 
     // Insights Config
-    openSearchDomainName: insightsStackRef.requireOutput("openSearchDomainName"),
     openSearchEndpoint: insightsStackRef.requireOutput("openSearchEndpoint"),
     openSearchUser: insightsStackRef.requireOutput("openSearchUser"),
     openSearchPassword: insightsStackRef.requireOutput("openSearchPassword"),
