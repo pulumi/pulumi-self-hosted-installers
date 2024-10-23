@@ -1,3 +1,10 @@
+**DEPRECATED**
+
+This EKS installer has been deprecated. New installations should use the new [EKS Installer](../eks-hosted) instead.
+
+If you wish to migrate from this installer to the new one, contact Pulumi at support@pulumi.com.
+
+
 # Self-Hosted Pulumi on AWS
 
 Deploys the Pulumi API Service and Console in Kubernetes using AWS.

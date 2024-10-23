@@ -30,7 +30,7 @@ const privateSubnetIds = networkingStackRef.requireOutput("privateSubnetIds");
 // Build the config object used by the code
 export const config = {
     baseName: pulumiConfig.require("baseName"),
-    clusterVersion: pulumiConfig.get("clusterVersion") || "1.30", 
+    clusterVersion: pulumiConfig.get("clusterVersion") || "1.30.3", 
 
     /**
      * EKS Node Group
