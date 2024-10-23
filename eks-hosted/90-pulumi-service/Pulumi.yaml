@@ -1,0 +1,3 @@
+name: selfhosted-90-pulumi-service
+description: Used to create database resources for the eks selfhosted installer.
+runtime: nodejs

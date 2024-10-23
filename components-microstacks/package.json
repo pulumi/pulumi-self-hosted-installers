@@ -1,0 +1,15 @@
+{
+    "name": "pulumi-selfhosted-components",
+    "version": "1.0.0",
+    "dependencies": {
+        "@pulumi/pulumi": "^3.135.0",
+        "@pulumi/kubernetes": "4.18.1"
+    },
+    "files": [
+        "api.ts",
+        "cert-manager.ts",
+        "console.ts",
+        "index.ts",
+        "openSearch.ts"
+    ]
+}

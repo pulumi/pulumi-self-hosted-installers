@@ -1,0 +1,53 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  # License key for the service.
+  # Configure as a secret using `pulumi config set licenseKey --secret`
+  licenseKey: licenseKey
+
+  # Image tag to use to retrieve the API and Console (and Migration) service images.
+  imageTag: latest
+  
+  # Number of replicas to deploy for the API and Console services.
+  apiReplicas: 2
+  consoleReplicas: 2
+
+  # DNS Hosted Zone and subdomain to operate on and use with ALB and ACM.
+  hostedZoneDomainName: mydomain.com
+  hostedZoneDomainSubdomain: pulumiservice 
+
+  # Either set the AWS KMS Key ARN to use for encrypting secrets or set a local key to use.
+  # If providing the KMS key ARN, be sure there is a policy attached to it that allows instanceRole (see 01-iam project) to use it.
+  # See secrets-management.ts for what permissions are needed.
+  awsKMSKeyArn: 
+  # If setting a local key run the following to generate 32 random characters: 
+  # openssl rand -base64 32| cut -c -32 | pulumi config set encryptionKey --secret
+  encryptionKey:
+
+  # SMTP Config config to allow the service to send emails.
+  smtpServer: 
+  smtpUsername: 
+  smtpPassword: 
+  smtpGenericSender: 
+
+  # reCAPTCHA Config
+  # Uses test values if not set in config.
+  # See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
+  recaptchaSiteKey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+  recaptchaSecretKey: "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+
+  # SAML SSO Setting:
+  # Whether or not SAML SSO should be able to be enabled in the console.
+  samlSsoEnabled: "true"
+
+  # Email Login Settings
+  consoleHideEmailSignup: "false"
+  consoleHideEmailLogin: "false"
+  apiDisableEmailSignup: "false"
+  apiDisableEmailLogin: "false"
