@@ -2,7 +2,6 @@ import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
 import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 import { CustomResource } from "@pulumi/kubernetes/apiextensions"
-import { EnvVar } from "./types"
 
 export interface OpenSearchArgs {
     namespace: Output<string>,
@@ -12,7 +11,7 @@ export interface OpenSearchArgs {
 
 export class OpenSearch extends ComponentResource {
     public namespace: Output<string>;
-    public envVars: EnvVar[];
+    public envVars: k8s.types.input.core.v1.EnvVar[];
     // public dashboardService: Output<k8s.core.v1.Service>;
     // public customResourceName: Output<string>;
 
