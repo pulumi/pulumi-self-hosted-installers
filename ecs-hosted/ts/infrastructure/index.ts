@@ -63,7 +63,7 @@ export = async () => {
         dbSecurityGroupId: database.dbSecurityGroupId,
         endpointSecurityGroupId: endpointSgId,
         s3EndpointPrefixId: s3PrefixListId,
-        opensearchDomain: resourceSearch.domain,
+        opensearchDomainName: resourceSearch.domainName,
         opensearchEndpoint: resourceSearch.endpoint,
         opensearchUser: resourceSearch.user,
         opensearchPassword: resourceSearch.password,
