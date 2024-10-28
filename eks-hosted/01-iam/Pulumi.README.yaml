@@ -1,0 +1,23 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  # Provide an SSO role arn that can be assumed by the Pulumi cli to deploy the infrastructure.
+  # Currently this is just passed through and consumed by later stacks to enable the k8s provider to assume the role and deploy 
+  # k8s infra to the eks cluster.
+  # A future iteration may create this sso role as part of the stack.
+  ssoRoleArn: arn:aws:iam::123456789012:role/SSO-Role-Name
+
+  #### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
+  # If you are not using the `01-iam` stack, then set the following values that would have otherwise been provided by the iam stack.
+  # The stack will then "pretend" it created the resources and output the values for the other stacks to use.
+  databaseMonitoringRoleArn: 
+  eksServiceRoleName:
+  eksInstanceRoleName:      
+  instanceProfileName:
+

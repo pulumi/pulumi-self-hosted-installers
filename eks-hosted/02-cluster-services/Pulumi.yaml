@@ -1,3 +1,0 @@
-name: pulumi-selfhosted-02-cluster-services
-description: Kubernetes and supporting resources - Kubernetes, Logging, RDS, etc.
-runtime: nodejs

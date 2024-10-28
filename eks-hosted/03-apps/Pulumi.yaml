@@ -1,3 +1,0 @@
-name: pulumi-selfhosted-03-apps
-description: App resources - S3/IAM, K8s Deployment and Ingress, ACM, Route53 Records, etc. 
-runtime: nodejs
