@@ -1,0 +1,11 @@
+build/
+*.license
+*-config.yaml
+*kubeconfig*
+*.cert
+*.key
+node_modules
+package-lock.json
+alb-ingress-chart-local/
+*/aws-load-balancer-controller/*
+Pulumi.pulumitest.yaml
