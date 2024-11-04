@@ -1,0 +1,10 @@
+{
+  "name": "eks-installer-iam",
+  "devDependencies": {
+    "typescript": "^3.0.0"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^6.54.0",
+    "@pulumi/pulumi": "^3.136.0"
+  }
+}

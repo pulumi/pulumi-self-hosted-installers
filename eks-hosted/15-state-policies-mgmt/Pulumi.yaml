@@ -1,0 +1,3 @@
+name: selfhosted-15-state-policies-mgmt
+description: Used to create the state and policy buckets for the eks selfhosted installer.
+runtime: nodejs

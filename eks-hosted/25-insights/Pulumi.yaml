@@ -1,0 +1,3 @@
+name: selfhosted-25-insights
+description: Used to create the resources needed for insights.
+runtime: nodejs

@@ -1,0 +1,4 @@
+name: selfhosted-10-cluster-services
+description: Base K8s services for the eks self-hosted cluster.
+runtime: nodejs
+
