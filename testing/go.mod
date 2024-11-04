@@ -1,4 +1,4 @@
-module github.com/pulumi/pulumi-junipermist/examples
+module github.com/pulumi/pulumi-self-hosted-installers/testing
 
 go 1.22
 

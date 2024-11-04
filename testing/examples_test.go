@@ -1,4 +1,4 @@
-package examples
+package testing
 
 import (
 	"os"
@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	EnvMistAPIKey = "MIST_API_TOKEN"
-	EnvMistOrgID  = "MIST_ORG_ID"
-	EnvMistHost   = "MIST_HOST"
-	EnvClaimCode1 = "MIST_CLAIM_CODE_1"
-	EnvClaimCode2 = "MIST_CLAIM_CODE_2"
+	EnvAwsAPIKey    = "AWS_ACCESS_KEY_ID"
+	EnvAwsSecretKey = "AWS_SECRET_ACCESS_KEY"
+	EnvAwsRegion    = "AWS_REGION"
+	EnvAzureKey     = "AZURE_KEY"
+	EnvGoogleKey    = "GOOGLE_KEY"
 )
 
 func checkEnvVars(t *testing.T, envVar string) {
@@ -38,8 +38,16 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	}
 }
 
-func checkBaseEnvVars(t *testing.T) {
-	checkEnvVars(t, EnvMistOrgID)
-	checkEnvVars(t, EnvMistAPIKey)
-	checkEnvVars(t, EnvMistHost)
+func checkAwsEnvVars(t *testing.T) {
+	checkEnvVars(t, EnvAwsAPIKey)
+	checkEnvVars(t, EnvAwsSecretKey)
+	checkEnvVars(t, EnvAwsRegion)
+}
+
+func checkAzureEnvVars(t *testing.T) {
+	checkEnvVars(t, EnvAzureKey)
+}
+
+func checkGoogleEnvVars(t *testing.T) {
+	checkEnvVars(t, EnvGoogleKey)
 }
