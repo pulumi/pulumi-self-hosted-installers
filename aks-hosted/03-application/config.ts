@@ -21,7 +21,7 @@ export const getConfig = async () => {
     const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
     const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
 
-    // the below enableAzureDnsCertManagement will cause the legacy certs and keys to be ignored as well ass
+    // the below enableAzureDnsCertManagement will cause the legacy certs and keys to be ignored as well as
     // a cluster issuer and cert created using letsencrypt w/ DNs01 validation via Azure DNS
     const enableAzureDnsCertManagementValue = await clusterStack.getOutputDetails("disableAzureDnsCertManagement");
     const disableAzureDnsCertManagement = getValue<boolean>(enableAzureDnsCertManagementValue, false);
@@ -91,6 +91,8 @@ export const getConfig = async () => {
         recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
         samlEnabled: stackConfig.get("samlEnabled") || "false",
         ingressAllowList: stackConfig.get("ingressAllowList") || "",
+        searchStorageClassName: stackConfig.get("searchStorageClassName") || "default",
+        searchStorageSizeGB: stackConfig.getNumber("searchStorageSizeGB") || 4,
         apiTlsKey,
         apiTlsCert,
         consoleTlsKey,
