@@ -1,0 +1,3 @@
+name: selfhosted-05-ekscluster
+description: Used to create the eks cluster for the eks selfhosted installer.
+runtime: nodejs

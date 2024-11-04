@@ -1,0 +1,17 @@
+config:
+  # Set the AWS region to deploy the infrastructure to.
+  # This should be the same for all the stacks.
+  aws:region: us-east-1
+
+  # Set a base name to be used when creating the resources.
+  # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
+  baseName: pulumiselfhost
+
+  ##### USING EXISTING RESOURCES #####
+  # If you using existing S3 buckets, then set the commented out values for the resources you already have.
+  # You will still run `pulumi up` for this stack and it will then "pretend" it created the resources and output the values for the other stacks to use.
+  # checkpointsS3BucketName: 
+  # policyPacksS3BucketName:
+  # eventsS3BucketName: 
+
+  

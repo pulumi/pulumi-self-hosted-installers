@@ -1,0 +1,11 @@
+{
+  "name": "eks-installer-cluster-svcs",
+  "devDependencies": {
+    "typescript": "^3.0.0"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^6.21.0",
+    "@pulumi/kubernetes": "^3.0.0",
+    "@pulumi/pulumi": "^3.136.0"
+  }
+}

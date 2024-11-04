@@ -6,7 +6,6 @@ build/
 *.key
 node_modules
 package-lock.json
-01-cluster-configuration/*-01-cluster-configuration.yaml
-02-cluster-services/*-02-cluster-services.yaml
-03-apps/*-03-apps.yaml
-*.yaml
+alb-ingress-chart-local/
+*/aws-load-balancer-controller/*
+Pulumi.pulumitest.yaml

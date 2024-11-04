@@ -41,6 +41,16 @@ func main() {
 		if err != nil {
 			return err
 		}
+    
+		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{
+			Versioning: &s3.BucketVersioningArgs{
+				Enabled: pulumi.Bool(true),
+			},
+		}, pulumi.Protect(true))
+
+		if err != nil {
+			return err
+		}
 
 		// retrieve "our" VPC to pull in our CIDR block which will be used for SG CIDR purpose
 		v := ec2.LookupVpcOutput(ctx, ec2.LookupVpcOutputArgs{Id: config.VpcId})
@@ -125,6 +135,7 @@ func main() {
 			ImagePrefix:                config.ImagePrefix,
 			LicenseKey:                 config.LicenseKey,
 			LogDriver:                  apiLogs,
+			MetadataBucket:							metadataBucket,
 			PolicyPacksBucket:          policypackBucket,
 			RecaptchaSecretKey:         config.RecaptchaSecretKey,
 			RootDomain:                 domain,
@@ -136,7 +147,7 @@ func main() {
 			WhiteListCidrBlocks:        config.WhiteListCidrBlocks,
 			OpenSearchUser:             config.OpenSearchUser,
 			OpenSearchPassword:         config.OpenSearchPassword,
-			OpenSearchDomain:           config.OpenSearchDomain,
+			OpenSearchDomainName:       config.OpenSearchDomainName,
 			OpenSearchEndpoint:         config.OpenSearchEndpoint,
 		})
 
@@ -174,6 +185,7 @@ func main() {
 
 		ctx.Export("checkpointsS3BucketName", checkpointsBucket.Bucket)
 		ctx.Export("policyPacksS3BucketName", policypackBucket.Bucket)
+		ctx.Export("metadataS3BucketName", metadataBucket.Bucket)
 		ctx.Export("publicLoadBalancerDnsName", trafficManager.Public.LoadBalancer.DnsName)
 		ctx.Export("publicLoadBalancerZoneId", trafficManager.Public.LoadBalancer.ZoneId)
 		ctx.Export("route53ZoneName", pulumi.String(config.Route53ZoneName))

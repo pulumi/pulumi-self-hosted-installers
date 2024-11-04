@@ -66,10 +66,10 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		SecurityGroupId: stackRef.GetStringOutput(pulumi.String("dbSecurityGroupId")),
 	}
 
-	resource.OpenSearchUser = stackRef.GetStringOutput(pulumi.String("OpenSearchUser"))
-	resource.OpenSearchPassword = stackRef.GetStringOutput(pulumi.String("OpenSearchPassword"))
-	resource.OpenSearchDomain = stackRef.GetStringOutput(pulumi.String("OpenSearchDomain"))
-	resource.OpenSearchEndpoint = stackRef.GetStringOutput(pulumi.String("OpenSearchEndpoint"))
+	resource.OpenSearchUser = stackRef.GetStringOutput(pulumi.String("opensearchUser"))
+	resource.OpenSearchPassword = stackRef.GetStringOutput(pulumi.String("opensearchPassword"))
+	resource.OpenSearchDomainName = stackRef.GetStringOutput(pulumi.String("opensearchDomainName"))
+	resource.OpenSearchEndpoint = stackRef.GetStringOutput(pulumi.String("opensearchEndpoint"))
 
 	// this SG protects the VPCEs created in the infrastructure stack
 	resource.EndpointSecurityGroup = stackRef.GetStringOutput(pulumi.String("endpointSecurityGroupId"))
@@ -195,7 +195,7 @@ type ConfigArgs struct {
 	// Insights Related Values
 	OpenSearchUser     pulumi.StringOutput
 	OpenSearchPassword pulumi.StringOutput
-	OpenSearchDomain   pulumi.StringOutput
+	OpenSearchDomainName   pulumi.StringOutput
 	OpenSearchEndpoint pulumi.StringOutput
 
 	// Configuration for Both
