@@ -1,7 +1,7 @@
 //go:build nodejs || all
 // +build nodejs all
 
-package examples
+package testing
 
 import (
 	"os"
@@ -24,7 +24,7 @@ func TestTsExamples(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			checkBaseEnvVars(t)
+			checkAwsEnvVars(t)
 			p := pulumitest.NewPulumiTest(t, test.directoryName,
 				opttest.LocalProviderPath("pulumi-junipermist", filepath.Join(getCwd(t), "..", "bin")),
 				opttest.YarnLink("@pulumi/juniper-mist"),
