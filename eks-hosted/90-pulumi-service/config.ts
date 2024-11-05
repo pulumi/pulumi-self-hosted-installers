@@ -21,10 +21,6 @@ const escStackRef = new pulumi.StackReference(`${orgName}/selfhosted-30-esc/${st
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
 
-// Used to test reCAPTCHA in development or as defaults if not set in config.
-const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-
 export const config = {
     // Cluster
     kubeconfig: clusterStackRef.requireOutput("kubeconfig"),
@@ -70,10 +66,9 @@ export const config = {
     smtpGenericSender: pulumiConfig.get("smtpGenericSender"),
 
     // reCAPTCHA Config
-    // Uses test values if not set in config.
-    // See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
-    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
-    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
+    // If the config is not set, then recaptcha will be disabled.
+    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey"), 
+    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey"), 
 
     // Insights Config
     openSearchEndpoint: insightsStackRef.requireOutput("openSearchEndpoint"),
