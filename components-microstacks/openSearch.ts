@@ -20,6 +20,7 @@ export class OpenSearch extends ComponentResource {
         const osChartName = "opensearch"
         const chartVersion = "2.24.1"
         const oscVersion = "2.14.0"
+        opts = {...opts, parent: this}  
         const opensearch = new k8s.helm.v3.Chart("opensearch", {
             chart: osChartName,
             version: chartVersion,
@@ -68,7 +69,7 @@ export class OpenSearch extends ComponentResource {
                 },
                 serviceAccountName: args.serviceAccount
             },
-        }, { parent: this });
+        }, opts);
 
         const opensearchDashboard = new k8s.helm.v3.Chart("opensearch-dashboards", {
             chart: `${osChartName}-dashboards`,
@@ -111,7 +112,7 @@ export class OpenSearch extends ComponentResource {
                 },
                 serviceAccountName: args.serviceAccount
             },
-        }, { parent: this });
+        }, opts);
 
 
         this.namespace = pulumi.output(args.namespace)
