@@ -1,16 +1,14 @@
 package tests
 
 import (
+	"io"
 	"os"
 	"testing"
-
-	"github.com/pulumi/pulumi/pkg/v3/testing/integration"
 )
 
 const (
 	EnvAwsAPIKey    = "AWS_ACCESS_KEY_ID"
 	EnvAwsSecretKey = "AWS_SECRET_ACCESS_KEY"
-	EnvAwsRegion    = "AWS_REGION"
 	EnvAzureKey     = "AZURE_KEY"
 	EnvGoogleKey    = "GOOGLE_KEY"
 )
@@ -18,7 +16,7 @@ const (
 func checkEnvVars(t *testing.T, envVar string) {
 	value := os.Getenv(envVar)
 	if value == "" {
-		t.Skipf("Skipping test due to missing %s environment variable", envVar)
+		t.Fatalf("Skipping test due to missing %s environment variable", envVar)
 	}
 }
 
@@ -31,17 +29,9 @@ func getCwd(t *testing.T) string {
 	return cwd
 }
 
-func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
-	return integration.ProgramTestOptions{
-		RunUpdateTest:        false,
-		ExpectRefreshChanges: true,
-	}
-}
-
 func checkAwsEnvVars(t *testing.T) {
 	checkEnvVars(t, EnvAwsAPIKey)
 	checkEnvVars(t, EnvAwsSecretKey)
-	checkEnvVars(t, EnvAwsRegion)
 }
 
 func checkAzureEnvVars(t *testing.T) {
@@ -50,4 +40,40 @@ func checkAzureEnvVars(t *testing.T) {
 
 func checkGoogleEnvVars(t *testing.T) {
 	checkEnvVars(t, EnvGoogleKey)
+}
+
+// CopyFile copies a file from src to dst.
+// It returns an error if there is any issue during the copy.
+func CopyFile(src, dst string) error {
+	// Open the source file
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+
+	// Create the destination file
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destinationFile.Close()
+
+	// Copy the contents from the source to the destination
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	// Optionally, you can also set the permissions of the destination file
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(dst, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

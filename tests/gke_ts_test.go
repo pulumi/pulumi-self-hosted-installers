@@ -1,5 +1,5 @@
-//go:build nodejs || all
-// +build nodejs all
+//go:build gke || all
+// +build gke all
 
 package tests
 

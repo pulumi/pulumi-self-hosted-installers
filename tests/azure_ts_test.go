@@ -1,5 +1,5 @@
-//go:build nodejs || all
-// +build nodejs all
+//go:build azure || all
+// +build azure all
 
 package tests
 
