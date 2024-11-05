@@ -1,4 +1,4 @@
-module github.com/pulumi/pulumi-self-hosted-installers/testing
+module github.com/pulumi/pulumi-self-hosted-installers/tests
 
 go 1.22
 
