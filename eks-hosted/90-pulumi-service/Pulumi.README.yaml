@@ -37,10 +37,13 @@ config:
   smtpGenericSender: 
 
   # reCAPTCHA Config
-  # Uses test values if not set in config.
+  # If not set, then reCAPTCHA will not be enabled during the create account user flow in the console.
   # See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
-  recaptchaSiteKey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-  recaptchaSecretKey: "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+  # Test keys that can be used:
+  # recaptchaSiteKey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+  # recaptchaSecretKey: "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+  recaptchaSiteKey: 
+  recaptchaSecretKey:
 
   # SAML SSO Setting:
   # Whether or not SAML SSO should be able to be enabled in the console.
