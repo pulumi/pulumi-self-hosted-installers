@@ -32,11 +32,109 @@ Navigate to any TypeScript-based project directory and use:
 - Format: `go fmt ./...`
 - Vet: `go vet ./...`
 
-### Integration Tests
-Located in `quickstart-docker-compose/tests/`:
-- Run with build tags: `go test -tags=minio ./...`
-- Tests create users, run stack operations, and verify API endpoints
-- Requires running Pulumi Service at `http://localhost:8080`
+### Integration Tests Framework
+Located in `tests/` directory at repository root:
+- **Platform Tests**: End-to-end deployment tests for each cloud platform
+- **Build Tags**: All tests use consistent build tags (`aws`, `azure`, `gke`, `integration`)
+- **Makefile Integration**: Use `make test-*` commands for reliable test execution
+- **Isolated Environments**: Each test creates unique isolated resources
+- **Service Validation**: Tests include API health checks and user creation verification
+
+#### Build Tag System
+```go
+//go:build aws || all
+// +build aws all
+```
+- **AWS tests**: `//go:build aws || all`
+- **Azure tests**: `//go:build azure || all`  
+- **GKE tests**: `//go:build gke || all`
+- **Integration tests**: `//go:build integration`
+
+#### Makefile Commands (Recommended)
+```bash
+make test-all          # Run all platform tests (includes go mod download)
+make test-aws-eks      # AWS EKS deployment (8 stages, ~2 hours)
+make test-aws-ecs-ts   # AWS ECS TypeScript deployment (~90 minutes)
+make test-aws-ecs-go   # AWS ECS Go deployment (~90 minutes)
+make test-azure-aks    # Azure AKS deployment (~90 minutes)
+make test-gke          # Google GKE deployment (~90 minutes)
+```
+
+#### Direct Go Commands (Alternative)
+```bash
+go test -v -timeout=2h -tags aws -run TestAwsEksTsExamples ./...
+go test -v -timeout=90m -tags azure -run TestAzureAksTsExamples ./...
+go test -v -timeout=90m -tags gke -run TestGkeTsExamples ./...
+```
+
+### GitHub Actions Workflows
+Individual platform testing workflows located in `.github/workflows/`:
+
+#### Available Workflows
+- `test-aws-eks.yml` - AWS EKS tests (2h timeout)
+- `test-aws-ecs-ts.yml` - AWS ECS TypeScript tests (90min timeout)  
+- `test-aws-ecs-go.yml` - AWS ECS Go tests (90min timeout)
+- `test-azure-aks.yml` - Azure AKS tests (90min timeout)
+- `test-gke.yml` - GKE tests (90min timeout)
+
+#### Triggering Logic (AND Condition)
+Workflows require **both** conditions to run:
+1. **File changes** in relevant paths (e.g., `eks-hosted/**`, `tests/*eks*`)
+2. **AND** appropriate PR label (e.g., `test:aws-eks`)
+
+#### Path Patterns (Important)
+- File patterns use single wildcard: `tests/*eks*` (not `tests/**/*eks*`)
+- Match actual filenames: `tests/aws_eks_ts_test.go`, `tests/gke_ts_test.go`, etc.
+- Shared files trigger multiple workflows: `tests/utils.go`, `tests/service_validation*`
+
+#### GitHub Labels (Created via `gh label create`)
+- `test:aws-eks` - Trigger AWS EKS tests
+- `test:aws-ecs-ts` - Trigger AWS ECS TypeScript tests  
+- `test:aws-ecs-go` - Trigger AWS ECS Go tests
+- `test:azure-aks` - Trigger Azure AKS tests
+- `test:gke` - Trigger GKE tests
+
+#### Usage Pattern
+1. Make changes to platform files (e.g., `eks-hosted/01-iam/index.ts`)
+2. Add appropriate label to PR (e.g., `test:aws-eks`)
+3. Workflow runs automatically using `make test-*` commands
+4. Results uploaded as artifacts with platform-specific names
+
+### Testing Framework Architecture
+
+#### Test File Organization
+```
+tests/
+├── aws_eks_ts_test.go      # AWS EKS tests (8 stages, ~2h)
+├── aws_ecs_ts_test.go      # AWS ECS TypeScript tests (~90min)
+├── aws_ecs_go_test.go      # AWS ECS Go tests (~90min)
+├── azure_ts_test.go        # Azure AKS tests (~90min)
+├── gke_ts_test.go          # GKE tests (~90min)
+├── utils.go                # Shared utilities (affects all workflows)
+├── service_validation.go   # Shared validation (affects all workflows)
+└── test_environment.go     # Test environment management
+```
+
+#### Service Validation Implementation
+Tests include end-to-end service validation:
+```go
+func getServiceEndpoint(t *testing.T, stack *pulumitest.PulumiTest) string {
+    ctx := context.Background()
+    currentStack := stack.CurrentStack()
+    if currentStack == nil {
+        return ""
+    }
+    outputs, err := currentStack.Outputs(ctx)
+    // ... extract endpoint from outputs using currentStack.Outputs(ctx)
+}
+```
+
+#### Key Testing Patterns
+- **Environment Isolation**: Each test creates unique resources with isolated backends
+- **LIFO Cleanup**: Resources cleaned up in reverse deployment order
+- **Stack References**: Multi-stage deployments use proper stack output chaining  
+- **Build Tags**: Consistent tagging prevents accidental test runs (`//go:build aws || all`)
+- **Makefile Integration**: All tests use `make` commands for reliability and `go mod download`
 
 ## Code Structure
 
