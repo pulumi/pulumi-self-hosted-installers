@@ -4,7 +4,7 @@ import * as ec2 from "@pulumi/aws/ec2";
 import * as iam from "@pulumi/aws/iam";
 import * as random from "@pulumi/random";
 
-import { getIamPolicyArn } from "../common/utils";
+import { getIamPolicyArn } from "./utils";
 
 const namespace = "pulumi:auroraDatabase";
 const engine = "aurora-mysql";
@@ -16,7 +16,8 @@ export interface DatabaseArgs {
     isolatedSubnetIds: string[],
     numberDbReplicas: number,
     instanceType: string,
-    region: string
+    region: string,
+    protectResources?: boolean
 }
 
 export class Database extends pulumi.ComponentResource {
@@ -53,6 +54,7 @@ export class Database extends pulumi.ComponentResource {
             byteLength: 6
         }, options);
 
+        const protectOptions = args.protectResources ? { protect: true } : {};
         const cluster = new rds.Cluster(`${name}-aurora-cluster`, {
             applyImmediately: true,
             backupRetentionPeriod: 7, // days
@@ -67,7 +69,7 @@ export class Database extends pulumi.ComponentResource {
             masterPassword: dbPassword.result,
             storageEncrypted: true,
             vpcSecurityGroupIds: [securityGroup.id],
-        }, pulumi.mergeOptions(options, { protect: true }));
+        }, pulumi.mergeOptions(options, protectOptions));
 
         const databaseInstanceOptions = new rds.ParameterGroup(`${name}-instance-options`, {
             family: dbOptionsFamily,
@@ -127,7 +129,7 @@ export class Database extends pulumi.ComponentResource {
             },
                 pulumi.mergeOptions(options, {
                     dependsOn: [databaseMonitoringRole],
-                    protect: true
+                    ...protectOptions
                 })
             );
         }

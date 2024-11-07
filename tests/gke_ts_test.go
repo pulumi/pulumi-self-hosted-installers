@@ -1,6 +1,3 @@
-//go:build gke || all
-// +build gke all
-
 package tests
 
 import (
@@ -8,36 +5,66 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pulumi/providertest/pulumitest"
-	"github.com/pulumi/providertest/pulumitest/opttest"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto/optpreview"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
+	"github.com/pulumi/pulumi/pkg/v3/testing/integration"
 )
 
-func TestGkeTsExamples(t *testing.T) {
-	tests := map[string]struct {
-		directoryName    string
-		additionalConfig map[string]string
-	}{
-		"TestGoogleTs": {directoryName: "../gke-hosted"},
+func TestGkeTs(t *testing.T) {
+	checkGoogleEnvVars(t)
+
+	basePath, err := filepath.Abs("../gke-hosted")
+	if err != nil {
+		t.Fatalf("Failed to get absolute path: %v", err)
 	}
-	// for name, test := range tests {
-	// 	t.Run(name, func(t *testing.T) {
-	// 		checkGoogleEnvVars(t)
-	// 		p := pulumitest.NewPulumiTest(t, test.directoryName,
-	// 			opttest.LocalProviderPath("pulumi-junipermist", filepath.Join(getCwd(t), "..", "bin")),
-	// 			opttest.YarnLink("@pulumi/juniper-mist"),
-	// 		)
-	// 		p.SetConfig(t, "organizationId", os.Getenv(EnvMistOrgID))
-	// 		if test.additionalConfig != nil {
-	// 			for key, value := range test.additionalConfig {
-	// 				p.SetConfig(t, key, value)
-	// 			}
-	// 		}
-	// 		p.Up(t)
-	// 		p.Preview(t, optpreview.ExpectNoChanges())
-	// 		p.Refresh(t, optrefresh.ExpectNoChanges())
-	// 	})
-	// }
-    return true
+
+	baseConfig := map[string]string{
+		"gcp:region": "us-east1",
+		"gcp:zone":   "us-east1-a",
+	}
+
+	// Set project if available
+	if googleProject := os.Getenv(EnvGoogleProject); googleProject != "" {
+		baseConfig["gcp:project"] = googleProject
+	}
+
+	// Add sensible defaults
+	baseConfig = mergeMaps(baseConfig, map[string]string{
+		"commonName":     "pulumitest",
+		"dbInstanceType": "db-g1-small",
+		"dbUser":         "pulumiadmin",
+	})
+
+	// Stage 1: Infrastructure (VPC, GKE, Cloud SQL, GCS, Service Account)
+	t.Log("Stage 1: Deploying infrastructure...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "01-infrastructure"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           baseConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Stage 2: Kubernetes (NGINX ingress, OpenSearch, cluster configuration)
+	t.Log("Stage 2: Deploying Kubernetes components...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "02-kubernetes"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           baseConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Stage 3: Application (Pulumi Service deployment, secrets, certificates)
+	t.Log("Stage 3: Deploying application...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "03-application"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           baseConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	t.Log("All GKE stages completed successfully")
 }

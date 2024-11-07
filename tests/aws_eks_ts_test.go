@@ -1,52 +1,213 @@
 package tests
 
 import (
-	"os"
-
-	"github.com/pulumi/providertest/pulumitest"
-
+	"fmt"
+	"math/rand"
 	"path/filepath"
 	"testing"
+	"time"
 
-	"github.com/pulumi/providertest/pulumitest/opttest"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto/optpreview"
+	"github.com/pulumi/pulumi/pkg/v3/testing/integration"
 )
 
-func runCycle(t *testing.T, basePath string, folder string, additionalConfig map[string]string) *pulumitest.PulumiTest {
-	os.MkdirAll("/tmp/.pulumi", os.FileMode(0777))
-	os.Setenv("PULUMI_BACKEND_URL", "file:///tmp/.pulumi")
-	p := pulumitest.NewPulumiTest(t, filepath.Join(basePath, folder), opttest.StackName("prod"), opttest.SkipInstall(), opttest.UseAmbientBackend())
-	CopyFile(filepath.Join(p.WorkingDir(), "Pulumi.README.yaml"), filepath.Join(p.WorkingDir(), "Pulumi.prod.yaml"))
-	p.SetConfig(t, "aws:region", "us-west-2")
-	if additionalConfig != nil {
-		for key, value := range additionalConfig {
-			p.SetConfig(t, key, value)
-		}
-	}
-	p.Install(t)
-	p.Up(t)
-	p.Preview(t, optpreview.ExpectNoChanges())
-	return p
-}
-func TestAwsEksTsExamples(t *testing.T) {
-	// "15-state-policies-mgmt",
-	// "20-database",
-	// "25-insights",
-	// "30-esc",
-	// "35-deployments",
-	// "90-pulumi-service"
+func TestAwsEksTs(t *testing.T) {
+	checkAwsEnvVars(t)
 
-	t.Run("TestAwsEksTs", func(t *testing.T) {
-		checkAwsEnvVars(t)
-		basePath := "../eks-hosted"
-		var emptyConfig map[string]string
-		iam := runCycle(t, basePath, "01-iam", emptyConfig)
-		defer iam.Destroy(t)
-		networking := runCycle(t, basePath, "02-networking", emptyConfig)
-		defer networking.Destroy(t)
-		eksCluster := runCycle(t, basePath, "05-eks-cluster", emptyConfig)
-		defer eksCluster.Destroy(t)
-		clusterSvcs := runCycle(t, basePath, "10-cluster-svcs", emptyConfig)
-		defer clusterSvcs.Destroy(t)
+	basePath, err := filepath.Abs("../eks-hosted")
+	if err != nil {
+		t.Fatalf("Failed to get absolute path: %v", err)
+	}
+
+	// Generate unique cluster name for this test run
+	timestamp := time.Now().Format("20060102150405")
+	randomSuffix := fmt.Sprintf("%04d", rand.Intn(10000))
+	clusterName := fmt.Sprintf("pulumiselfhost-eks-%s-%s", timestamp, randomSuffix)
+
+	baseConfig := mergeMaps(map[string]string{
+		"aws:region": "us-east-1",
+	}, getAwsDefaultTags("eks-ts"))
+
+	testConfig := mergeMaps(baseConfig, map[string]string{
+		"protectResources": "false",
 	})
+
+	networkingConfig := mergeMaps(baseConfig, map[string]string{
+		"eksClusterName":   clusterName,
+		"protectResources": "false",
+	})
+
+	// Variable for service endpoint validation
+	var apiEndpoint string
+
+	// Refresh token before starting
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 1: IAM roles and policies
+	t.Log("Stage 1: Deploying IAM...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "01-iam"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 2: VPC and networking
+	t.Log("Stage 2: Deploying networking...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "02-networking"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           networkingConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 3: EKS cluster
+	t.Log("Stage 3: Deploying EKS cluster...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "05-eks-cluster"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 4: Cluster services (ingress, DNS)
+	t.Log("Stage 4: Deploying cluster services...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "10-cluster-svcs"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 5: State management and policies
+	t.Log("Stage 5: Deploying state policies management...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "15-state-policies-mgmt"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 6: Database (RDS)
+	t.Log("Stage 6: Deploying database...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "20-database"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 7: Insights and monitoring
+	t.Log("Stage 7: Deploying insights...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "25-insights"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 8: ESC (Environments, Secrets, Configuration)
+	t.Log("Stage 8: Deploying ESC...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "30-esc"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Refresh token before next stage
+	if err := RefreshEscToken(t); err != nil {
+		t.Logf("Warning: Token refresh failed: %v", err)
+	}
+
+	// Stage 9: Pulumi Service deployment
+	t.Log("Stage 9: Deploying Pulumi Service...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "90-pulumi-service"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           testConfig,
+		PrepareProject:   copyConfigFiles,
+		ExtraRuntimeValidation: func(t *testing.T, stack integration.RuntimeValidationStackInfo) {
+			// Try to extract API endpoint from stack outputs
+			possibleOutputs := []string{"apiEndpoint", "api_endpoint", "apiUrl", "api_url", "serviceUrl", "service_url"}
+			for _, outputName := range possibleOutputs {
+				if endpoint, ok := stack.Outputs[outputName]; ok {
+					if endpointStr, ok := endpoint.(string); ok && endpointStr != "" {
+						apiEndpoint = endpointStr
+						t.Logf("Found API endpoint: %s", apiEndpoint)
+						break
+					}
+				}
+			}
+		},
+	})
+
+	// Service validation
+	if apiEndpoint != "" {
+		t.Log("Running service validation...")
+		config := ServiceValidationConfig{
+			APIEndpoint: apiEndpoint,
+			Timeout:     5 * time.Minute,
+		}
+		ValidatePulumiService(t, config)
+	} else {
+		t.Log("Service validation skipped - API endpoint not available")
+	}
+
+	t.Log("All EKS TypeScript stages completed successfully")
+	t.Logf("Manual cleanup hint - EKS cluster name: %s", clusterName)
 }

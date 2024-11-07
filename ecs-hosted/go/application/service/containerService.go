@@ -3,14 +3,13 @@ package service
 import (
 	"fmt"
 
+	"application/network"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/appautoscaling"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ecs"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/iam"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/kms"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/lb"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -283,7 +282,7 @@ func NewEcsRole(ctx *pulumi.Context, name string, region string, rolePolicyDocs 
 		return nil, err
 	}
 
-	policyArn := common.GetIamPolicyArn(region, string(iam.ManagedPolicyAmazonECSTaskExecutionRolePolicy))
+	policyArn := GetIamPolicyArn(region, string(iam.ManagedPolicyAmazonECSTaskExecutionRolePolicy))
 
 	rpaAttachName := fmt.Sprintf("%s-role-attachment", name)
 	_, err = iam.NewRolePolicyAttachment(ctx, rpaAttachName, &iam.RolePolicyAttachmentArgs{
@@ -340,7 +339,7 @@ func NewSecretsManagerPolicy(ctx *pulumi.Context, name string, region string, se
 	}
 
 	return key.Arn.ApplyT(func(s string) (string, error) {
-		secretsArn := common.GetIamPolicyArn(region, fmt.Sprintf("arn:aws:secretsmanager:%s:%s:secret:%s/*", region, accountId, secretsPrefix))
+		secretsArn := GetIamPolicyArn(region, fmt.Sprintf("arn:aws:secretsmanager:%s:%s:secret:%s/*", region, accountId, secretsPrefix))
 		doc := fmt.Sprintf(`{
 			"Version": "2012-10-17",
 			"Statement": [

@@ -79,4 +79,8 @@ jobs:
             - Check for breaking changes in component interfaces
             - Ensure backwards compatibility with existing deployments
             
+            **Important:** When reviewing version numbers, do not flag current stable releases as invalid. 
+            As of 2024-2025, Go versions like 1.23.12, 1.24.6, etc. are valid stable releases. Use the internet to check the latest stable release.
+            Only flag versions that are genuinely problematic (e.g., non-existent versions, incompatible combinations, or versions that are too old for security reasons).
+            
             Be constructive and focus on production deployment reliability.

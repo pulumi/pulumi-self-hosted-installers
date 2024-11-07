@@ -5,7 +5,6 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/elb"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/s3"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -37,7 +36,7 @@ func NewTrafficManager(ctx *pulumi.Context, name string, args *LoadBalancerArgs,
 	prefix := "pulumi-elb"
 	if args.EnabledAccessLogs {
 		ctx.Log.Debug("creating load balancer access logs s3 bucket", nil)
-		accessLogsBucket, err = newAccessLogBucket(ctx, args.Region, name, prefix, args.AccountId, options...)
+		accessLogsBucket, err = newAccessLogBucket(ctx, args.Region, name, prefix, args.AccountId, args.ProtectResources, options...)
 	}
 
 	if err != nil {
@@ -84,8 +83,11 @@ func newLoadBalancerArgs(args *LoadBalancerArgs, bucket *s3.Bucket, prefix strin
 	}
 }
 
-func newAccessLogBucket(ctx *pulumi.Context, region string, name string, prefix string, accountId string, opts ...pulumi.ResourceOption) (*s3.Bucket, error) {
-	options := append(opts, pulumi.Protect(true))
+func newAccessLogBucket(ctx *pulumi.Context, region string, name string, prefix string, accountId string, protectResources bool, opts ...pulumi.ResourceOption) (*s3.Bucket, error) {
+	options := opts
+	if protectResources {
+		options = append(opts, pulumi.Protect(true))
+	}
 	bucketName := fmt.Sprintf("%s-access-logs", name)
 
 	accessLogsBucket, err := s3.NewBucket(ctx, bucketName, &s3.BucketArgs{}, options...)
@@ -105,7 +107,7 @@ func newAccessLogBucket(ctx *pulumi.Context, region string, name string, prefix 
 			accountId := args[2].(string)
 
 			nonRegionArn := fmt.Sprintf("arn:aws:s3:::%s/%s/AWSLogs/%s/*", accessLogsBucketId, prefix, accountId)
-			accessBucketArn := common.GetIamPolicyArn(region, nonRegionArn)
+			accessBucketArn := GetIamPolicyArn(region, nonRegionArn)
 
 			return fmt.Sprintf(`{
 				"Version": "2012-10-17",

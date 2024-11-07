@@ -1,43 +1,62 @@
-//go:build azure || all
-// +build azure all
-
 package tests
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/pulumi/providertest/pulumitest"
-	"github.com/pulumi/providertest/pulumitest/opttest"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto/optpreview"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto/optrefresh"
+	"github.com/pulumi/pulumi/pkg/v3/testing/integration"
 )
 
-func TestAzureTsExamples(t *testing.T) {
-	tests := map[string]struct {
-		directoryName    string
-		additionalConfig map[string]string
-	}{
-		"TestDeviceGatewayTs": {directoryName: "../aks-hosted"},
+func TestAzureAksTs(t *testing.T) {
+	checkAzureEnvVars(t)
+
+	basePath, err := filepath.Abs("../aks-hosted")
+	if err != nil {
+		t.Fatalf("Failed to get absolute path: %v", err)
 	}
-	// for name, test := range tests {
-	// 	t.Run(name, func(t *testing.T) {
-	// 		checkAzureEnvVars(t)
-	// 		p := pulumitest.NewPulumiTest(t, test.directoryName,
-	// 			opttest.LocalProviderPath("pulumi-junipermist", filepath.Join(getCwd(t), "..", "bin")),
-	// 			opttest.YarnLink("@pulumi/juniper-mist"),
-	// 		)
-	// 		p.SetConfig(t, "organizationId", os.Getenv(EnvMistOrgID))
-	// 		if test.additionalConfig != nil {
-	// 			for key, value := range test.additionalConfig {
-	// 				p.SetConfig(t, key, value)
-	// 			}
-	// 		}
-	// 		p.Up(t)
-	// 		p.Preview(t, optpreview.ExpectNoChanges())
-	// 		p.Refresh(t, optrefresh.ExpectNoChanges())
-	// 	})
-	// }
-	return true
+
+	baseConfig := map[string]string{
+		"azure-native:location": "East US",
+	}
+
+	infraConfig := mergeMaps(baseConfig, map[string]string{
+		"subnetCidr":   "10.0.1.0/24",
+		"dbSubnetCidr": "10.0.2.0/24",
+		"networkCidr":  "10.0.0.0/16",
+	})
+
+	// Stage 1: Infrastructure (VNet, AKS, Database, Storage, Active Directory)
+	t.Log("Stage 1: Deploying infrastructure...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "01-infrastructure"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           infraConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Stage 2: Kubernetes (cert-manager, ingress, identity, cluster configuration)
+	t.Log("Stage 2: Deploying Kubernetes components...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "02-kubernetes"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           baseConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	// Stage 3: Application (Pulumi Service deployment, secrets, certificates)
+	t.Log("Stage 3: Deploying application...")
+	integration.ProgramTest(t, &integration.ProgramTestOptions{
+		Dir:              filepath.Join(basePath, "03-application"),
+		StackName:        "prod",
+		Quick:            true,
+		DestroyOnCleanup: true,
+		Config:           baseConfig,
+		PrepareProject:   copyConfigFiles,
+	})
+
+	t.Log("All Azure AKS stages completed successfully")
 }

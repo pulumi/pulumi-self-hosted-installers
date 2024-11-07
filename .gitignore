@@ -183,7 +183,9 @@ tramp
 # Local stack-specific overrides
 local-*
 dev-*
-test-*
+test-*.yaml
+test-*.yml
+!**/.github/workflows/test-*.yml
 staging-*
 prod-*
 

@@ -8,7 +8,6 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/iam"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/rds"
 	"github.com/pulumi/pulumi-random/sdk/v4/go/random"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -59,10 +58,12 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		return nil, err
 	}
 
-	engine := "aurora-mysql"
 	engineVersion := "8.0.mysql_aurora.3.07.0"
 
-	clusterOpts := append(options, pulumi.Protect(true))
+	clusterOpts := options
+	if args.protectResources {
+		clusterOpts = append(options, pulumi.Protect(true))
+	}
 	cluster, err := rds.NewCluster(ctx, ToCommonName(name, "aurora-cluster"), &rds.ClusterArgs{
 		ApplyImmediately:        pulumi.BoolPtr(true),
 		BackupRetentionPeriod:   pulumi.Int(7), // days
@@ -70,7 +71,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		DatabaseName:            pulumi.String("pulumi"),
 		DbSubnetGroupName:       subnetGroup.ID(), // misleading ... its ID not name
 		DeletionProtection:      pulumi.BoolPtr(false),
-		Engine:                  pulumi.String(engine),
+		Engine:                  rds.EngineTypeAuroraMysql,
 		EngineVersion:           pulumi.String(engineVersion),
 		FinalSnapshotIdentifier: finalSnapshotId.Hex,
 		MasterUsername:          pulumi.String("pulumi"),
@@ -115,7 +116,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 	}
 
 	// govcloud policy arns are different from non-govcloud
-	monitoringArn := common.GetIamPolicyArn(args.region, "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole")
+	monitoringArn := GetIamPolicyArn(args.region, "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole")
 
 	monitoringRole, err := iam.NewRole(ctx, ToCommonName(name, "instance-monitoring-role"), &iam.RoleArgs{
 		AssumeRolePolicy: pulumi.String(`{
@@ -170,7 +171,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		instanceId := fmt.Sprintf("instance-%d", i)
 		_, err := rds.NewClusterInstance(ctx, ToCommonName(name, instanceId), &rds.ClusterInstanceArgs{
 			ClusterIdentifier:    cluster.ID(),
-			Engine:               pulumi.String(engine),
+			Engine:               rds.EngineTypeAuroraMysql,
 			EngineVersion:        pulumi.String(engineVersion),
 			InstanceClass:        args.instanceType,
 			DbParameterGroupName: parameterGroup.Name,
@@ -211,4 +212,5 @@ type DatabaseArgs struct {
 	numberDbReplicas  int
 	instanceType      pulumi.String
 	region            string
+	protectResources  bool
 }

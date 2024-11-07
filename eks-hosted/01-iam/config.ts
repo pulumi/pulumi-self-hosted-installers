@@ -8,4 +8,6 @@ export const config = {
     eksServiceRoleName: pulumiConfig.get("eksServiceRoleName"),
     eksInstanceRoleName: pulumiConfig.get("eksInstanceRoleName"), 
     databaseMonitoringRoleArn: pulumiConfig.get("databaseMonitoringRoleArn"),
+    // SSO role ARN for Pulumi CLI authentication (passed through)
+    ssoRoleArn: pulumiConfig.get("ssoRoleArn"),
 };

@@ -12,5 +12,6 @@ export interface LoadBalancerArgs {
     publicSubnetIds: string[],
     region: string,
     vpcId: string,
-    whiteListCidrBlocks: string[] | undefined
+    whiteListCidrBlocks: string[] | undefined,
+    protectResources?: boolean
 }

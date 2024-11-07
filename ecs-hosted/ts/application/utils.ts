@@ -1,7 +1,20 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as kms from "@pulumi/aws/kms";
 import { LogType } from "./logs/types";
-import { getIamPolicyArn } from "../common/utils";
+// Local implementation of getIamPolicyArn to avoid dependency on ../common
+const getIamPolicyArn = (region: string, policyArn: string): string => {
+    let policy = policyArn;
+
+    const regionLower = region.toLocaleLowerCase();
+    if (regionLower === "us-gov-west-1" || regionLower === "us-gov-east-1") {
+        const splits = policyArn.split(":");
+        splits[1] = "aws-us-gov";
+
+        policy = splits.join(":");
+    }
+
+    return policy;
+}
 
 // build the ECR image tag; this could be in the current account or a separate account (AWS)
 export const buildECRImageTag = (accountId: string, region: string, imageName: string): string => {

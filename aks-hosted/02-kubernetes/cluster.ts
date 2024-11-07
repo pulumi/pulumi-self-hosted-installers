@@ -103,7 +103,7 @@ export class KubernetesCluster extends ComponentResource {
       }
     );
 
-    const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
+    const nodeResourceGroup = cluster.nodeResourceGroup.apply((s: string | undefined) => s!);
     const credentials = containerservice.listManagedClusterAdminCredentialsOutput({
       resourceGroupName: args.resourceGroupName,
       resourceName: cluster.name
@@ -120,7 +120,7 @@ export class KubernetesCluster extends ComponentResource {
       Buffer.from(config, "base64").toString()
     );
 
-    this.OidcClusterIssuerUrl = cluster.oidcIssuerProfile.apply(s => s?.issuerURL);
+    this.OidcClusterIssuerUrl = cluster.oidcIssuerProfile.apply((s: any) => s?.issuerURL);
     this.registerOutputs({
       Name: this.Name,
       Kubeconfig: this.Kubeconfig,

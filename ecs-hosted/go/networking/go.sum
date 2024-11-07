@@ -1,0 +1,4 @@
+github.com/pulumi/pulumi-aws/sdk/v7 v7.3.1 h1:gluUxmLxbcu+/F84Tj2LrUB2oGa6qgBrTafHF2wf8Ug=
+github.com/pulumi/pulumi-aws/sdk/v7 v7.3.1/go.mod h1:od9x4x3RWuqTpd4MQ7temdMT3MWr3kR4c78JSenxxPc=
+github.com/pulumi/pulumi/sdk/v3 v3.185.0 h1:+pEMQxo2VvZFjSNw5EkpOdEUu87WflApTK9X/Zej8/Y=
+github.com/pulumi/pulumi/sdk/v3 v3.185.0/go.mod h1:YS7uQ+eoIV/Fco804Upv3jmz5pwo/MkLYmbGH3VgA9c=

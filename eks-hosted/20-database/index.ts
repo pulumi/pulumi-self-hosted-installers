@@ -28,6 +28,7 @@ if (config.dbHostEndpoint && config.dbPort && config.dbUsername && config.dbPass
         databaseMonitoringRoleArn: config.databaseMonitoringRoleArn,
         replicas: config.dbReplicas,
         instanceType: config.dbInstanceType,
+        protectResources: config.protectResources,
     });
     const db = rds.db;
 
