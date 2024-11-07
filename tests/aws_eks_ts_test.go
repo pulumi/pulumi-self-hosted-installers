@@ -5,6 +5,7 @@ import (
 
 	"github.com/pulumi/providertest/pulumitest"
 
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 )
 
 func runCycle(t *testing.T, basePath string, folder string, additionalConfig map[string]string) *pulumitest.PulumiTest {
+	fmt.Printf("Testing Pulumi Program: %s", folder)
 	os.MkdirAll("/tmp/.pulumi", os.FileMode(0777))
 	os.Setenv("PULUMI_BACKEND_URL", "file:///tmp/.pulumi")
 	p := pulumitest.NewPulumiTest(t, filepath.Join(basePath, folder), opttest.StackName("prod"), opttest.SkipInstall(), opttest.UseAmbientBackend())
