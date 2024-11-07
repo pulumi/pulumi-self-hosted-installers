@@ -34,8 +34,7 @@ export const config = {
     /**
      * EKS Node Group
      */
-    // standardNodeGroupInstanceType: pulumiConfig.get("standardNodeGroupInstanceType") || "t3.xlarge",
-    standardNodeGroupInstanceType: "t3.xlarge",
+    standardNodeGroupInstanceType: pulumiConfig.get("standardNodeGroupInstanceType") || "t3.xlarge",
     standardNodeGroupDesiredCapacity: pulumiConfig.getNumber("standardNodeGroupDesiredCapacity") ?? 2,
     standardNodeGroupMinSize: pulumiConfig.getNumber("standardNodeGroupMinSize") ?? 2,
     standardNodeGroupMaxSize: pulumiConfig.getNumber("standardNodeGroupMaxSize") ?? 5,
@@ -46,9 +45,9 @@ export const config = {
     pulumiNodeGroupMaxSize: pulumiConfig.getNumber("pulumiNodeGroupMaxSize") ?? 5,
 
     // IAM stack values
-    eksInstanceRoleName: eksInstanceRoleName,
-    instanceProfileName: instanceProfileName,
-    eksServiceRoleName: eksServiceRoleName,
+    eksInstanceRoleName: pulumi.interpolate `${eksInstanceRoleName}`,
+    instanceProfileName: pulumi.interpolate `${instanceProfileName}`,
+    eksServiceRoleName: pulumi.interpolate `${eksServiceRoleName}`,
 
     // Networking stack values
     clusterName: clusterName,
@@ -57,5 +56,3 @@ export const config = {
     privateSubnetIds: privateSubnetIds,
 
 };
-
-console.log(typeof(config.standardNodeGroupInstanceType))
