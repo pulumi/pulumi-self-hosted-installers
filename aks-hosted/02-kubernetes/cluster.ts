@@ -32,7 +32,7 @@ export class KubernetesCluster extends ComponentResource {
     ).publicKeyOpenssh;
 
     const nodeRgName = `${name}-aks-nodes-rg`;
-    const clusterArgs: containerservice.v20230401.ManagedClusterArgs = {
+    const clusterArgs: containerservice.ManagedClusterArgs = {
       resourceGroupName: args.resourceGroupName,
       servicePrincipalProfile: {
         clientId: args.aDApplicationId,
@@ -92,7 +92,7 @@ export class KubernetesCluster extends ComponentResource {
     }
 
     // Must use a shorter name due to https://aka.ms/aks-naming-rules.
-    const cluster = new containerservice.v20230401.ManagedCluster(
+    const cluster = new containerservice.ManagedCluster(
       `${name}-aks`,
       clusterArgs,
       {
@@ -103,7 +103,7 @@ export class KubernetesCluster extends ComponentResource {
       }
     );
 
-    const nodeResourceGroup = cluster.nodeResourceGroup.apply(s => s!);
+    const nodeResourceGroup = cluster.nodeResourceGroup.apply((s: string | undefined) => s!);
     const credentials = containerservice.listManagedClusterAdminCredentialsOutput({
       resourceGroupName: args.resourceGroupName,
       resourceName: cluster.name
@@ -120,7 +120,7 @@ export class KubernetesCluster extends ComponentResource {
       Buffer.from(config, "base64").toString()
     );
 
-    this.OidcClusterIssuerUrl = cluster.oidcIssuerProfile.apply(s => s?.issuerURL);
+    this.OidcClusterIssuerUrl = cluster.oidcIssuerProfile.apply((s: any) => s?.issuerURL);
     this.registerOutputs({
       Name: this.Name,
       Kubeconfig: this.Kubeconfig,
@@ -133,7 +133,7 @@ export class KubernetesCluster extends ComponentResource {
     name: string,
     nodeResourceGroup: Output<string>,
     tags: Input<{ [key: string]: Input<string> }>,
-    cluster: containerservice.v20230401.ManagedCluster): Output<string> {
+    cluster: containerservice.ManagedCluster): Output<string> {
     const publicIp = new network.PublicIPAddress(`${name}-publicIp`, {
       resourceGroupName: nodeResourceGroup,
       publicIPAllocationMethod: "Static",
