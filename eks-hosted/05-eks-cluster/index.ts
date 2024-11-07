@@ -67,8 +67,7 @@ const ngStandard = new eks.NodeGroup(`${baseName}-ng-standard`, {
     nodeSecurityGroup: cluster.nodeSecurityGroup,
     clusterIngressRule: cluster.eksClusterIngressRule,
     amiId: amiId,
-    
-    instanceType: <aws.ec2.InstanceType>config.standardNodeGroupInstanceType,
+    instanceType: config.standardNodeGroupInstanceType,
     desiredCapacity: config.standardNodeGroupDesiredCapacity,
     minSize: config.standardNodeGroupMinSize,
     maxSize: config.standardNodeGroupMaxSize,

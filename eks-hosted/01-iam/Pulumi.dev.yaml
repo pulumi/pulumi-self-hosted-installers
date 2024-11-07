@@ -1,3 +1,4 @@
+encryptionsalt: v1:fpWgKidMtzw=:v1:AOY9DqFslMZ7S/Kt:iWJuCzpaM3AsU3ke8VWg5DchlajAXg==
 config:
   # Set the AWS region to deploy the infrastructure to.
   # This should be the same for all the stacks.

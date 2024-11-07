@@ -12,7 +12,6 @@ const iamStackRef = new pulumi.StackReference(`${orgName}/selfhosted-01-iam/${st
 const eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
 const instanceProfileName = iamStackRef.requireOutput("instanceProfileName");
 const eksServiceRoleName = iamStackRef.requireOutput("eksServiceRoleName");
-const ssoRoleArn = iamStackRef.requireOutput("ssoRoleArn");
 
 // Networking Stack values
 // Get the needed values from the networking stack.
@@ -35,7 +34,8 @@ export const config = {
     /**
      * EKS Node Group
      */
-    standardNodeGroupInstanceType: pulumiConfig.get("standardNodeGroupInstanceType") || "t3.xlarge",
+    // standardNodeGroupInstanceType: pulumiConfig.get("standardNodeGroupInstanceType") || "t3.xlarge",
+    standardNodeGroupInstanceType: "t3.xlarge",
     standardNodeGroupDesiredCapacity: pulumiConfig.getNumber("standardNodeGroupDesiredCapacity") ?? 2,
     standardNodeGroupMinSize: pulumiConfig.getNumber("standardNodeGroupMinSize") ?? 2,
     standardNodeGroupMaxSize: pulumiConfig.getNumber("standardNodeGroupMaxSize") ?? 5,
@@ -49,7 +49,6 @@ export const config = {
     eksInstanceRoleName: eksInstanceRoleName,
     instanceProfileName: instanceProfileName,
     eksServiceRoleName: eksServiceRoleName,
-    ssoRoleArn: ssoRoleArn,
 
     // Networking stack values
     clusterName: clusterName,
@@ -58,3 +57,5 @@ export const config = {
     privateSubnetIds: privateSubnetIds,
 
 };
+
+console.log(typeof(config.standardNodeGroupInstanceType))

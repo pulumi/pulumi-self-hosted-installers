@@ -27,14 +27,14 @@ That said, one can use Pulumi Cloud for the state backend as well. However, thes
 
 ### Configuration
 
-Each project has its own configuration requirements. Each project folder has a `Pulumi.EXAMPLE.yaml` file that includes instructions for setting up the configuration and can be used as a template for the actual stack config file (see [Pulumi stack config](https://www.pulumi.com/docs/iac/concepts/config/)). 
+Each project has its own configuration requirements. Each project folder has a `Pulumi.README.yaml` file that includes instructions for setting up the configuration and can be used as a template for the actual stack config file (see [Pulumi stack config](https://www.pulumi.com/docs/iac/concepts/config/)). 
 
 ### Deployment Order
 
 Each subfolder is it's own Pulumi project (and by extension stack). The numbering represents the order of deployment. 
 
 ### Using Existing Infrastructure 
-In some cases, you man need to use existing infrastructure.
+In some cases, you may need to use existing infrastructure.
 Currently, the following installer projects support the case where the infrastructure already exists:
 
 * 01-iam: IAM resources
@@ -43,8 +43,9 @@ Currently, the following installer projects support the case where the infrastru
 * 30-esc: S3 bucket for ESC-related storage
 
 If using pre-existing resources, you will still run the given stacks (i.e. `01-iam` and `02-networking`) but you will provide the values for the resources your created - see the project's `Pulumi.README.yaml` for details.
+<!-- TODO: wording: does the stack 'pretend' to create the resources? better - the stack passes input values through to the outputs - check code -->
 The stack will then pretend to create the resources and output the values so that downstream stacks can use the values as needed.
-- Review the `Pulumi.README.yaml` file to understand some of the inputs for the given stack.
+- Review the `Pulumi.README.yaml` file to understand the inputs for the given stack.
 - Review `index.ts` and any related files to understand how the given infrastructure is created.
 
 ### Deployment Instructions
@@ -53,16 +54,15 @@ These instructions assume you are using "prod" for the name of your stacks. Of c
 The process is the same for each microstack:
 - cd to the given project folder (e.g. `01-iam`)
 - `npm install` to install the package dependencies
-- Run `pulumi stack init prod` (or whatever name of stack you want to use)
-- copy "Pulumi.README.yaml" to a file where "README" is replaced with the name of your stack.
-  - For example, if you are naming the stacks "prod", then you would run `cp Pulumi.README.yaml Pulumi.prod.yaml`
+- Run `pulumi stack init prod` (or whatever name of stack you want to use). This will create a new empty stack, and will create a stack config file with the "encryptionsalt" key (if using the passphrase secrets provider).
+- copy the contents of the "Pulumi.README.yaml" file into the new "Pulumi.prod.yaml" stack config file, with the "config" key at the top level. 
 - edit "Pulumi.prod.yaml" and follow the instructions in the file about setting configuration values.
   - In a number of cases you can use the default values copied from "Pulumi.README.yaml".
 - Run `pulumi up` to deploy the infrastructure.
 - Move to the next project folder and repeat the above steps.
 
-#### Helpful Tips about Stack Depenencies
-The following stacks manage stateful resources or resources that are foundational to other stacks. So careful thought should be given before destroying them:
+#### Helpful Tips about Stack Dependencies
+The following stacks manage stateful resources or resources that are foundational to other stacks, so think carefully before destroying them:
 * 01-iam
 * 02-networking 
 * 05-eks-cluster
@@ -71,5 +71,6 @@ The following stacks manage stateful resources or resources that are foundationa
 * 30-esc
 
 The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss:
-* 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchclsuter.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
+<!-- TODO: what about deployments? -->
+* 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchcluster.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
 * 90-pulumi-service
