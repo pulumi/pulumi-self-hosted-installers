@@ -1,6 +1,5 @@
 import * as aws from "@pulumi/aws";
 import * as k8s from "@pulumi/kubernetes";
-import * as pulumi from "@pulumi/pulumi";
 import { config } from "./config";
 import { createAlbSecurityGroup, createAlbIngressController } from "./ingress-controller";
 
