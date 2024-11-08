@@ -61,6 +61,7 @@ export class Database extends ComponentResource {
                 backupRetentionDays: 7,
                 geoRedundantBackup: "Disabled",
             },
+            createMode: "Default",
             network: {
                 delegatedSubnetResourceId: args.dbSubnetId,
                 privateDnsZoneResourceId: privateZone.id,
@@ -84,7 +85,7 @@ export class Database extends ComponentResource {
 
         new dbformysql.Configuration(`${name}-disable-tls`, {
             resourceGroupName: args.resourceGroupName,
-            serverName: server.name,  
+            serverName: server.name,
             source: "user-override",
             configurationName: "require_secure_transport",
             value: "OFF",

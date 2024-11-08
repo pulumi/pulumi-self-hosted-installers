@@ -1,5 +1,5 @@
-import { ComponentResource, ComponentResourceOptions, Output, all } from "@pulumi/pulumi";
-import { Provider, apiextensions } from "@pulumi/kubernetes";
+import {ComponentResource, ComponentResourceOptions, Output, all} from "@pulumi/pulumi";
+import {Provider, apiextensions} from "@pulumi/kubernetes";
 
 export interface CertManagerArgs {
     provider: Provider,
@@ -14,12 +14,14 @@ export interface CertManagerArgs {
 }
 
 export class CertManagerDeployment extends ComponentResource {
+    public readonly Issuer: Output<string>;
+
     constructor(name: string, args: CertManagerArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:certManagerDeployment", name, args, opts);
 
-        //  const letsEncryptUrl = "https://acme-v02.api.letsencrypt.org/directory";
+         const letsEncryptUrl = "https://acme-v02.api.letsencrypt.org/directory";
         // FOR TESTING:
-        const letsEncryptUrl = "https://acme-staging-v02.api.letsencrypt.org/directory";
+        // const letsEncryptUrl = "https://acme-staging-v02.api.letsencrypt.org/directory";
         const acmeSpec = args.issuerEmail ?
             {
                 server: letsEncryptUrl,
@@ -70,7 +72,8 @@ export class CertManagerDeployment extends ComponentResource {
             spec: {
                 acme: acmeSpec
             }
-        }, { provider: args.provider, parent: this });
+        }, {provider: args.provider, parent: this});
+        this.Issuer = issuer.metadata.name;
 
         new apiextensions.CustomResource(`${name}-cert`, {
             apiVersion: "cert-manager.io/v1",
@@ -91,6 +94,12 @@ export class CertManagerDeployment extends ComponentResource {
                     "server auth"
                 ],
             }
-        }, { provider: args.provider, parent: this });
+        }, {provider: args.provider, parent: this});
+
+        this.registerOutputs({
+            Issuer: this.Issuer
+        });
     }
+
+
 }
