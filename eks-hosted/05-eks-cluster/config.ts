@@ -54,5 +54,4 @@ export const config = {
     vpcId: vpcId,
     publicSubnetIds: publicSubnetIds,
     privateSubnetIds: privateSubnetIds,
-
-};
+}

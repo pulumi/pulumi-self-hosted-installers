@@ -10,7 +10,6 @@ const tags = { "Project": "pulumi-k8s-aws-cluster", "Owner": "pulumi"};
 // --- EKS Cluster ---
 const serviceRole = aws.iam.Role.get("eksServiceRole", config.eksServiceRoleName)
 const instanceRole = aws.iam.Role.get("instanceRole", config.eksInstanceRoleName)
-
 const instanceProfile = aws.iam.InstanceProfile.get("ng-standard", config.instanceProfileName)
 
 // Create an EKS cluster.
@@ -51,13 +50,13 @@ export const clusterName = cluster.core.cluster.name;
 export const region = aws.config.region;
 export const nodeSecurityGroupId = cluster.nodeSecurityGroup.id; // For RDS
 export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
+
 /////////////////////
 /// Build node groups
 const ssmParam = pulumi.output(aws.ssm.getParameter({
     // https://docs.aws.amazon.com/eks/latest/userguide/retrieve-ami-id.html
     name: `/aws/service/eks/optimized-ami/${config.clusterVersion}/amazon-linux-2/recommended`,
 }))
-
 export const amiId = ssmParam.value.apply(s => <string>JSON.parse(s).image_id)
 
 // Create a standard node group.
@@ -68,12 +67,12 @@ const ngStandard = new eks.NodeGroup(`${baseName}-ng-standard`, {
     nodeSecurityGroup: cluster.nodeSecurityGroup,
     clusterIngressRule: cluster.eksClusterIngressRule,
     amiId: amiId,
-    instanceType: config.standardNodeGroupInstanceType,
+    instanceType: <aws.ec2.InstanceType>config.standardNodeGroupInstanceType,
     desiredCapacity: config.standardNodeGroupDesiredCapacity,
     minSize: config.standardNodeGroupMinSize,
     maxSize: config.standardNodeGroupMaxSize,
 
-    // labels: {"amiId": pulumi.interpolate `${amiId}`},
+    // labels: {"amiId": amiId},
     cloudFormationTags: clusterName.apply(clusterName => ({
         "k8s.io/cluster-autoscaler/enabled": "true",
         [`k8s.io/cluster-autoscaler/${clusterName}`]: "true",
@@ -82,7 +81,6 @@ const ngStandard = new eks.NodeGroup(`${baseName}-ng-standard`, {
 }, {
     providers: { kubernetes: cluster.provider},
 });
-
 
 // Create a standard node group tainted for use only by self-hosted pulumi.
 const ngStandardPulumi = new eks.NodeGroup(`${baseName}-ng-standard-pulumi`, {
