@@ -3,6 +3,11 @@ import * as k8s from "@pulumi/kubernetes";
 import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 import { CustomResource } from "@pulumi/kubernetes/apiextensions"
 
+// NOTE: If you need to use a local version of the helm charts instead of the remote repo, do the following:
+// - Locally copy the repo: `git clone https://github.com/opensearch-project/helm-charts.git`
+// - Comment out the fetchOpts and repo fields in the two helm charts resources below.
+// - Uncomment the path field for each helm chart resources and set it to the local path of the opensearch or opensearch-dashboard helm chart accordingly.   
+
 export interface OpenSearchArgs {
     namespace: Output<string>,
     serviceAccount: Input<string>,
@@ -25,9 +30,12 @@ export class OpenSearch extends ComponentResource {
             chart: osChartName,
             version: chartVersion,
             namespace: args.namespace,
+            // Comment out the fetchOpts block if using local copy of the helm chart.
+            // And uncomment the path field and set it to the local path of the helm chart if using a local copy of the helm chart.
             fetchOpts: {
                 repo: osRepoUrl,
             },
+            // path: "/path/to/local/helm-charts/charts",
             values: {
                 roles: [
                     "master",
@@ -75,9 +83,12 @@ export class OpenSearch extends ComponentResource {
             chart: `${osChartName}-dashboards`,
             version: "2.22.0",
             namespace: args.namespace,
+            // Comment out the fetchOpts block if using local copy of the helm chart.
+            // And, uncomment the path field and set it to the local path of the helm chart if using a local copy of the helm chart.
             fetchOpts: {
                 repo: osRepoUrl,
             },
+            // path: "/path/to/local/helm-charts/charts",
             values: {
                 replicas: 1,
                 imageTag: oscVersion,

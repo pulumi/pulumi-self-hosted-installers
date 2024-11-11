@@ -59,7 +59,8 @@ export class RdsDatabase extends pulumi.ComponentResource {
             masterUsername: "pulumi",
             masterPassword: this.password,
             storageEncrypted: true,
-            vpcSecurityGroupIds: [args.securityGroupId],         // Must be able to communicate with EKS nodes.
+            // vpcSecurityGroupIds: [args.securityGroupId],         // Must be able to communicate with EKS nodes.
+            vpcSecurityGroupIds: pulumi.output(args.securityGroupId).apply(id => [id]),        // Must be able to communicate with EKS nodes.
             finalSnapshotIdentifier: finalSnapshotIdentifier.hex,
             tags,
         }, { protect: true, });
