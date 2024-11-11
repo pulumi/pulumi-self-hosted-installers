@@ -1,7 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
-// import { OpenSearchArgs, OpenSearch } from "../../components-microstacks/openSearch";
-import { OpenSearchArgs, OpenSearch } from "../../../insights-local-test/openSearch";
+import { OpenSearchArgs, OpenSearch } from "../../components-microstacks/openSearch";
 import { config } from "./config";
 
 const baseName = config.baseName 
