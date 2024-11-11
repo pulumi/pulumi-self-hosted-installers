@@ -78,6 +78,5 @@ The following stacks manage stateful resources or resources that are foundationa
 - 30-esc
 
 The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss:
-<!-- TODO: what about deployments? -->
 - 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchcluster.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
 - 90-pulumi-service
