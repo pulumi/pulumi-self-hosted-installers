@@ -67,8 +67,8 @@ export const config = {
 
     // reCAPTCHA Config
     // If the config is not set, then recaptcha will be disabled.
-    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey"), 
-    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey"), 
+    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey") || "", 
+    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey") || "", 
 
     // Insights Config
     openSearchEndpoint: insightsStackRef.requireOutput("openSearchEndpoint"),
