@@ -45,9 +45,9 @@ export const config = {
     pulumiNodeGroupMaxSize: pulumiConfig.getNumber("pulumiNodeGroupMaxSize") ?? 5,
 
     // IAM stack values
-    eksInstanceRoleName: pulumi.interpolate `${eksInstanceRoleName}`,
-    instanceProfileName: pulumi.interpolate `${instanceProfileName}`,
-    eksServiceRoleName: pulumi.interpolate `${eksServiceRoleName}`,
+    eksInstanceRoleName: eksInstanceRoleName,
+    instanceProfileName: instanceProfileName,
+    eksServiceRoleName: eksServiceRoleName,
 
     // Networking stack values
     clusterName: clusterName,

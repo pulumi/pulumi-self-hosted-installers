@@ -25,7 +25,6 @@ const cluster = new eks.Cluster(`${baseName}`, {
     providerCredentialOpts: { profileName: process.env.AWS_PROFILE}, 
     nodeAssociatePublicIpAddress: false,
     skipDefaultNodeGroup: true,
-    deployDashboard: false,
     version: config.clusterVersion,
     createOidcProvider: false,
     tags: tags,
@@ -48,7 +47,8 @@ const cluster = new eks.Cluster(`${baseName}`, {
 export const kubeconfig = pulumi.secret(cluster.kubeconfig.apply(JSON.stringify));
 export const clusterName = cluster.core.cluster.name;
 export const region = aws.config.region;
-export const nodeSecurityGroupId = cluster.nodeSecurityGroup.id; // For RDS
+
+// For RDS
 export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
 
 /////////////////////
@@ -60,7 +60,7 @@ const ssmParam = pulumi.output(aws.ssm.getParameter({
 export const amiId = ssmParam.value.apply(s => <string>JSON.parse(s).image_id)
 
 // Create a standard node group.
-const ngStandard = new eks.NodeGroup(`${baseName}-ng-standard`, {
+const ngStandard = new eks.NodeGroupV2(`${baseName}-ng-standard`, {
     cluster: cluster,
     instanceProfile: instanceProfile,
     nodeAssociatePublicIpAddress: false,
@@ -83,7 +83,7 @@ const ngStandard = new eks.NodeGroup(`${baseName}-ng-standard`, {
 });
 
 // Create a standard node group tainted for use only by self-hosted pulumi.
-const ngStandardPulumi = new eks.NodeGroup(`${baseName}-ng-standard-pulumi`, {
+const ngStandardPulumi = new eks.NodeGroupV2(`${baseName}-ng-standard-pulumi`, {
     cluster: cluster,
     instanceProfile: instanceProfile,
     nodeAssociatePublicIpAddress: false,
