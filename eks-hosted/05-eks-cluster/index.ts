@@ -44,6 +44,7 @@ const cluster = new eks.Cluster(`${baseName}`, {
 export const kubeconfig = pulumi.secret(cluster.kubeconfig.apply(JSON.stringify));
 export const clusterName = cluster.core.cluster.name;
 export const region = aws.config.region;
+export const nodeSecurityGroupId = cluster.nodeSecurityGroupId;
 
 // For RDS
 export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
@@ -54,7 +55,7 @@ const ssmParam = pulumi.output(aws.ssm.getParameter({
     // https://docs.aws.amazon.com/eks/latest/userguide/retrieve-ami-id.html
     name: `/aws/service/eks/optimized-ami/${config.clusterVersion}/amazon-linux-2/recommended`,
 }))
-export const amiId = ssmParam.value.apply(s => <string>JSON.parse(s).image_id)
+const amiId = ssmParam.value.apply(s => <string>JSON.parse(s).image_id)
 
 const instanceProfile = new aws.iam.InstanceProfile("ng-standard", {role: config.eksInstanceRoleName})
 // Create a standard node group.
