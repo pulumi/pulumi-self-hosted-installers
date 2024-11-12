@@ -8,9 +8,6 @@ const tags = { "Project": "pulumi-k8s-aws-cluster", "Owner": "pulumi"};
 
 /////////////////////
 // --- EKS Cluster ---
-const serviceRole = aws.iam.Role.get("eksServiceRole", config.eksServiceRoleName)
-const instanceRole = aws.iam.Role.get("instanceRole", config.eksInstanceRoleName)
-// const instanceProfile = aws.iam.InstanceProfile.get("ng-standard", config.instanceProfileName)
 
 // Create an EKS cluster.
 const cluster = new eks.Cluster(`${baseName}`, {
