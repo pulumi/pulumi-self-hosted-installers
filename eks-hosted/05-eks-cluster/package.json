@@ -4,8 +4,8 @@
     "typescript": "^3.0.0"
   },
   "dependencies": {
-    "@pulumi/aws": "^6.54.0",
-    "@pulumi/eks": "^2.8.1",
+    "@pulumi/aws": "^6.59.0",
+    "@pulumi/eks": "^3.0.1",
     "@pulumi/pulumi": "^3.136.0"
   }
 }

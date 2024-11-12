@@ -12,6 +12,8 @@ const iamStackRef = new pulumi.StackReference(`${orgName}/selfhosted-01-iam/${st
 const eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
 const instanceProfileName = iamStackRef.requireOutput("instanceProfileName");
 const eksServiceRoleName = iamStackRef.requireOutput("eksServiceRoleName");
+const eksServiceRole = iamStackRef.requireOutput("eksServiceRole")
+const eksInstanceRole = iamStackRef.requireOutput("eksInstanceRole")
 
 // Networking Stack values
 // Get the needed values from the networking stack.
@@ -48,6 +50,8 @@ export const config = {
     eksInstanceRoleName: eksInstanceRoleName,
     instanceProfileName: instanceProfileName,
     eksServiceRoleName: eksServiceRoleName,
+    eksInstanceRole: eksInstanceRole,
+    eksServiceRole: eksServiceRole,
 
     // Networking stack values
     clusterName: clusterName,
