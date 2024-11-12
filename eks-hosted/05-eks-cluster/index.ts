@@ -44,10 +44,8 @@ const cluster = new eks.Cluster(`${baseName}`, {
 export const kubeconfig = pulumi.secret(cluster.kubeconfig.apply(JSON.stringify));
 export const clusterName = cluster.core.cluster.name;
 export const region = aws.config.region;
-cluster.nodeSecurityGroup.apply(sg => {
-    if (sg) { return sg.id }
-    else return null
-}); // For RDS
+
+// For RDS
 export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
 
 /////////////////////
