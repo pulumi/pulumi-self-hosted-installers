@@ -54,3 +54,10 @@ config:
   consoleHideEmailLogin: "false"
   apiDisableEmailSignup: "false"
   apiDisableEmailLogin: "false"
+
+  # Github Settings
+  # github_oauth_endpoint is needed to configure the Github integration for features such as project templates.
+  # github_oauth_id and github_oauth_secret are needed to configure the Github SSO.
+  github_oauth_endpoint:  // e.g. "https://github.acme.com"
+  github_oauth_id: 
+  github_oauth_secret: 
