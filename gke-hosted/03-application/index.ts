@@ -111,10 +111,10 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               image: config.migrationImageName,
               resources: migrationResources,
               env: [
-            generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "connectionString"),
-            generateEnvVarFromSecret("MYSQL_ROOT_USERNAME", secrets.DBConnSecret.metadata.name, "username"),
-            generateEnvVarFromSecret("MYSQL_ROOT_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
-            generateEnvVarFromSecret("PULUMI_DATABASE_PING_ENDPOINT", secrets.DBConnSecret.metadata.name, "host"),
+                  generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "connectionString"),
+                  generateEnvVarFromSecret("MYSQL_ROOT_USERNAME", secrets.DBConnSecret.metadata.name, "username"),
+                  generateEnvVarFromSecret("MYSQL_ROOT_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+                  generateEnvVarFromSecret("PULUMI_DATABASE_PING_ENDPOINT", secrets.DBConnSecret.metadata.name, "host"),
                   {
                       name: "RUN_MIGRATIONS_EXTERNALLY",
                       value: "true"
@@ -136,19 +136,19 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               env: [
                 pulumiLocalKeySecret.encryptionServiceEnv,
                 generateEnvVarFromSecret("PULUMI_LICENSE_KEY", secrets.LicenseKeySecret.metadata.name, "key"),
-              generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "connectionString"),
-              generateEnvVarFromSecret("PULUMI_DATABASE_USER_NAME", secrets.DBConnSecret.metadata.name, "username"),
-              generateEnvVarFromSecret("PULUMI_DATABASE_USER_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
-              generateEnvVarFromSecret("SAML_CERTIFICATE_PUBLIC_KEY", ssoSecret.SamlSsoSecret.metadata.name, "pubkey"),
-              generateEnvVarFromSecret("SAML_CERTIFICATE_PRIVATE_KEY", ssoSecret.SamlSsoSecret.metadata.name, "privatekey"),
-              generateEnvVarFromSecret("AWS_ACCESS_KEY_ID", secrets.StorageSecret.metadata.name, "accessKeyId"),
-              generateEnvVarFromSecret("AWS_SECRET_ACCESS_KEY", secrets.StorageSecret.metadata.name, "secretAccessKey"),
-              generateEnvVarFromSecret("SMTP_SERVER", secrets.SmtpSecret.metadata.name, "server"),
-              generateEnvVarFromSecret("SMTP_USERNAME", secrets.SmtpSecret.metadata.name, "username"),
-              generateEnvVarFromSecret("SMTP_PASSWORD", secrets.SmtpSecret.metadata.name, "password"),
-              generateEnvVarFromSecret("SMTP_GENERIC_SENDER", secrets.SmtpSecret.metadata.name, "fromaddress"),
-              generateEnvVarFromSecret("RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
-              generateEnvVarFromSecret("LOGIN_RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
+                generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "connectionString"),
+                generateEnvVarFromSecret("PULUMI_DATABASE_USER_NAME", secrets.DBConnSecret.metadata.name, "username"),
+                generateEnvVarFromSecret("PULUMI_DATABASE_USER_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+                generateEnvVarFromSecret("SAML_CERTIFICATE_PUBLIC_KEY", ssoSecret.SamlSsoSecret.metadata.name, "pubkey"),
+                generateEnvVarFromSecret("SAML_CERTIFICATE_PRIVATE_KEY", ssoSecret.SamlSsoSecret.metadata.name, "privatekey"),
+                generateEnvVarFromSecret("AWS_ACCESS_KEY_ID", secrets.StorageSecret.metadata.name, "accessKeyId"),
+                generateEnvVarFromSecret("AWS_SECRET_ACCESS_KEY", secrets.StorageSecret.metadata.name, "secretAccessKey"),
+                generateEnvVarFromSecret("SMTP_SERVER", secrets.SmtpSecret.metadata.name, "server"),
+                generateEnvVarFromSecret("SMTP_USERNAME", secrets.SmtpSecret.metadata.name, "username"),
+                generateEnvVarFromSecret("SMTP_PASSWORD", secrets.SmtpSecret.metadata.name, "password"),
+                generateEnvVarFromSecret("SMTP_GENERIC_SENDER", secrets.SmtpSecret.metadata.name, "fromaddress"),
+                generateEnvVarFromSecret("RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
+                generateEnvVarFromSecret("LOGIN_RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
                 {
                   name: "PULUMI_ENTERPRISE",
                   value: "true",
@@ -238,7 +238,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   value: pulumi.interpolate`http://${apiServiceEndpointAddress}:${apiServiceEndpointPort}`
                 },
                 generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
-            generateEnvVarFromSecret("LOGIN_RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
+                generateEnvVarFromSecret("LOGIN_RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
             ]
           }]
         }
