@@ -82,6 +82,19 @@ const pulumiLocalKeySecret = new EncryptionService(`${commonName}-local-key`, {
   provider: provider
 });
 
+function generateEnvVarFromSecret(envVarName: string, secretName: pulumi.Output<string>, secretKey: string) : k8s.types.input.core.v1.EnvVar {
+  return {
+    name: envVarName,
+    valueFrom: {
+      secretKeyRef: {
+        name: secretName,
+        key: secretKey
+      } 
+    }
+  }
+}
+
+
 const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
     metadata: {
       namespace: appsNamespace.metadata.name,
@@ -98,22 +111,10 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               image: config.migrationImageName,
               resources: migrationResources,
               env: [
-                  {
-                      name: "PULUMI_DATABASE_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
-                  },
-                  {
-                      name: "MYSQL_ROOT_USERNAME",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("username"),
-                  },
-                  {
-                      name: "MYSQL_ROOT_PASSWORD",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("password"),
-                  },
-                  {
-                      name: "PULUMI_DATABASE_PING_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("host"),
-                  },
+                  generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "connectionString"),
+                  generateEnvVarFromSecret("MYSQL_ROOT_USERNAME", secrets.DBConnSecret.metadata.name, "username"),
+                  generateEnvVarFromSecret("MYSQL_ROOT_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+                  generateEnvVarFromSecret("PULUMI_DATABASE_PING_ENDPOINT", secrets.DBConnSecret.metadata.name, "host"),
                   {
                       name: "RUN_MIGRATIONS_EXTERNALLY",
                       value: "true"
@@ -134,10 +135,20 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               ],
               env: [
                 pulumiLocalKeySecret.encryptionServiceEnv,
-                {
-                  name: "PULUMI_LICENSE_KEY",
-                  valueFrom: secrets.LicenseKeySecret.asEnvValue("key"),
-                },
+                generateEnvVarFromSecret("PULUMI_LICENSE_KEY", secrets.LicenseKeySecret.metadata.name, "key"),
+                generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "connectionString"),
+                generateEnvVarFromSecret("PULUMI_DATABASE_USER_NAME", secrets.DBConnSecret.metadata.name, "username"),
+                generateEnvVarFromSecret("PULUMI_DATABASE_USER_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+                generateEnvVarFromSecret("SAML_CERTIFICATE_PUBLIC_KEY", ssoSecret.SamlSsoSecret.metadata.name, "pubkey"),
+                generateEnvVarFromSecret("SAML_CERTIFICATE_PRIVATE_KEY", ssoSecret.SamlSsoSecret.metadata.name, "privatekey"),
+                generateEnvVarFromSecret("AWS_ACCESS_KEY_ID", secrets.StorageSecret.metadata.name, "accessKeyId"),
+                generateEnvVarFromSecret("AWS_SECRET_ACCESS_KEY", secrets.StorageSecret.metadata.name, "secretAccessKey"),
+                generateEnvVarFromSecret("SMTP_SERVER", secrets.SmtpSecret.metadata.name, "server"),
+                generateEnvVarFromSecret("SMTP_USERNAME", secrets.SmtpSecret.metadata.name, "username"),
+                generateEnvVarFromSecret("SMTP_PASSWORD", secrets.SmtpSecret.metadata.name, "password"),
+                generateEnvVarFromSecret("SMTP_GENERIC_SENDER", secrets.SmtpSecret.metadata.name, "fromaddress"),
+                generateEnvVarFromSecret("RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
+                generateEnvVarFromSecret("LOGIN_RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
                 {
                   name: "PULUMI_ENTERPRISE",
                   value: "true",
@@ -151,40 +162,12 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   value: config.consoleDomain,
                 },
                 {
-                  name: "PULUMI_DATABASE_ENDPOINT",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
-                },
-                {
-                  name: "PULUMI_DATABASE_USER_NAME",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("username"),
-                },
-                {
-                  name: "PULUMI_DATABASE_USER_PASSWORD",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("password"),
-                },
-                {
                   name: "PULUMI_DATABASE_NAME",
                   value: "pulumi",
                 },
                 {
-                  name: "SAML_CERTIFICATE_PUBLIC_KEY",
-                  valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("pubkey")
-                },
-                {
-                  name: "SAML_CERTIFICATE_PRIVATE_KEY",
-                  valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("privatekey")
-                },
-                {
                   name: "AWS_REGION",
                   value: "us-east-1" // this is a dummy value needed to appease the bucket access code.
-                },
-                {
-                  name: "AWS_ACCESS_KEY_ID",
-                  valueFrom: secrets.StorageSecret.asEnvValue("accessKeyId")
-                },
-                {
-                  name: "AWS_SECRET_ACCESS_KEY",
-                  valueFrom: secrets.StorageSecret.asEnvValue("secretAccessKey")
                 },
                 {
                   name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
@@ -194,30 +177,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
                   value: pulumi.interpolate`s3://${config.checkpointBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 },
-                {
-                  name: "SMTP_SERVER",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("server"),
-                },
-                {
-                  name: "SMTP_USERNAME",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("username"),
-                },
-                {
-                  name: "SMTP_PASSWORD",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("password"),
-                },
-                {
-                  name: "SMTP_GENERIC_SENDER",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("fromaddress")
-                },
-                {
-                  name: "RECAPTCHA_SECRET_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
-                },
-                {
-                  name: "LOGIN_RECAPTCHA_SECRET_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
-                }
               ],
             },
           ],
@@ -278,14 +237,8 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   name: "PULUMI_API_INTERNAL_ENDPOINT",
                   value: pulumi.interpolate`http://${apiServiceEndpointAddress}:${apiServiceEndpointPort}`
                 },
-                {
-                  name: "RECAPTCHA_SITE_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
-                },
-                {
-                  name: "LOGIN_RECAPTCHA_SITE_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
-                }
+                generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
+                generateEnvVarFromSecret("LOGIN_RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
             ]
           }]
         }
