@@ -238,7 +238,7 @@ const consolePodBuilder = new kx.PodBuilder({
             "SAML_SSO_ENABLED": `${config.samlSsoEnabled}`,
             ...recaptchaConsoleConfig,
             ...consoleEmailLoginConfig
-        },
+        } as EnvMap,
         resources: consoleResources,
     }],
 });
@@ -288,14 +288,14 @@ const zone = aws.route53.getZoneOutput({
 
 const certValidation = new aws.route53.Record("certValidation", {
     name: certCertificate.domainValidationOptions[0].resourceRecordName,
-    records: [certCertificate.domainValidationOptions[0].resourceRecordValue],
+    records: pulumi.output([certCertificate.domainValidationOptions[0].resourceRecordValue]),
     ttl: 60,
     type: certCertificate.domainValidationOptions[0].resourceRecordType,
     zoneId: zone.id,
 });
 const certCertificateValidation = new aws.acm.CertificateValidation("cert", {
     certificateArn: certCertificate.arn,
-    validationRecordFqdns: [certValidation.fqdn],
+    validationRecordFqdns: pulumi.output([certValidation.fqdn]),
 });
 
 //////////////
@@ -400,7 +400,7 @@ const consoleDnsRecord = new aws.route53.Record("consoleEndDnsRecord", {
   name: consoleEndpoint,
   type: "CNAME",
   ttl: 300,
-  records: [ consoleLoadbalancerDnsName]
+  records: pulumi.output([consoleLoadbalancerDnsName])
 })
 
 const serviceDnsRecord = new aws.route53.Record("serviceEndDnsRecord", {
@@ -408,5 +408,5 @@ const serviceDnsRecord = new aws.route53.Record("serviceEndDnsRecord", {
   name: serviceEndpoint,
   type: "CNAME",
   ttl: 300,
-  records: [ serviceLoadbalancerDnsName]
+  records: pulumi.output([serviceLoadbalancerDnsName])
 })
