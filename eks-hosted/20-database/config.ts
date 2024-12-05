@@ -29,5 +29,11 @@ export const config = {
 
     // Networking values
     privateSubnetIds: networkingStackRef.requireOutput("privateSubnetIds"),
+
+    // Values if existing database is being used
+    dbHostEndpoint: pulumiConfig.get("dbHostEndpoint"),
+    dbPort: pulumiConfig.get("dbPort"),
+    dbUsername: pulumiConfig.get("dbUsername"),
+    dbPassword: pulumiConfig.getSecret("dbPassword"),
 };
 
