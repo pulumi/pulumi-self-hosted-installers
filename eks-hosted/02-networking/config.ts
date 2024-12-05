@@ -7,6 +7,7 @@ export const config = {
     clusterName: pulumiConfig.require("eksClusterName"),
     networkCidrBlock: pulumiConfig.require("networkCidrBlock"),
     vpcId: pulumiConfig.get("vpcId"),
+    // Optional: If bringing your own VPC - see Pulumi.README.yaml
     publicSubnetIds: pulumiConfig.getObject("publicSubnetIds"),
     privateSubnetIds: pulumiConfig.getObject("privateSubnetIds"),
 };
