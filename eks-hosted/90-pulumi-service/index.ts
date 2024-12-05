@@ -7,7 +7,7 @@ import EnvMap = types.EnvMap;
 import { config } from "./config";
 
 // Set up the K8s secrets used by the applications.
-import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  openSearchConfig, secretsIntegration } from "./k8s-secrets";
+import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  openSearchConfig, secretsIntegration, githubConfig } from "./k8s-secrets";
 
 const migrationsImage = `pulumi/migrations:${config.imageTag}`;
 const apiImage = `pulumi/service:${config.imageTag}`;
@@ -67,6 +67,7 @@ const serviceEnv = pulumi
             ...recaptchaServiceConfig,
             ...openSearchConfig,
             ...apiEmailLoginConfig,
+            ...githubConfig,
         } as EnvMap;
 
         // Add env vars specific to managing secrets.
@@ -237,7 +238,8 @@ const consolePodBuilder = new kx.PodBuilder({
             "PULUMI_API_INTERNAL_ENDPOINT": pulumi.interpolate`http://${apiService.metadata.name}:${apiPort}`,
             "SAML_SSO_ENABLED": `${config.samlSsoEnabled}`,
             ...recaptchaConsoleConfig,
-            ...consoleEmailLoginConfig
+            ...consoleEmailLoginConfig,
+            ...githubConfig,
         },
         resources: consoleResources,
     }],
