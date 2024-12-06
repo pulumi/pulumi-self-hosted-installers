@@ -7,4 +7,9 @@ config:
   # Note, you will be setting this value for each stack you create, so use a value that will make sense across all the infrastructure. 
   baseName: pulumiselfhost
 
+  ##### USING EXISTING RESOURCE #####
+  # If you using an existing S3 bucket, then set the commented out values for the resources you already have.
+  # You will still run `pulumi up` for this stack so it can output the values for the other stacks to use.
+  # escBucketName: 
+
   

@@ -10,7 +10,7 @@ export interface NetworkArgs {
   tags?: Input<{
     [key: string]: Input<string>;
   }>;
-};
+}
 
 export class Network extends ComponentResource {
   public readonly subnetId: Output<string>;

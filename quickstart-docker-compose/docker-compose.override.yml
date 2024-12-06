@@ -22,6 +22,9 @@ services:
     build:
       context: ../../
       dockerfile: ./cmd/service/Dockerfile
+      target: service
+      ssh:
+        - default
     environment:
       API_TLS_CERTIFICATE: "${API_TLS_CERTIFICATE}"
       API_TLS_PRIVATE_KEY: "${API_TLS_PRIVATE_KEY}"

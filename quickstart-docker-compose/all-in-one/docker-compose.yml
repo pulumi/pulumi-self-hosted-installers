@@ -135,6 +135,8 @@ services:
         condition: service_healthy
       db:
         condition: service_started
+      migration:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   console:

@@ -6,7 +6,7 @@ export interface StorageArgs {
     tags?: Input<{
         [key: string]: Input<string>;
     }>,
-};
+}
 
 export class Storage extends ComponentResource {
     public readonly storageAccountId: Output<string>;

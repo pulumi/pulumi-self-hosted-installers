@@ -125,3 +125,24 @@ export const consoleEmailLoginConfig = {
     "PULUMI_HIDE_EMAIL_LOGIN": (config.consoleHideEmailLogin === "true" ? "true" : null),
     "PULUMI_HIDE_EMAIL_SIGNUP": (config.consoleHideEmailSignup === "true" ? "true" : null),
 }
+
+
+// Capture the config and secrets related to GitHub integration.
+export let githubConfig = {}
+if (config.github_oauth_endpoint) {
+    const githubSecret = new kx.Secret("github-conn",
+    {
+        metadata: { namespace: config.appsNamespaceName },
+        stringData: {
+            github_oauth_endpoint: config.github_oauth_endpoint,
+            github_oauth_id: config.github_oauth_id || "",
+            github_oauth_secret: config.github_oauth_secret || ""
+        },
+
+    }, { provider: k8sprovider })
+    githubConfig = {
+        "GITHUB_OAUTH_ENDPOINT": githubSecret.asEnvValue("github_oauth_endpoint"),
+        "GITHUB_OAUTH_ID": githubSecret.asEnvValue("github_oauth_id"),
+        "GITHUB_OAUTH_SECRET": githubSecret.asEnvValue("github_oauth_secret"),  
+    }
+}

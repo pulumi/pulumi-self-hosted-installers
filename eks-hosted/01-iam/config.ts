@@ -5,7 +5,7 @@ const pulumiConfig = new pulumi.Config();
 export const config = {
     baseName: pulumiConfig.require("baseName"),
     ssoRoleArn: pulumiConfig.require("ssoRoleArn"),
-    // These may not be set - see Pulumi.README.yaml for more information.
+    // Optional: If bringing your own IAM configs - see Pulumi.README.yaml
     eksServiceRoleName: pulumiConfig.get("eksServiceRoleName"),
     eksInstanceRoleName: pulumiConfig.get("eksInstanceRoleName"), 
     instanceProfileName: pulumiConfig.get("instanceProfileName"),

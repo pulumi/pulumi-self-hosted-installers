@@ -8,8 +8,5 @@ config:
   baseName: pulumiselfhost
 
   # Opensearch configuration
-  # Note: the domain name is derived from the baseName. See config.ts
-  openSearchInstanceType: t3.medium.search
-  openSearchInstanceCount: 3
-  openSearchDedicatedMasterCount: 0
-  
+  # Use "pulumi config set opensearchPassword --secret <password>"
+  opensearchPassword: 
