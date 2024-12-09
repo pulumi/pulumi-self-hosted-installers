@@ -13,6 +13,7 @@ const k8sprovider = new k8s.Provider("provider", {kubeconfig: config.kubeconfig,
 const coreDnsAddon = new aws.eks.Addon("coreDns", {
     addonName: "coredns",
     clusterName: config.clusterName,
+    // addonVersion: "v1.11.3-eksbuild.2",
     addonVersion: "v1.11.1-eksbuild.8",
 });
 

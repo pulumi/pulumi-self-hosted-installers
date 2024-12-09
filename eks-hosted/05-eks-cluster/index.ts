@@ -10,8 +10,6 @@ const tags = { "Project": "pulumi-k8s-aws-cluster", "Owner": "pulumi"};
 // --- EKS Cluster ---
 const serviceRole = aws.iam.Role.get("eksServiceRole", config.eksServiceRoleName)
 const instanceRole = aws.iam.Role.get("instanceRole", config.eksInstanceRoleName)
-// const instanceProfile = aws.iam.InstanceProfile.get("ng-standard", config.instanceProfileName)
-
 // Create an EKS cluster.
 const cluster = new eks.Cluster(`${baseName}`, {
     name: config.clusterName,
@@ -25,7 +23,6 @@ const cluster = new eks.Cluster(`${baseName}`, {
     providerCredentialOpts: { profileName: process.env.AWS_PROFILE}, 
     nodeAssociatePublicIpAddress: false,
     skipDefaultNodeGroup: true,
-    deployDashboard: false,
     version: config.clusterVersion,
     createOidcProvider: false,
     tags: tags,
@@ -48,7 +45,7 @@ const cluster = new eks.Cluster(`${baseName}`, {
 export const kubeconfig = pulumi.secret(cluster.kubeconfig.apply(JSON.stringify));
 export const clusterName = cluster.core.cluster.name;
 export const region = aws.config.region;
-export const nodeSecurityGroupId = cluster.nodeSecurityGroup.id; // For RDS
+export const nodeSecurityGroupId = cluster.nodeSecurityGroup.id
 export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
 
 /////////////////////
@@ -57,6 +54,23 @@ export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
 // Launch template for the managed node group to manage settings.
 const ngManagedLaunchTemplate = new aws.ec2.LaunchTemplate(`${baseName}-ng-managed-launch-template`, {
     vpcSecurityGroupIds: [cluster.nodeSecurityGroup.id],
+})
+
+const ngManagedStandard = new eks.ManagedNodeGroup(`${baseName}-ng-managed-standard`, {
+    cluster: cluster,
+    instanceTypes: [<aws.ec2.InstanceType>config.standardNodeGroupInstanceType],
+    launchTemplate: {
+        id: ngManagedLaunchTemplate.id,
+        version: ngManagedLaunchTemplate.latestVersion.apply(v => v.toString()),
+    },
+    nodeRoleArn: instanceRole.arn,
+    scalingConfig: {
+        desiredSize: config.standardNodeGroupDesiredCapacity,
+        minSize: config.standardNodeGroupMinSize,
+        maxSize: config.standardNodeGroupMaxSize,
+    },
+    subnetIds: config.privateSubnetIds,
+    tags: tags,
 })
 
 const ngManagedPulumi = new eks.ManagedNodeGroup(`${baseName}-ng-managed-pulumi`, {
@@ -90,11 +104,6 @@ const ngManagedPulumi = new eks.ManagedNodeGroup(`${baseName}-ng-managed-pulumi`
         effect: "NO_SCHEDULE"
     }],
     tags: tags,
-//     cloudFormationTags: clusterName.apply(clusterName => ({
-//         "k8s.io/cluster-autoscaler/enabled": "true",
-//         [`k8s.io/cluster-autoscaler/${clusterName}`]: "true",
-//         ...tags,
-//     })),
 // }, {
 //     providers: { kubernetes: cluster.provider},
 });
