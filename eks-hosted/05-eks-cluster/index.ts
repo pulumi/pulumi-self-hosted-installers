@@ -37,14 +37,14 @@ export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
 /////////////////////
 // Build managed nodegroup for the service to run on.
 
-const instanceRoleArn = aws.iam.Role.get("instanceRole", config.eksInstanceRoleName).arn
+const instanceRoleArn = config.eksInstanceRole.apply(role => role.arn); 
 
 // Launch template for the managed node group to manage settings.
 const ngManagedLaunchTemplate = new aws.ec2.LaunchTemplate(`${baseName}-ng-managed-launch-template`, {
     vpcSecurityGroupIds: [cluster.nodeSecurityGroupId],
     metadataOptions: {
-        httpTokens: "required",
-        httpPutResponseHopLimit: 2,
+        httpTokens: config.httpTokens,
+        httpPutResponseHopLimit: config.httpPutResponseHopLimit,
     },
 })
 

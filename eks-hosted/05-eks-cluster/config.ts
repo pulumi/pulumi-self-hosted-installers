@@ -45,6 +45,9 @@ export const config = {
     pulumiNodeGroupMinSize: pulumiConfig.getNumber("pulumiNodeGroupMinSize") ?? 3,
     pulumiNodeGroupMaxSize: pulumiConfig.getNumber("pulumiNodeGroupMaxSize") ?? 5,
 
+    httpTokens: pulumiConfig.get("httpTokens") || "required",
+    httpPutResponseHopLimit: pulumiConfig.getNumber("httpPutResponseHopLimit") ?? 2,
+
     // IAM stack values
     eksInstanceRoleName: eksInstanceRoleName,
     eksInstanceRole: eksInstanceRole,

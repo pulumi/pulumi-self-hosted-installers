@@ -74,6 +74,7 @@ The following stacks manage stateful resources or resources that are foundationa
 The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss:
 * 05-eks-cluster
   * Note: You will have to modify the RDS to use a "throw-away" security group if you want to redeploy the cluster, and then replace the security group for the RDS with the security group from eks cluster.
+  * Note: You shouldn't destroy 05-eks-cluster before destroying 90-pulumi-service, 25-insights and 10-cluster-svcs first.
 * 10-cluster-svcs
 * 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchclsuter.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
   * Coordinate with 90-pulumi-service based on which stack (currently) owns the `pulumi-service` namespace.

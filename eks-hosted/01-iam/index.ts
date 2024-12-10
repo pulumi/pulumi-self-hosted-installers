@@ -16,15 +16,16 @@ export let databaseMonitoringRoleArn: string | pulumi.Output<string>;
 
 // If the user provided the roles, use them instead of creating new ones.
 // It's an all-or-nothing situation, so if one is provided, they all must be.
-// if (config.eksServiceRoleName && config.eksInstanceRoleName && config.instanceProfileName && config.databaseMonitoringRoleArn) {
 if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMonitoringRoleArn) {
     eksServiceRoleName = config.eksServiceRoleName;
     eksInstanceRoleName = config.eksInstanceRoleName;
     databaseMonitoringRoleArn = config.databaseMonitoringRoleArn;
+    eksServiceRole = aws.iam.Role.get("eksServiceRole", eksServiceRoleName);
+    eksInstanceRole = aws.iam.Role.get("eksInstanceRole", eksInstanceRoleName);
 } else {
     // Create the roles.
     /// Cluster Role ///
-    const eksRole = new aws.iam.Role(`${config.baseName}-eksRole`, {
+    eksServiceRole = new aws.iam.Role(`${config.baseName}-eksRole`, {
         assumeRolePolicy: {
             Statement: [
                 {   Action:"sts:AssumeRole",
@@ -41,10 +42,10 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMo
             "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
         ],
     });
-    eksServiceRoleName = eksRole.name;
+    eksServiceRoleName = eksServiceRole.name;
 
     /// Instance Role ///
-    const instanceRole = new aws.iam.Role(`${config.baseName}-instanceRole`, {
+    eksInstanceRole = new aws.iam.Role(`${config.baseName}-instanceRole`, {
         assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal(aws.iam.Principals.Ec2Principal),
         managedPolicyArns: [
             "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
@@ -56,7 +57,7 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMo
     // S3 policy used by Pulumi services
     const instanceRoleS3Policy = new aws.iam.RolePolicyAttachment("instanceRoleS3Policy", {
         policyArn: "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-        role: instanceRole 
+        role: eksInstanceRole 
     })
 
     // ALB management used by ingress controller
@@ -65,7 +66,7 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMo
     });
     const rpaAlbPolicy = new aws.iam.RolePolicyAttachment("albPolicy", {
         policyArn: albControllerPolicy.arn,
-        role: instanceRole
+        role: eksInstanceRole
     })
 
     // Opensearch access
@@ -85,10 +86,10 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMo
     });
     const openSearchPolicyAttachment = new aws.iam.RolePolicyAttachment("opensearchPolicy", {
         policyArn: opensearchPolicy.arn,
-        role: instanceRole
+        role: eksInstanceRole
     })
 
-    eksInstanceRoleName = instanceRole.name;
+    eksInstanceRoleName = eksInstanceRole.name;
 
     // used by RDS to publish metrics to CloudWatch
     const databaseMonitoringRole = new aws.iam.Role("databaseMonitoringRole", {
@@ -112,6 +113,5 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMo
     databaseMonitoringRoleArn = databaseMonitoringRole.arn;
 }
 
-eksServiceRole = aws.iam.Role.get("eksServiceRole", eksServiceRoleName);
-eksInstanceRole = aws.iam.Role.get("eksInstanceRole", eksInstanceRoleName);
+
 
