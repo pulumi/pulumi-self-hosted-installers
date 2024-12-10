@@ -13,7 +13,6 @@ const eksInstanceRoleName = iamStackRef.requireOutput("eksInstanceRoleName");
 const eksInstanceRole = iamStackRef.requireOutput("eksInstanceRole");
 const eksServiceRoleName = iamStackRef.requireOutput("eksServiceRoleName");
 const eksServiceRole = iamStackRef.requireOutput("eksServiceRole");
-const ssoRoleArn = iamStackRef.requireOutput("ssoRoleArn");
 
 // Networking Stack values
 // Get the needed values from the networking stack.
@@ -51,7 +50,6 @@ export const config = {
     eksInstanceRole: eksInstanceRole,
     eksServiceRoleName: eksServiceRoleName,
     eksServiceRole: eksServiceRole,
-    ssoRoleArn: ssoRoleArn,
 
     // Networking stack values
     clusterName: clusterName,

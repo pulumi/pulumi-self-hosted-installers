@@ -16,7 +16,8 @@ This architecture does impose some design requirements:
 Version ID | Date | K8s Version Supported | Note
 ---|---|---|--
 1.0 | Oct, 2024 | 1.30.3 | Initial version of the new eks installer.
-2.1 | Nov, 2024 | 1.30.3 | Need to add 
+2.1 | Nov, 2024 | 1.30.3 | Add GITHUB support and more BYO support.
+3.0 | Dec, 2024 | 1.30.3 | Moves to Managed NodeGroups. See section at bottom for upgrade steps.
 
 ## How to Use
 
@@ -66,50 +67,94 @@ The process is the same for each microstack:
 The following stacks manage stateful resources or resources that are foundational to other stacks. So careful thought should be given before destroying them:
 * 01-iam
 * 02-networking 
-* 05-eks-cluster
 * 15-state-policies-mgmt
 * 20-database
 * 30-esc
 
 The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss:
+* 05-eks-cluster
+  * Note: You will have to modify the RDS to use a "throw-away" security group if you want to redeploy the cluster, and then replace the security group for the RDS with the security group from eks cluster.
+* 10-cluster-svcs
 * 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchclsuter.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
+  * Coordinate with 90-pulumi-service based on which stack (currently) owns the `pulumi-service` namespace.
 * 90-pulumi-service
 
 
+## 2.x -> 3.x+ Installer Update Procedure
 
-## Migration to managed nodes notes
-Capturing steps for implementing the managed nodes approach
-This version is service disrupting to work on getting to an updated system
-* pulumi destroy the following stacks
-  * 90-
-  * 25-
-  * 10-
-* Go to AWS UI:
-  * Create a throw-away security group in the VPC being used (see 02-networking if you are not bringing your own)
-  * Go to RDS page and go to one of the instances:
-    * Remove the eks cluster nodegroup security group
-    * Add the security group just created 
-    * Choose Apply IMMEDIATELY
-* pulumi destroy
-  * 05-
-* pulumi up
-  * 01-
-    * This shoud just output a the instance and server roles as objects (along with the old outputs of the names, etc)
-  * 05-
-* Update RDS security group
-  * Option 1
-    * Go to AWS console RDS page and go to one of the instances
-      * Modify to remove the throw-away security group
-      * Add the nodesecurity group just created as part of the 05-eks-cluster update
-      * Choose Apply IMMEDIATELY
-    * Delete the throw-away security group since it's no longer needed
-    * pulumi refresh 
-      * 20-
-        * This is to update state to reflect the new security group
-  * Option 2
-    * Run `pulumi up` for 20-database.
-      * Confirm it is only upating the vpcSecurityGroupIds property and say yes.
-* pulumi up:
-  * 10-
-  * 25-
-  * 90-
+This is a disruptive update but does NOT destroy any stateful resources (e.g. DB, or buckets).
+Allow for about an hour to complete the process.
+
+### Tear down the non-stateful resources
+
+Destroy the following stacks in the given order.
+
+* 90-pulumi-service:
+  * pulumi state unprotect –all -y; 
+  * pulumi destroy
+* 25-insights:
+  * pulumi state unprotect –all -y; 
+  * pulumi destroy
+* 10-cluster-services:
+  * pulumi state unprotect –all -y; 
+  * pulumi destroy
+* 05-eks-cluster 
+  * Before taking down the eks cluster, we need to temporarily remove the security group assigned to the RDS database:
+    * Go to AWS Console
+    * Create a throw-away security group - it doesn’t have to have any ingress or egress rules. Just make sure it's on the VPC being used for the self-hosted install.
+    * Go to RDS page and go to one of the RDS instances
+    * Unassign the “cluster” security group and assign the throw-away security group.
+      * APPLY IMMEDIATELY and wait for the instance to update.
+      * The other RDS instance will automatically update as well so wait for it to update - it may finish before the first one.
+  * In 05-eks-cluster folder:
+    * pulumi state unprotect –all -y; 
+    * pulumi destroy
+
+### Set up for the new release of the installer
+* Pull down release 3.x+ of the installer.
+
+### Update and Deploy the Infrastructure
+
+* 01-iam
+  * You can remove the ssorolearn  from the config file.
+  * If BYO, 
+    * You can remove the instanceProfileName from the config file.
+    * Attach the following policies to the instance role. Look at the “albControllerPolicy.ts” file to see how they should be added.
+      * "elasticloadbalancing:DescribeListenerAttributes",
+      * "elasticloadbalancing:ModifyListenerAttributes"
+  * Run `npm update` to ensure you have the latest version of the packages.
+  * Run `pulumi up` this should result in the role constructs being output and the sso and profile outputs being removed.  
+  * If not BYO, you’ll see the instanceProfile being deleted.
+* 02-networking: 
+  * SKIP
+* 05-eks-cluster:
+  * Run `npm update`
+  * Run `pulumi up`
+    * This will deploy the entire stack since it was destroyed earlier.
+* 10-cluster-svcs
+  * Run `npm update`
+  * Run `pulumi up`
+    * This will deploy the entire stack since it was destroyed earlier.
+* 15-state-policies-mgmt
+  * SKIP
+* 20-database
+  * Run `npm update`
+  * Run `pulumi refresh` 
+    * This is to update state to reflect the “throw-away” security group attachment.
+    * It’ll also pull in new stack references.
+  * Run `pulumi up`
+    * This should only update the attached security group to the correct one and replace the “throw-away” security group that was attached earlier.
+* 25-insights
+  * Run `npm update`
+  * Run `pulumi up`
+    * This will deploy the entire stack since it was destroyed earlier.
+* 30-esc: 
+  * SKIP
+* 90-pulumi-service
+  * Run `npm update`
+  * Run `pulumi up`
+    * This will deploy the entire stack since it was destroyed earlier.
+
+At this point, you should be able to login to the service. Note, it may take a few minutes for DNS to populate and/or caches to update.
+If you have stacks deployed but they do not show up on the resources page, an admin can go to Settings->Self-hosted and reindex the search cluster.
+

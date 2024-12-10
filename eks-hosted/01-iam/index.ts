@@ -5,14 +5,12 @@ import { albControllerPolicyStatement } from "./albControllerPolicy";
 
 /// SSO Role ///
 // This is currently managed outside of the stack and passed through for later stacks to use.
-export const ssoRoleArn = config.ssoRoleArn;
 
 // These roles are either provided by the user or created in this stack.
 export let eksServiceRoleName: string | pulumi.Output<string>;
 export let eksServiceRole: aws.iam.Role | pulumi.Output<aws.iam.Role>;
 export let eksInstanceRoleName: string | pulumi.Output<string>; 
 export let eksInstanceRole: aws.iam.Role | pulumi.Output<aws.iam.Role>;
-export let instanceProfileName: string | pulumi.Output<string>;
 export let databaseMonitoringRoleArn: string | pulumi.Output<string>;
 
 

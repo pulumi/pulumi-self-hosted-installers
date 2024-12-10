@@ -35,6 +35,7 @@ export function createAlbIngressController(name: string, args: AlbIngressControl
         repo: "https://aws.github.io/eks-charts"
     },
     chart: "aws-load-balancer-controller",
+    version: "1.10.1",
     // chart: "./alb-ingress-chart-local/aws-load-balancer-controller",
     namespace: "kube-system",
     values: {
