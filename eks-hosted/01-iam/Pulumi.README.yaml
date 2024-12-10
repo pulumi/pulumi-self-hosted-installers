@@ -19,5 +19,4 @@ config:
   databaseMonitoringRoleArn: 
   eksServiceRoleName:
   eksInstanceRoleName:      
-  instanceProfileName:
 

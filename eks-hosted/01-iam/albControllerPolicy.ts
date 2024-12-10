@@ -33,6 +33,7 @@ JSON.stringify({
               "elasticloadbalancing:DescribeLoadBalancers",
               "elasticloadbalancing:DescribeLoadBalancerAttributes",
               "elasticloadbalancing:DescribeListeners",
+              "elasticloadbalancing:DescribeListenerAttributes",
               "elasticloadbalancing:DescribeListenerCertificates",
               "elasticloadbalancing:DescribeSSLPolicies",
               "elasticloadbalancing:DescribeRules",
@@ -182,6 +183,7 @@ JSON.stringify({
       {
           "Effect": "Allow",
           "Action": [
+              "elasticloadbalancing:ModifyListenerAttributes",
               "elasticloadbalancing:ModifyLoadBalancerAttributes",
               "elasticloadbalancing:SetIpAddressType",
               "elasticloadbalancing:SetSecurityGroups",

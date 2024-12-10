@@ -8,6 +8,5 @@ export const config = {
     // Optional: If bringing your own IAM configs - see Pulumi.README.yaml
     eksServiceRoleName: pulumiConfig.get("eksServiceRoleName"),
     eksInstanceRoleName: pulumiConfig.get("eksInstanceRoleName"), 
-    instanceProfileName: pulumiConfig.get("instanceProfileName"),
     databaseMonitoringRoleArn: pulumiConfig.get("databaseMonitoringRoleArn"),
 };

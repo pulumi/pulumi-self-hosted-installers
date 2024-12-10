@@ -16,6 +16,7 @@ This architecture does impose some design requirements:
 Version ID | Date | K8s Version Supported | Note
 ---|---|---|--
 1.0 | Oct, 2024 | 1.30.3 | Initial version of the new eks installer.
+2.1 | Nov, 2024 | 1.30.3 | Need to add 
 
 ## How to Use
 
@@ -73,3 +74,42 @@ The following stacks manage stateful resources or resources that are foundationa
 The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss:
 * 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchclsuter.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
 * 90-pulumi-service
+
+
+
+## Migration to managed nodes notes
+Capturing steps for implementing the managed nodes approach
+This version is service disrupting to work on getting to an updated system
+* pulumi destroy the following stacks
+  * 90-
+  * 25-
+  * 10-
+* Go to AWS UI:
+  * Create a throw-away security group in the VPC being used (see 02-networking if you are not bringing your own)
+  * Go to RDS page and go to one of the instances:
+    * Remove the eks cluster nodegroup security group
+    * Add the security group just created 
+    * Choose Apply IMMEDIATELY
+* pulumi destroy
+  * 05-
+* pulumi up
+  * 01-
+    * This shoud just output a the instance and server roles as objects (along with the old outputs of the names, etc)
+  * 05-
+* Update RDS security group
+  * Option 1
+    * Go to AWS console RDS page and go to one of the instances
+      * Modify to remove the throw-away security group
+      * Add the nodesecurity group just created as part of the 05-eks-cluster update
+      * Choose Apply IMMEDIATELY
+    * Delete the throw-away security group since it's no longer needed
+    * pulumi refresh 
+      * 20-
+        * This is to update state to reflect the new security group
+  * Option 2
+    * Run `pulumi up` for 20-database.
+      * Confirm it is only upating the vpcSecurityGroupIds property and say yes.
+* pulumi up:
+  * 10-
+  * 25-
+  * 90-

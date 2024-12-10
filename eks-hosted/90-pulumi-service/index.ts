@@ -87,7 +87,6 @@ const serviceEnv = pulumi
 // https://www.pulumi.com/docs/guides/self-hosted/console/
 const apiResources = { requests: { cpu: "2048m", memory: "1024Mi" } };
 const migrationResources = { requests: { cpu: "128m", memory: "128Mi" } };
-// const consoleResources = { requests: { cpu: "1024m", memory: "512Mi" } };
 const consoleResources = { requests: { cpu: "512m", memory: "512Mi" } };
 
 // Deploy the API service.
@@ -306,7 +305,6 @@ const apiIngress = new k8s.networking.v1.Ingress(apiName,
         metadata: {
             labels: { "app": "pulumi" },
             namespace: config.appsNamespaceName,
-            // Annotations: https://git.io/JvMAx
             annotations: {
                 "kubernetes.io/ingress.class": "alb",
                 "alb.ingress.kubernetes.io/target-type": "ip",
@@ -350,7 +348,6 @@ const consoleIngress = new k8s.networking.v1.Ingress(consoleName,
         metadata: {
             labels: { "app": "pulumi" },
             namespace: config.appsNamespaceName,
-            // Annotations: https://git.io/JITxH
             annotations: {
                 "kubernetes.io/ingress.class": "alb",
                 "alb.ingress.kubernetes.io/target-type": "ip",

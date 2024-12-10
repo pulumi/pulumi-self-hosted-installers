@@ -9,17 +9,19 @@ export const ssoRoleArn = config.ssoRoleArn;
 
 // These roles are either provided by the user or created in this stack.
 export let eksServiceRoleName: string | pulumi.Output<string>;
+export let eksServiceRole: aws.iam.Role | pulumi.Output<aws.iam.Role>;
 export let eksInstanceRoleName: string | pulumi.Output<string>; 
+export let eksInstanceRole: aws.iam.Role | pulumi.Output<aws.iam.Role>;
 export let instanceProfileName: string | pulumi.Output<string>;
 export let databaseMonitoringRoleArn: string | pulumi.Output<string>;
 
 
 // If the user provided the roles, use them instead of creating new ones.
 // It's an all-or-nothing situation, so if one is provided, they all must be.
-if (config.eksServiceRoleName && config.eksInstanceRoleName && config.instanceProfileName && config.databaseMonitoringRoleArn) {
+// if (config.eksServiceRoleName && config.eksInstanceRoleName && config.instanceProfileName && config.databaseMonitoringRoleArn) {
+if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMonitoringRoleArn) {
     eksServiceRoleName = config.eksServiceRoleName;
     eksInstanceRoleName = config.eksInstanceRoleName;
-    instanceProfileName = config.instanceProfileName;
     databaseMonitoringRoleArn = config.databaseMonitoringRoleArn;
 } else {
     // Create the roles.
@@ -90,9 +92,6 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.instancePr
 
     eksInstanceRoleName = instanceRole.name;
 
-    const instanceProfile =  new aws.iam.InstanceProfile("ng-standard", {role: eksInstanceRoleName})
-    instanceProfileName = instanceProfile.name;
-
     // used by RDS to publish metrics to CloudWatch
     const databaseMonitoringRole = new aws.iam.Role("databaseMonitoringRole", {
         assumeRolePolicy: {
@@ -114,4 +113,7 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.instancePr
     });
     databaseMonitoringRoleArn = databaseMonitoringRole.arn;
 }
+
+eksServiceRole = aws.iam.Role.get("eksServiceRole", eksServiceRoleName);
+eksInstanceRole = aws.iam.Role.get("eksInstanceRole", eksInstanceRoleName);
 

@@ -8,15 +8,13 @@ const tags = { "Project": "pulumi-k8s-aws-cluster", "Owner": "pulumi"};
 
 /////////////////////
 // --- EKS Cluster ---
-const serviceRole = aws.iam.Role.get("eksServiceRole", config.eksServiceRoleName)
-const instanceRole = aws.iam.Role.get("instanceRole", config.eksInstanceRoleName)
 // Create an EKS cluster.
 const cluster = new eks.Cluster(`${baseName}`, {
     name: config.clusterName,
     authenticationMode: "API",
     // We keep these serviceRole and instanceRole properties to prevent the EKS provider from creating its own roles.
-    serviceRole: serviceRole,
-    instanceRole: instanceRole,
+    serviceRole: config.eksServiceRole,
+    instanceRole: config.eksInstanceRole,
     vpcId: config.vpcId,
     publicSubnetIds: config.publicSubnetIds,
     privateSubnetIds: config.privateSubnetIds,
@@ -27,33 +25,27 @@ const cluster = new eks.Cluster(`${baseName}`, {
     createOidcProvider: false,
     tags: tags,
     enabledClusterLogTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"],
-}, {
-    transformations: [(args) => {
-        if (args.type === "aws:eks/cluster:Cluster") {
-            return {
-                props: args.props,
-                opts: pulumi.mergeOptions(args.opts, {
-                    protect: true,
-                })
-            }
-        }
-        return undefined;
-    }],
-});
+}, { protect: true });
 
 // Export the cluster details.
 export const kubeconfig = pulumi.secret(cluster.kubeconfig.apply(JSON.stringify));
 export const clusterName = cluster.core.cluster.name;
 export const region = aws.config.region;
-export const nodeSecurityGroupId = cluster.nodeSecurityGroup.id
+export const nodeSecurityGroupId = cluster.nodeSecurityGroupId;
 export const nodeGroupInstanceType = config.pulumiNodeGroupInstanceType;
 
 /////////////////////
 // Build managed nodegroup for the service to run on.
 
+const instanceRoleArn = aws.iam.Role.get("instanceRole", config.eksInstanceRoleName).arn
+
 // Launch template for the managed node group to manage settings.
 const ngManagedLaunchTemplate = new aws.ec2.LaunchTemplate(`${baseName}-ng-managed-launch-template`, {
-    vpcSecurityGroupIds: [cluster.nodeSecurityGroup.id],
+    vpcSecurityGroupIds: [cluster.nodeSecurityGroupId],
+    metadataOptions: {
+        httpTokens: "required",
+        httpPutResponseHopLimit: 2,
+    },
 })
 
 const ngManagedStandard = new eks.ManagedNodeGroup(`${baseName}-ng-managed-standard`, {
@@ -63,7 +55,7 @@ const ngManagedStandard = new eks.ManagedNodeGroup(`${baseName}-ng-managed-stand
         id: ngManagedLaunchTemplate.id,
         version: ngManagedLaunchTemplate.latestVersion.apply(v => v.toString()),
     },
-    nodeRoleArn: instanceRole.arn,
+    nodeRoleArn: instanceRoleArn,
     scalingConfig: {
         desiredSize: config.standardNodeGroupDesiredCapacity,
         minSize: config.standardNodeGroupMinSize,
@@ -75,93 +67,22 @@ const ngManagedStandard = new eks.ManagedNodeGroup(`${baseName}-ng-managed-stand
 
 const ngManagedPulumi = new eks.ManagedNodeGroup(`${baseName}-ng-managed-pulumi`, {
     cluster: cluster,
-//     instanceProfile: instanceProfile,
-//     nodeAssociatePublicIpAddress: false,
-//     nodeSecurityGroup: cluster.nodeSecurityGroup,
-//     clusterIngressRule: cluster.eksClusterIngressRule,
-//     amiId: amiId,
-
     instanceTypes: [<aws.ec2.InstanceType>config.pulumiNodeGroupInstanceType],
     launchTemplate: {
         id: ngManagedLaunchTemplate.id,
         version: ngManagedLaunchTemplate.latestVersion.apply(v => v.toString()),
     },
-    nodeRoleArn: instanceRole.arn,
+    nodeRoleArn: instanceRoleArn,
     scalingConfig: {
         desiredSize: config.pulumiNodeGroupDesiredCapacity,
         minSize: config.pulumiNodeGroupMinSize,
         maxSize: config.pulumiNodeGroupMaxSize,
     },
     subnetIds: config.privateSubnetIds,
-//     desiredCapacity: config.pulumiNodeGroupDesiredCapacity,
-//     minSize: config.pulumiNodeGroupMinSize,
-//     maxSize: config.pulumiNodeGroupMaxSize,
-
-//     labels: {"amiId": `${amiId}`},
     taints: [{ 
         key: "self-hosted-pulumi",
         value: "true", 
         effect: "NO_SCHEDULE"
     }],
     tags: tags,
-// }, {
-//     providers: { kubernetes: cluster.provider},
 });
-
-
-/////////////////////
-/// Build node groups
-// const ssmParam = pulumi.output(aws.ssm.getParameter({
-//     // https://docs.aws.amazon.com/eks/latest/userguide/retrieve-ami-id.html
-//     name: `/aws/service/eks/optimized-ami/${config.clusterVersion}/amazon-linux-2/recommended`,
-// }))
-// const amiId = ssmParam.value.apply(s => JSON.parse(s).image_id)
-
-// // Create a standard node group.
-// const ngStandard = new eks.NodeGroup(`${baseName}-ng-standard`, {
-//     cluster: cluster,
-//     instanceProfile: instanceProfile,
-//     nodeAssociatePublicIpAddress: false,
-//     nodeSecurityGroup: cluster.nodeSecurityGroup,
-//     clusterIngressRule: cluster.eksClusterIngressRule,
-//     amiId: amiId,
-    
-//     instanceType: <aws.ec2.InstanceType>config.standardNodeGroupInstanceType,
-//     desiredCapacity: config.standardNodeGroupDesiredCapacity,
-//     minSize: config.standardNodeGroupMinSize,
-//     maxSize: config.standardNodeGroupMaxSize,
-
-//     labels: {"amiId": `${amiId}`},
-//     cloudFormationTags: clusterName.apply(clusterName => ({
-//         "k8s.io/cluster-autoscaler/enabled": "true",
-//         [`k8s.io/cluster-autoscaler/${clusterName}`]: "true",
-//         ...tags,
-//     })),
-// }, {
-//     providers: { kubernetes: cluster.provider},
-// });
-
-// // Create a standard node group tainted for use only by self-hosted pulumi.
-// const ngStandardPulumi = new eks.NodeGroup(`${baseName}-ng-standard-pulumi`, {
-//     cluster: cluster,
-//     instanceProfile: instanceProfile,
-//     nodeAssociatePublicIpAddress: false,
-//     nodeSecurityGroup: cluster.nodeSecurityGroup,
-//     clusterIngressRule: cluster.eksClusterIngressRule,
-//     amiId: amiId,
-
-//     instanceType: <aws.ec2.InstanceType>config.pulumiNodeGroupInstanceType,
-//     desiredCapacity: config.pulumiNodeGroupDesiredCapacity,
-//     minSize: config.pulumiNodeGroupMinSize,
-//     maxSize: config.pulumiNodeGroupMaxSize,
-
-//     labels: {"amiId": `${amiId}`},
-//     taints: { "self-hosted-pulumi": { value: "true", effect: "NoSchedule"}},
-//     cloudFormationTags: clusterName.apply(clusterName => ({
-//         "k8s.io/cluster-autoscaler/enabled": "true",
-//         [`k8s.io/cluster-autoscaler/${clusterName}`]: "true",
-//         ...tags,
-//     })),
-// }, {
-//     providers: { kubernetes: cluster.provider},
-// });
