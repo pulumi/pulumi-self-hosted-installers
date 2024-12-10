@@ -86,4 +86,9 @@ export const config = {
     apiDisableEmailSignup: pulumiConfig.get("apiDisableEmailSignup") ?? 'false',
     apiDisableEmailLogin: pulumiConfig.get("apiDisableEmailLogin") ?? 'false',
 
+    // GITHUB related settings
+    github_oauth_endpoint: pulumiConfig.get("github_oauth_endpoint"),
+    github_oauth_id: pulumiConfig.get("github_oauth_id"),
+    github_oauth_secret: pulumiConfig.get("github_oauth_secret"),
+
 };
