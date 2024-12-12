@@ -82,8 +82,8 @@ const recaptchaSecret = new kx.Secret("recaptcha",
 {
     metadata: { namespace: config.appsNamespaceName },
     stringData: {
-        siteKey: config.recaptchaSiteKey,
-        secretKey: config.recaptchaSecretKey
+        siteKey: config.recaptchaSiteKey || "undefined",
+        secretKey: config.recaptchaSecretKey || "undefined"
     },
 
 }, { provider: k8sprovider })

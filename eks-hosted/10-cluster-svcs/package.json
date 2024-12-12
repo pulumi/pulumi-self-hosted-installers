@@ -4,8 +4,8 @@
     "typescript": "^3.0.0"
   },
   "dependencies": {
-    "@pulumi/aws": "^6.21.0",
-    "@pulumi/kubernetes": "^3.0.0",
-    "@pulumi/pulumi": "^3.136.0"
+    "@pulumi/aws": "6.42.0",
+    "@pulumi/kubernetes": "4.18.4",
+    "@pulumi/pulumi": "3.142.0"
   }
 }
