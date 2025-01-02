@@ -19,6 +19,9 @@ services:
     build:
       context: ../../../
       dockerfile: ./cmd/service/Dockerfile
+      target: service
+      ssh:
+        - default
 
   console:
     ports:

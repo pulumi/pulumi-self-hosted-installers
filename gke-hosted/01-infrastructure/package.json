@@ -4,8 +4,8 @@
         "@types/node": "10.17.60"
     },
     "dependencies": {
-        "@pulumi/gcp": "6.60.0",
-        "@pulumi/pulumi": "3.76.0",
-        "@pulumi/random": "4.13.2"
+        "@pulumi/gcp": "8.10.0",
+        "@pulumi/pulumi": "3.142.0",
+        "@pulumi/random": "4.16.7"
     }
 }

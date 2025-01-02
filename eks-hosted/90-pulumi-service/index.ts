@@ -7,7 +7,7 @@ import EnvMap = types.EnvMap;
 import { config } from "./config";
 
 // Set up the K8s secrets used by the applications.
-import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  openSearchConfig, secretsIntegration } from "./k8s-secrets";
+import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  openSearchConfig, secretsIntegration, githubConfig } from "./k8s-secrets";
 
 const migrationsImage = `pulumi/migrations:${config.imageTag}`;
 const apiImage = `pulumi/service:${config.imageTag}`;
@@ -67,6 +67,7 @@ const serviceEnv = pulumi
             ...recaptchaServiceConfig,
             ...openSearchConfig,
             ...apiEmailLoginConfig,
+            ...githubConfig,
         } as EnvMap;
 
         // Add env vars specific to managing secrets.
@@ -87,7 +88,6 @@ const serviceEnv = pulumi
 // https://www.pulumi.com/docs/guides/self-hosted/console/
 const apiResources = { requests: { cpu: "2048m", memory: "1024Mi" } };
 const migrationResources = { requests: { cpu: "128m", memory: "128Mi" } };
-// const consoleResources = { requests: { cpu: "1024m", memory: "512Mi" } };
 const consoleResources = { requests: { cpu: "512m", memory: "512Mi" } };
 
 // Deploy the API service.
@@ -237,7 +237,8 @@ const consolePodBuilder = new kx.PodBuilder({
             "PULUMI_API_INTERNAL_ENDPOINT": pulumi.interpolate`http://${apiService.metadata.name}:${apiPort}`,
             "SAML_SSO_ENABLED": `${config.samlSsoEnabled}`,
             ...recaptchaConsoleConfig,
-            ...consoleEmailLoginConfig
+            ...consoleEmailLoginConfig,
+            ...githubConfig,
         },
         resources: consoleResources,
     }],
@@ -306,7 +307,6 @@ const apiIngress = new k8s.networking.v1.Ingress(apiName,
         metadata: {
             labels: { "app": "pulumi" },
             namespace: config.appsNamespaceName,
-            // Annotations: https://git.io/JvMAx
             annotations: {
                 "kubernetes.io/ingress.class": "alb",
                 "alb.ingress.kubernetes.io/target-type": "ip",
@@ -350,7 +350,6 @@ const consoleIngress = new k8s.networking.v1.Ingress(consoleName,
         metadata: {
             labels: { "app": "pulumi" },
             namespace: config.appsNamespaceName,
-            // Annotations: https://git.io/JITxH
             annotations: {
                 "kubernetes.io/ingress.class": "alb",
                 "alb.ingress.kubernetes.io/target-type": "ip",

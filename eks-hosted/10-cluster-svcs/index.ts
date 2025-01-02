@@ -23,7 +23,6 @@ const coreDnsAddon = new aws.eks.Addon("coreDns", {
 const albSecurityGroup = createAlbSecurityGroup(config.baseName, {
     vpcId: config.vpcId,
     nodeSecurityGroupId: config.nodeSecurityGroupId,
-    // tags: tags,
     clusterName: config.clusterName,
 });
 

@@ -11,7 +11,6 @@ config:
   # Currently this is just passed through and consumed by later stacks to enable the k8s provider to assume the role and deploy 
   # k8s infra to the eks cluster.
   # A future iteration may create this sso role as part of the stack.
-  ssoRoleArn: arn:aws:iam::123456789012:role/SSO-Role-Name
 
   #### BRINGING YOUR OWN IAM INFRASTRUCTURE ###
   # If you are not using the `01-iam` stack, then set the following values that would have otherwise been provided by the iam stack.
@@ -19,5 +18,4 @@ config:
   databaseMonitoringRoleArn: 
   eksServiceRoleName:
   eksInstanceRoleName:      
-  instanceProfileName:
 

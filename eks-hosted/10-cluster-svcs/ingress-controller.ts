@@ -21,8 +21,8 @@ export function createAlbIngressController(name: string, args: AlbIngressControl
   const albServiceAccount = new k8s.core.v1.ServiceAccount("albServiceAccount", {
     metadata: {
         name: "aws-load-balancer-controller",
-        namespace: "kube-system"
-    }
+        namespace: "kube-system",
+    },
   }, {provider: args.k8sprovider})
 
   // If you are not able to access the repository, you can reference it as a local chart by doing the following:
@@ -35,6 +35,7 @@ export function createAlbIngressController(name: string, args: AlbIngressControl
         repo: "https://aws.github.io/eks-charts"
     },
     chart: "aws-load-balancer-controller",
+    version: "1.10.1",
     // chart: "./alb-ingress-chart-local/aws-load-balancer-controller",
     namespace: "kube-system",
     values: {

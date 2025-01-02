@@ -12,7 +12,7 @@ const stackName = pulumi.getStack();
 const commonName = stackConfig.get("commonName") || "pulumi-selfhosted"; 
 const resourceNamePrefix = `${commonName}-${stackName}`;
 
-const clusterVersion = stackConfig.get("clusterVersion") || "1.26";
+const clusterVersion = stackConfig.get("clusterVersion") || "1.30";
 
 export const config = {
     projectName,
