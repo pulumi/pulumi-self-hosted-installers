@@ -33,7 +33,7 @@ if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
     fi
 fi
 
-while ! mysqladmin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" -P "${MYSQL_PORT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
+while ! mariadb-admin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" -P "${MYSQL_PORT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --skip-ssl --silent; do sleep 1; done
 
 echo "MySQL is running!"
 
