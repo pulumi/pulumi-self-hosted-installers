@@ -33,7 +33,17 @@ if [ -z "${PULUMI_DATABASE_PING_ENDPOINT:-}" ]; then
     fi
 fi
 
-while ! mariadb-admin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" -P "${MYSQL_PORT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --skip-ssl --silent; do sleep 1; done
+# mysqladmin has been renamed to mariadb-admin and the old name produces deprecation warnings on newer releases.
+# Use mariadb-admin if present
+if command -v mariadb-admin >/dev/null 2>&1; then
+    while ! mariadb-admin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" -P "${MYSQL_PORT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --skip-ssl --silent; do sleep 1; done
+# Fall back to using mysqladmin
+elif command -v mysqladmin >/dev/null 2>&1; then
+    while ! mysqladmin ping -h "${PULUMI_DATABASE_PING_ENDPOINT}" -P "${MYSQL_PORT}" --user="${MYSQL_ROOT_USERNAME}" --password="${MYSQL_ROOT_PASSWORD}" --silent; do sleep 1; done
+else
+    echo "Neither mariadb-admin nor mysqladmin is available in the PATH."
+    exit 1
+fi
 
 echo "MySQL is running!"
 
