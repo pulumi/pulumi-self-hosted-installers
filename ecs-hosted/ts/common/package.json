@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "@pulumi/esc-sdk": "^0.11.0",
-    "@types/mocha": "^9.1.0",
+    "@types/mocha": "^10.0.0",
     "assert": "^2.0.0",
     "mocha": "^11.0.1",
     "ts-node": "^10.4.0",
