@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
 
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.11.1@sha256:223eaaca192bcfe3101ddf49682d1dfb1a4cefbafdae18b54b7562170d29e8d1
+    image: opensearchproject/opensearch-dashboards:2.18.0@sha256:0ecd8444add2926cb6c52e03f910160138b6e331522237561da0b82e159b134f
     container_name: opensearch-dashboards
     ports:
       - "5601:5601"
