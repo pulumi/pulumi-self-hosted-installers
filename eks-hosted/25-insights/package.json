@@ -1,7 +1,7 @@
 {
   "name": "eks-installer-state-policies-mgmt",
   "devDependencies": {
-    "typescript": "^3.0.0"
+    "typescript": "3.9.10"
   },
   "scripts": {
     "postinstall": "(cd ../../components-microstacks/ && npm install);"
