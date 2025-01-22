@@ -9,7 +9,7 @@ networks:
 services:
 
   opensearch:
-    image: opensearchproject/opensearch:2.11.1@sha256:cbca8e35fb333af938289ac0f370abdcbde46dbe7629acc1af0cd4219da85b62
+    image: opensearchproject/opensearch:2.18.0@sha256:7f6fa1efee8f39e94ca30a0a31f95d866c8a99f25a86e6cf6691142d1eab4f9e
     container_name: search
     ulimits:
       memlock:
