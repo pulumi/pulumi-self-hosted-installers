@@ -7,7 +7,7 @@ toolchain go1.23.5
 require (
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.66.3
 	github.com/pulumi/pulumi-random/sdk/v4 v4.17.0
-	github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common v3.0
+	github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common v0.0.0-00010101000000-000000000000
 	github.com/pulumi/pulumi/sdk/v3 v3.147.0
 	github.com/pulumiverse/pulumi-time/sdk v0.0.17
 )
