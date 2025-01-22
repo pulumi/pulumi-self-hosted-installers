@@ -5,11 +5,11 @@
     "@pulumi/pulumi": "^3.2.1",
     "@types/js-yaml": "^3.12.5",
     "@types/readline-sync": "^1.4.3",
-    "@types/yargs": "^15.0.9",
+    "@types/yargs": "^17.0.0",
     "js-yaml": "^3.14.0",
     "readline-sync": "^1.4.10",
     "typescript": "^5.0.0",
-    "yargs": "^16.1.0"
+    "yargs": "^17.0.0"
   },
   "files": [
     "index.ts"
