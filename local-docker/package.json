@@ -1,7 +1,7 @@
 {
     "name": "pulumi-onprem-docker-compose",
     "devDependencies": {
-        "@types/node": "10.17.60"
+        "@types/node": "22.10.7"
     },
     "dependencies": {
         "@pulumi/docker": "^4.0.0",
