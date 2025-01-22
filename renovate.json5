@@ -1,6 +1,6 @@
 {
   // Extend from Pulumi's default renovate config
-  extends: ["github>pulumi/renovate-config"],
+  extends: ["github>pulumi/renovate-config//default.json5"],
   
   // Ignore specific paths
   ignorePaths: [
