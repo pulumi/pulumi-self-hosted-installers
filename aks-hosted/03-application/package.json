@@ -1,7 +1,7 @@
 {
     "name": "k8s-azure-03-application",
     "devDependencies": {
-        "@types/node": "18.19.71"
+        "@types/node": "22.10.7"
     },
     "dependencies": {
         "@pulumi/kubernetes": "^4.0.0",
