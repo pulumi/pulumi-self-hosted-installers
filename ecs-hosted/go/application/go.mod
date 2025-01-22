@@ -9,8 +9,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.26
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.66.3
-	github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common v0.0.0-00010101000000-000000000000
-	github.com/pulumi/pulumi-tls/sdk/v4 v4.11.1
+	github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common v3.0
+	github.com/pulumi/pulumi-tls/sdk/v5 v5.1.0
 	github.com/pulumi/pulumi/sdk/v3 v3.147.0
 )
 
