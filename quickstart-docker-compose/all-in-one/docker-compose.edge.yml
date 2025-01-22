@@ -15,12 +15,12 @@ services:
   api:
     ports:
       - "8080:8080"
-    image: "pulumi/service:edge"
+    image: "pulumi/service:edge@sha256:3b339cdf317de607aaf0a8683b59c02e9481a68379b78d70a8baab91ca2003cb"
 
   console:
     ports:
       - "3000:3000"
-    image: "pulumi/console:edge"
+    image: "pulumi/console:edge@sha256:3f25fd2748821fd5eb4a87a9a1d42fbd7874eb7ad03015129d5084346e5df935"
 
   migration:
-    image: "pulumi/migrations:edge"
+    image: "pulumi/migrations:edge@sha256:d3ec407582f1892cb8a3c29c16c6e85e2d8105a43806048436cd89cd06416bd0"
