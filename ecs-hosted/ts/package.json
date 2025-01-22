@@ -10,6 +10,6 @@
         "@pulumi/pulumi": "^3.0.0",
         "@pulumi/pulumiservice": "^0.27.0",
         "@pulumi/random": "^4.16.3",
-        "@pulumiverse/time": "^0.0.17"
+        "@pulumiverse/time": "^0.1.0"
     }
 }
