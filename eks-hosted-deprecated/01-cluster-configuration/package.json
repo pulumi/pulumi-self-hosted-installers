@@ -1,7 +1,7 @@
 {
   "name": "k8s-aws-cluster",
   "devDependencies": {
-    "typescript": "3.9.10"
+    "typescript": "5.7.3"
   },
   "dependencies": {
     "@pulumi/aws": "^6.21.0",
