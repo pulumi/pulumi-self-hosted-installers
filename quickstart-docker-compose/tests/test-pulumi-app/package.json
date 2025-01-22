@@ -1,7 +1,7 @@
 {
     "name": "test-pulumi-app",
     "devDependencies": {
-        "@types/node": "^18.0.0"
+        "@types/node": "18.19.33"
     },
     "dependencies": {
         "@pulumi/pulumi": "^3.116.0",
