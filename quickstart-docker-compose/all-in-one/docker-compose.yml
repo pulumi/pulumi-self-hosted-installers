@@ -173,7 +173,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: "mysql:8.0@sha256:4f33388ab0a152ca309eeb70cd2e4a9a8989d5006ec2a4890d883afbffd6be4a"
+    image: "mysql:8.4@sha256:1d967fb75a64dc3c2894c69285becfc2304ae0c3c4f4c715c297f3c12d60b01c"
     environment:
       MYSQL_DATABASE: "pulumi"
       # This is set to true because we never expose the db service outside the local network.
