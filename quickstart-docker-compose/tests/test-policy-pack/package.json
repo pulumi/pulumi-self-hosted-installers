@@ -7,6 +7,6 @@
         "@pulumi/random": "^4.16.1"
     },
     "devDependencies": {
-        "@types/node": "22.10.7"
+        "@types/node": "22.10.9"
     }
 }
