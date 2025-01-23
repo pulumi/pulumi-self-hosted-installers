@@ -1,7 +1,7 @@
 {
     "name": "self-hosted-aws-ecs-ts",
     "devDependencies": {
-        "@types/node": "22.10.7",
+        "@types/node": "22.10.9",
         "typescript": "5.7.3"
     },
     "dependencies": {
