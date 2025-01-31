@@ -27,6 +27,11 @@ export const config = {
     resourceNamePrefix,
 
     kubeconfig: clusterStack.requireOutput("kubeconfig"),
+    openSearch: {
+        username: clusterStack.requireOutput("openSearchUsername"),
+        password: clusterStack.requireOutput("openSearchPassword"),
+        endpoint: clusterStack.requireOutput("openSearchEndpoint")
+    },
     licenseKey: stackConfig.requireSecret("licenseKey"),
     database: {
         connectionString: infrastructureStack.requireOutput("dbConnectionString"),
@@ -35,6 +40,7 @@ export const config = {
         password: infrastructureStack.requireOutput("dbPassword"),
         serverName: infrastructureStack.requireOutput("dbServerName")
     },
+    appNamespaceName: clusterStack.requireOutput("appNamespace"),
     migrationImageName: `pulumi/migrations:${imageTag}`,
     consoleImageName: `pulumi/console:${imageTag}`,
     serviceImageName: `pulumi/service:${imageTag}`,
@@ -44,6 +50,7 @@ export const config = {
     policyBlobName: infrastructureStack.requireOutput("policyBucketName"),
     checkpointBlobId: infrastructureStack.requireOutput("checkpointBucketId"),
     checkpointBlobName: infrastructureStack.requireOutput("checkpointBucketName"),
+    escBlobName: infrastructureStack.requireOutput("escBucketName"),
     storageServiceAccountAccessKeyId: infrastructureStack.requireOutput("serviceAccountAccessKeyId"),
     storageServiceAccountSecretAccessKey: infrastructureStack.requireOutput("serviceAccountSecretAccessKey"),
     apiDomain: stackConfig.require("apiDomain"),

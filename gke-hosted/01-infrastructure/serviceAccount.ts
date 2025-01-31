@@ -5,6 +5,7 @@ import { Output } from "@pulumi/pulumi";
 export interface ServiceAccountArgs {
     policyBucketName: pulumi.Output<string>;
     checkpointBucketName: pulumi.Output<string>;
+    escBucketName: pulumi.Output<string>;
     tags?: pulumi.Input<{
         [key: string]: pulumi.Input<string>;
     }>,
@@ -18,7 +19,7 @@ export class ServiceAccount extends pulumi.ComponentResource {
         super("x:infrastructure:serviceaccount", name);
 
         // Create a service account to be used by the api service for access to the buckets and SQL DB.
-        const saName = `${name}-sa`
+        const saName = `${name}-sa`;
         const serviceAccount = new gcp.serviceaccount.Account(saName, {
             accountId: saName,
             displayName: "A service account for the api service",
@@ -29,13 +30,19 @@ export class ServiceAccount extends pulumi.ComponentResource {
         const checkpointBucketIAMMember = new gcp.storage.BucketIAMMember(`${saName}-checkpoint-bucket-iam`, {
             bucket: args.checkpointBucketName,
             role: "roles/storage.objectAdmin",
-            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`
+            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
         }, { parent: serviceAccount });
 
         const policyBucketIAMMember = new gcp.storage.BucketIAMMember(`${saName}-policy-bucket-iam`, {
             bucket: args.policyBucketName,
             role: "roles/storage.objectAdmin",
-            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`
+            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
+          }, { parent: serviceAccount });
+
+        const escBucketIAMMember = new gcp.storage.BucketIAMMember(`${saName}-esc-bucket-iam`, {
+            bucket: args.escBucketName,
+            role: "roles/storage.objectAdmin",
+            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
         }, { parent: serviceAccount });
 
         const serviceAccountKey = new gcp.storage.HmacKey(`${saName}-hmac`, {
