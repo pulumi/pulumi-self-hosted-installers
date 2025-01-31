@@ -33,7 +33,12 @@ export interface SecretsCollectionArgs {
         recaptcha: {
             secretKey: Input<string>,
             siteKey: Input<string>
-        }
+        },
+        openSearch: {
+            username: Input<string>,
+            password: Input<string>,
+            endpoint: Input<string>,
+        };
     }
 }
 
@@ -45,6 +50,7 @@ export class SecretsCollection extends ComponentResource {
     StorageSecret: k8s.core.v1.Secret;
     SmtpSecret: k8s.core.v1.Secret;
     RecaptchaSecret: k8s.core.v1.Secret;
+    OpenSearchSecret: k8s.core.v1.Secret;
     constructor(name: string, args: SecretsCollectionArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:secrets", name, opts);
 
@@ -72,7 +78,7 @@ export class SecretsCollection extends ComponentResource {
                 "tls.crt": args.secretValues.consoleTlsCert.apply(it=>Buffer.from(it).toString("base64")),
             },
         }, { provider: args.provider, parent: this });
-        
+
         this.DBConnSecret = new k8s.core.v1.Secret(`${args.commonName}-mysql-db-conn`, {
             metadata: {
                 namespace: args.namespace,
@@ -105,7 +111,7 @@ export class SecretsCollection extends ComponentResource {
                 password: args.secretValues.smtpDetails.smtpPassword,
                 fromaddress: args.secretValues.smtpDetails.smtpFromAddress,
             }
-        }, {provider: args.provider, parent: this});
+        }, { provider: args.provider, parent: this });
 
         this.RecaptchaSecret = new k8s.core.v1.Secret(`${args.commonName}-recaptcha-secret`, {
             metadata: {
@@ -115,8 +121,19 @@ export class SecretsCollection extends ComponentResource {
                 secretKey: args.secretValues.recaptcha.secretKey,
                 siteKey: args.secretValues.recaptcha.siteKey
             }
+          }, { provider: args.provider, parent: this });
+
+      this.OpenSearchSecret = new k8s.core.v1.Secret(`${args.commonName}-opensearch-secrets`, {
+            metadata: {
+                namespace: args.namespace,
+          },
+            stringData: {
+              username: args.secretValues.openSearch.username,
+              password: args.secretValues.openSearch.password,
+              endpoint: args.secretValues.openSearch.endpoint,
+          },
         }, {provider: args.provider, parent: this});
-    
+
         this.registerOutputs({
             LicenseKeySecret: this.LicenseKeySecret,
             ApiCertificateSecret: this.ApiCertificateSecret,
@@ -124,7 +141,8 @@ export class SecretsCollection extends ComponentResource {
             DBConnSecret: this.DBConnSecret,
             StorageSecret: this.StorageSecret,
             SmtpSecret: this.SmtpSecret,
-            RecaptchaSecret: this.RecaptchaSecret
-        })
+            RecaptchaSecret: this.RecaptchaSecret,
+            OpenSearchSecret: this.OpenSearchSecret
+        });
     }
 }

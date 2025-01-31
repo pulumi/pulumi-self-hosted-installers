@@ -1,18 +1,18 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
-import {config} from "./config";
-import {SecretsCollection} from "./secrets";
-import {SsoCertificate} from "./sso-cert";
-import {EncryptionService} from "./encryptionService";
+import { config } from "./config";
+import { SecretsCollection } from "./secrets";
+import { SsoCertificate } from "./sso-cert";
+import { EncryptionService } from "./encryptionService";
 
 /**
  * Check pre-requisites.
  */
 if (!config.apiDomain.startsWith("api.")) {
-    throw new Error("Configuration value [apiDomain] must start with [api.].")
+    throw new Error("Configuration value [apiDomain] must start with [api.].");
 }
 if (!config.consoleDomain.startsWith("app.")) {
-    throw new Error("Configuration value [consoleDomain] must start with [app.].")
+    throw new Error("Configuration value [consoleDomain] must start with [app.].");
 }
 
 const commonName = "pulumi-selfhosted";
@@ -29,16 +29,10 @@ const provider = new k8s.Provider("k8s-provider", {
   kubeconfig: config.kubeconfig,
 });
 
-const appsNamespace = new k8s.core.v1.Namespace(`${commonName}-apps`, {
-  metadata: {
-      name: `${commonName}-apps`,
-  },
-}, { provider });
-
 const secrets = new SecretsCollection(`${commonName}-secrets`, {
   apiDomain: config.apiDomain,
   commonName: commonName,
-  namespace: appsNamespace.metadata.name,
+  namespace: config.appNamespaceName,
   provider: provider,
   secretValues: {
     apiTlsCert: config.apiTlsCert,
@@ -49,7 +43,7 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
       host: config.database.host,
       connectionString: config.database.connectionString,
       login: config.database.login,
-      password:config.database.password,
+      password: config.database.password,
       serverName: config.database.serverName
     },
     storage: {
@@ -65,20 +59,25 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
     },
     recaptcha: {
       secretKey: config.recaptchaSecretKey,
-      siteKey: config.recaptchaSiteKey
-    }
-  }
+      siteKey: config.recaptchaSiteKey,
+    },
+    openSearch: {
+      endpoint: config.openSearch.endpoint,
+      username: config.openSearch.username,
+      password: config.openSearch.password,
+    },
+  },
 });
 
 const ssoSecret = new SsoCertificate(`${commonName}-sso-certificate`, {
   apiDomain: config.apiDomain,
-  namespace: appsNamespace.metadata.name,
+  namespace: config.appNamespaceName,
   provider: provider
 });
 
 const pulumiLocalKeySecret = new EncryptionService(`${commonName}-local-key`, {
   commonName: commonName,
-  namespace: appsNamespace.metadata.name,
+  namespace: config.appNamespaceName,
   provider: provider
 });
 
@@ -94,10 +93,9 @@ function generateEnvVarFromSecret(envVarName: string, secretName: pulumi.Output<
   }
 }
 
-
 const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
     metadata: {
-      namespace: appsNamespace.metadata.name,
+      namespace: config.appNamespaceName,
       name: `${apiName}-deployment`,
     },
     spec: {
@@ -149,6 +147,9 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 generateEnvVarFromSecret("SMTP_GENERIC_SENDER", secrets.SmtpSecret.metadata.name, "fromaddress"),
                 generateEnvVarFromSecret("RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
                 generateEnvVarFromSecret("LOGIN_RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
+                generateEnvVarFromSecret("PULUMI_SEARCH_PASSWORD", secrets.OpenSearchSecret.metadata.name, "password"),
+                generateEnvVarFromSecret("PULUMI_SEARCH_USER", secrets.OpenSearchSecret.metadata.name, "username"),
+                generateEnvVarFromSecret("PULUMI_SEARCH_DOMAIN", secrets.OpenSearchSecret.metadata.name, "endpoint"),
                 {
                   name: "PULUMI_ENTERPRISE",
                   value: "true",
@@ -177,18 +178,22 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
                   value: pulumi.interpolate`s3://${config.checkpointBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 },
+                {
+                  name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
+                  value: pulumi.interpolate`s3://${config.escBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
+                }
               ],
             },
           ],
         },
       },
     },
-  }, {provider});
+  }, { provider });
 
   const apiService = new k8s.core.v1.Service(`${commonName}-${apiName}`, {
       metadata: {
         name: `${apiName}-service`,
-        namespace: appsNamespace.metadata.name,
+        namespace: config.appNamespaceName,
       },
       spec: {
         ports: [{ port: 80, targetPort: config.servicePort, name: "http-port" }],
@@ -196,23 +201,19 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
       },
   }, { provider, parent: apiDeployment });
 
-  const apiServiceEndpoint = k8s.core.v1.Endpoints.get("apiServiceEndpoints", apiService.id, {provider})
-  const apiServiceEndpointAddress = apiServiceEndpoint.subsets[0].addresses[0].ip
-  const apiServiceEndpointPort = apiServiceEndpoint.subsets[0].ports[0].port
-
   const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleName}`, {
     metadata: {
-      namespace: appsNamespace.metadata.name,
+      namespace: config.appNamespaceName,
       name: `${consoleName}-deployment`,
     },
     spec: {
-      selector: {matchLabels: consoleAppLabel},
+      selector: { matchLabels: consoleAppLabel },
       replicas: 1,
       template: {
-        metadata: {labels: consoleAppLabel},
+        metadata: { labels: consoleAppLabel },
         spec: {
           containers: [{
-            image: config.consoleImageName,
+              image: config.consoleImageName,
               name: consoleName,
               resources: consoleResources,
               ports: [{ containerPort: config.consolePort, name: "http" }],
@@ -235,7 +236,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_API_INTERNAL_ENDPOINT",
-                  value: pulumi.interpolate`http://${apiServiceEndpointAddress}:${apiServiceEndpointPort}`
+                  value: pulumi.interpolate`http://${apiService.metadata.name}.${config.appNamespaceName}:80`
                 },
                 generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
                 generateEnvVarFromSecret("LOGIN_RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
@@ -244,12 +245,12 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
         }
       }
     }
-  }, {provider});
-  
-  const consoleService = new k8s.core.v1.Service(`${commonName}-${consoleName}`, {
+  }, { provider });
+
+const consoleService = new k8s.core.v1.Service(`${commonName}-${consoleName}`, {
     metadata: {
       name: `${consoleName}-service`,
-      namespace: appsNamespace.metadata.name,
+      namespace: config.appNamespaceName,
     },
     spec: {
       ports: [{ port: 80, targetPort: config.consolePort, name: "http-port" }],
@@ -263,16 +264,16 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
     "nginx.ingress.kubernetes.io/ssl-redirect": "true",
     "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
   };
-  
-  if(config.ingressAllowList.length > 0) {
-    ingressAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"] = config.ingressAllowList;
-  }
 
-  const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
+if (config.ingressAllowList.length > 0) {
+  ingressAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"] = config.ingressAllowList;
+}
+
+const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
     kind: "Ingress",
     metadata: {
       name: "pulumi-service-ingress",
-      namespace: appsNamespace.metadata.name,
+      namespace: config.appNamespaceName,
       annotations: ingressAnnotations,
     },
     spec: {
@@ -292,16 +293,16 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
           host: config.apiDomain,
           http: {
             paths: [{
-              pathType: "Prefix",
-              path: "/",
-              backend: {
-                service: {
-                  name: apiService.metadata.name,
-                  port: {
-                    number: 80,
+                pathType: "Prefix",
+                path: "/",
+                backend: {
+                  service: {
+                    name: apiService.metadata.name,
+                    port: {
+                      number: 80,
+                    }
                   }
                 }
-              }             
             }],
           },
         },
@@ -309,23 +310,23 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
           host: config.consoleDomain,
           http: {
             paths: [{
-              pathType: "Prefix",
-              path: "/",
-              backend: {
-                service: {
-                  name: consoleService.metadata.name,
-                  port: {
-                    number: 80
+                pathType: "Prefix",
+                path: "/",
+                backend: {
+                  service: {
+                    name: consoleService.metadata.name,
+                    port: {
+                      number: 80
+                    }
                   }
                 }
-              }
             }]
           }
         }
       ],
     },
-  }, {provider, dependsOn: [apiService, consoleService]});
+  }, { provider, dependsOn: [apiService, consoleService] });
 
 export const consoleUrl = pulumi.interpolate`https://${config.consoleDomain}`;
 export const apiUrl = pulumi.interpolate`https://${config.apiDomain}`;
-export const namespace = appsNamespace.metadata.name;
+export const namespace = config.appNamespaceName;
