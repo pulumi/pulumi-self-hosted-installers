@@ -9,7 +9,7 @@
   "dependencies": {
     "@pulumi/aws": "6.68.0",
     "@pulumi/kubernetes": "4.21.1",
-    "@pulumi/pulumi": "3.149.0",
+    "@pulumi/pulumi": "3.150.0",
     "@pulumi/random": "4.17.0",
     "@pulumiverse/time": "0.1.1"
   }
