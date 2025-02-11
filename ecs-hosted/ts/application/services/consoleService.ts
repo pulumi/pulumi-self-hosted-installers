@@ -199,10 +199,6 @@ export class ConsoleService extends pulumi.ComponentResource {
                 value: recaptchaSiteKey
             },
             {
-                name: "LOGIN_RECAPTCHA_SITE_KEY",
-                value: recaptchaSiteKey
-            },
-            {
                 // https://github.com/pulumi/pulumi-service/pull/7953
                 name: "PULUMI_HIDE_EMAIL_LOGIN",
                 value: hideEmailLogin ? String(hideEmailLogin) : ""

@@ -146,7 +146,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 generateEnvVarFromSecret("SMTP_PASSWORD", secrets.SmtpSecret.metadata.name, "password"),
                 generateEnvVarFromSecret("SMTP_GENERIC_SENDER", secrets.SmtpSecret.metadata.name, "fromaddress"),
                 generateEnvVarFromSecret("RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
-                generateEnvVarFromSecret("LOGIN_RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
                 generateEnvVarFromSecret("PULUMI_SEARCH_PASSWORD", secrets.OpenSearchSecret.metadata.name, "password"),
                 generateEnvVarFromSecret("PULUMI_SEARCH_USER", secrets.OpenSearchSecret.metadata.name, "username"),
                 generateEnvVarFromSecret("PULUMI_SEARCH_DOMAIN", secrets.OpenSearchSecret.metadata.name, "endpoint"),
@@ -239,7 +238,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   value: pulumi.interpolate`http://${apiService.metadata.name}.${config.appNamespaceName}:80`
                 },
                 generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
-                generateEnvVarFromSecret("LOGIN_RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
             ]
           }]
         }

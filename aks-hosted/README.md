@@ -122,8 +122,8 @@ Note if not set, "forgot password" and email invites will not work but sign ups 
 * `pulumi config set smtpUsername {smtp username}`
 * `pulumi config set smtpPassword {smtp password} --secret`
 * `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
-* `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
-* `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
+* `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a Cloudflare Turnstile widget Site Key)
+* `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret` (this must be a Cloudflare Turnstile widget Seret Key)
 * `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted
     Pulumi Cloud. Not setting this will allow the set up to be open to the internet). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range)
 * `pulumi config set certManagerEmail {email}` (email address that will be used for certificate expirations

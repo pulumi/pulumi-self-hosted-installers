@@ -89,11 +89,9 @@ const recaptchaSecret = new kx.Secret("recaptcha",
 }, { provider: k8sprovider })
 export const recaptchaServiceConfig = {
     "RECAPTCHA_SECRET_KEY": recaptchaSecret.asEnvValue("secretKey"),
-    "LOGIN_RECAPTCHA_SECRET_KEY": recaptchaSecret.asEnvValue("secretKey"),
 }
 export const recaptchaConsoleConfig = {
     "RECAPTCHA_SITE_KEY": recaptchaSecret.asEnvValue("siteKey"),
-    "LOGIN_RECAPTCHA_SITE_KEY": recaptchaSecret.asEnvValue("siteKey"),
 }
 
 // Secrets for accessing OpenSearch domain

@@ -243,10 +243,10 @@ smtpUsername: johndoe
 smtpPassword: abcdefghi
 smtpGenericSender: sender@domain.com  # Be sure this email is allowed to send emails via your SMTP server.
 
-# Optional reCAPTCHA settings
-# reCAPTCHA is used if too many incorrect passwords are entered or if the user clicks the forgot password link.
-# If not set, default "test" values will be used to allow these flows to work.
-# See: https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha-what-should-i-do
+# Optional UI visitor verification configuration.
+# This is used if too many incorrect passwords are entered or if the user clicks the forgot password link.
+# If not set, then the verification is disabled.
+# To use create a Cloudflare Turnstile widget and set the site key and secret key accordingly. See https://www.cloudflare.com/application-services/products/turnstile/
 recaptchaSiteKey: abcdefghijklmno
 recaptchaSecretKey: pqrstuvwxyzabc
 

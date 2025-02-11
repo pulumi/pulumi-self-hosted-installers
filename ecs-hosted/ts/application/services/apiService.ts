@@ -74,10 +74,6 @@ export class ApiService extends pulumi.ComponentResource {
                 value: this.baseArgs.recaptchaSecretKey
             },
             {
-                name: "LOGIN_RECAPTCHA_SECRET_KEY",
-                value: this.baseArgs.recaptchaSecretKey
-            },
-            {
                 name: "SAML_CERTIFICATE_PRIVATE_KEY",
                 value: this.baseArgs.samlCertPrivateKey
             },

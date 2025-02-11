@@ -193,7 +193,6 @@ func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName
 
 	env := []map[string]any{
 		CreateEnvVar("AWS_REGION", args.Region),
-		CreateEnvVar("LOGIN_RECAPTCHA_SITE_KEY", args.RecaptchaSiteKey),
 		CreateEnvVar("PULUMI_API", fmt.Sprintf("https://%s", args.ApiUrl)),
 		CreateEnvVar("PULUMI_CONSOLE_DOMAIN", args.ConsoleUrl),
 		CreateEnvVar("PULUMI_HOMEPAGE_DOMAIN", args.ConsoleUrl),
