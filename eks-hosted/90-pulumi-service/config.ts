@@ -1,6 +1,4 @@
 import * as pulumi from "@pulumi/pulumi";
-import { eventsS3BucketName } from "../15-state-policies-mgmt";
-import { openSearchNamespaceName } from "../25-insights";
 
 const pulumiConfig = new pulumi.Config();
 
@@ -20,6 +18,13 @@ const escStackRef = new pulumi.StackReference(`${orgName}/selfhosted-30-esc/${st
 
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
+
+// Check for encryption key or KMS key ARN.
+const awsKMSKeyArn = pulumiConfig.get("awsKMSKeyArn");
+const encryptionKey = pulumiConfig.get("encryptionKey");
+if (!awsKMSKeyArn && !encryptionKey)  {
+    throw new Error("Either an AWS KMS key ARN or a hard-coded encryptionKey must be provided. See Pulumi.README.yaml.");
+}
 
 export const config = {
     // Cluster
@@ -55,20 +60,20 @@ export const config = {
     apiReplicas: pulumiConfig.getNumber("apiReplicas") ?? 2,
     consoleReplicas: pulumiConfig.getNumber("consoleReplicas") ?? 2,
     
-    // One of these two needs to be set. See Pulumi.README.yaml for more information.
-    awsKMSKeyArn: pulumiConfig.get("awsKMSKeyArn"),
-    encryptionKey: pulumiConfig.get("encryptionKey"),
+    // If no AWS KMS key ARN is provided, then a local encryption key must be provided.
+    awsKMSKeyArn: awsKMSKeyArn,
+    encryptionKey: encryptionKey,
 
     // SMTP Config
-    smtpServer: pulumiConfig.get("smtpServer"),
-    smtpUsername: pulumiConfig.get("smtpUsername"),
-    smtpPassword: pulumiConfig.get("smtpPassword"),
-    smtpGenericSender: pulumiConfig.get("smtpGenericSender"),
+    smtpServer: pulumiConfig.get("smtpServer") ?? "",
+    smtpUsername: pulumiConfig.get("smtpUsername") ?? "",
+    smtpPassword: pulumiConfig.get("smtpPassword") ?? "",
+    smtpGenericSender: pulumiConfig.get("smtpGenericSender") ?? "",
 
     // reCAPTCHA Config
     // If the config is not set, then recaptcha will be disabled.
-    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey"), 
-    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey"), 
+    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey") ?? "", 
+    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey") ?? "", 
 
     // Insights Config
     openSearchEndpoint: insightsStackRef.requireOutput("openSearchEndpoint"),
@@ -87,8 +92,8 @@ export const config = {
     apiDisableEmailLogin: pulumiConfig.get("apiDisableEmailLogin") ?? 'false',
 
     // GITHUB related settings
-    github_oauth_endpoint: pulumiConfig.get("github_oauth_endpoint"),
-    github_oauth_id: pulumiConfig.get("github_oauth_id"),
-    github_oauth_secret: pulumiConfig.get("github_oauth_secret"),
+    githubOauthEndpoint: pulumiConfig.get("github_oauth_endpoint") ?? "",
+    githubOauthId: pulumiConfig.get("github_oauth_id") ?? "",
+    githubOauthSecret: pulumiConfig.get("github_oauth_secret") ?? "",
 
 };

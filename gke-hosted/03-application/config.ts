@@ -58,8 +58,8 @@ export const config = {
     smtpUsername: stackConfig.get("smtpUsername") || "",
     smtpPassword: stackConfig.getSecret("smtpPassword") || "",
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
-    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey"),
-    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey"), 
+    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") || "",
+    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") || "", 
     samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
     ingressAllowList: stackConfig.get("ingressAllowList") || "",
 };
