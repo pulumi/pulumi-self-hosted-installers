@@ -1,22 +1,32 @@
-import * as aws from "@pulumi/aws";
-import * as k8s from "@pulumi/kubernetes";
-import * as kx from "@pulumi/kubernetesx";
-import { types } from "@pulumi/kubernetesx";
 import * as pulumi from "@pulumi/pulumi";
-import EnvMap = types.EnvMap;
+import * as k8s from "@pulumi/kubernetes";
+import * as aws from "@pulumi/aws";
 import { config } from "./config";
+import { SecretsCollection } from "./secrets";
+import { EncryptionService } from "./encryptionService";
 
-// Set up the K8s secrets used by the applications.
-import { k8sprovider, licenseKeySecret, dbConnSecret, smtpConfig, apiEmailLoginConfig, consoleEmailLoginConfig, samlSsoConfig, recaptchaServiceConfig, recaptchaConsoleConfig,  openSearchConfig, secretsIntegration, githubConfig } from "./k8s-secrets";
+const k8sprovider = new k8s.Provider("provider", { kubeconfig: config.kubeconfig, deleteUnreachable: true });
 
+////////////
+// Names and Naming conventions
 const migrationsImage = `pulumi/migrations:${config.imageTag}`;
 const apiImage = `pulumi/service:${config.imageTag}`;
 const consoleImage = `pulumi/console:${config.imageTag}`;
 
+const commonName = "pulumi-selfhosted";
+
 const apiName = "pulumi-api";
+const apiAppLabel = { app: apiName };
 const apiSubdomainName = "api";
+const serviceEndpoint = pulumi.interpolate`${apiSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`;
+export const serviceUrl = pulumi.interpolate`https://${serviceEndpoint}`;
+
 const consoleName = "pulumi-console";
+const consoleAppLabel = { app: consoleName };
 const consoleSubdomainName = "app";
+const consoleEndpoint = pulumi.interpolate`${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`;
+export const consoleURL = pulumi.interpolate`https://${consoleEndpoint}`;
+
 const apiPort = 8080;
 const consolePort = 3000;
 const apiReplicas = config.apiReplicas;
@@ -34,6 +44,8 @@ config.openSearchNamespaceName.apply(openSearchNamespaceName => {
     }
 })
 
+////////////
+// Create the k8s service account for the API service.
 const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
     metadata: {
         namespace: config.appsNamespaceName,
@@ -41,42 +53,68 @@ const apiServiceAccount = new k8s.core.v1.ServiceAccount(apiName, {
     },
 }, { provider: k8sprovider });
 
+////////////
+// Create secrets collection to pass values to the API and Console.
+const secrets = new SecretsCollection(`${commonName}-secrets`, {
+    apiDomain: serviceEndpoint,
+    commonName: commonName,
+    namespace: appsNamespaceName,
+    provider: k8sprovider,
+    secretValues: {
+      database: {
+        host: config.dbConn.apply(db => db.host),
+        port: config.dbConn.apply(db => db.port),
+        username: config.dbConn.apply(db => db.username),
+        password: config.dbConn.apply(db => db.password)
+      },
+      licenseKey: config.licenseKey,
+      smtpDetails: {
+        smtpServer: config.smtpServer,
+        smtpUsername: config.smtpUsername,
+        smtpPassword: config.smtpPassword,
+        smtpGenericSender: config.smtpGenericSender,
+      },
+      recaptcha: {
+        secretKey: config.recaptchaSecretKey,
+        siteKey: config.recaptchaSiteKey,
+      },
+      openSearch: {
+        domain: config.openSearchEndpoint,
+        username: config.openSearchUser,
+        password: config.openSearchPassword,
+      },
+      github: {
+        oauthEndpoint: config.githubOauthEndpoint,
+        oauthId: config.githubOauthId,
+        oauthSecret: config.githubOauthSecret
+      },
+      samlSso: {
+        certCommonName: serviceEndpoint
+      }
+    },
+  });
+  
+  const pulumiEncryptionKey = new EncryptionService(`${commonName}-encryption-key`, {
+    commonName: commonName,
+    namespace: appsNamespaceName,
+    awsKMSKeyArn: config.awsKMSKeyArn,
+    encryptionKey: config.encryptionKey,
+    provider: k8sprovider
+  });
 
-//////////////
-// Environment variables for the API service.
-const awsRegion = pulumi.output(aws.getRegion())
-const serviceEnv = pulumi
-    .all([config.checkpointsS3BucketName, config.policyPacksS3BucketName, config.eventsS3BucketName, config.escBucketName, awsRegion.name])
-    .apply(([cBucket, pBucket, evBucket, eBucket, regionName]) => {
-        const envVars = {
-            "AWS_REGION": regionName,
-            "PULUMI_LICENSE_KEY": licenseKeySecret.asEnvValue("key"),
-            "PULUMI_ENTERPRISE": "true",
-            "PULUMI_API_DOMAIN": `${apiSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_CONSOLE_DOMAIN": `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_DATABASE_ENDPOINT": dbConnSecret.asEnvValue("endpoint"),
-            "MYSQL_ROOT_USERNAME": dbConnSecret.asEnvValue("username"),
-            "MYSQL_ROOT_PASSWORD": dbConnSecret.asEnvValue("password"),
-            "PULUMI_DATABASE_NAME": "pulumi",
-            "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT": `s3://${cBucket}`,
-            "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT": `s3://${pBucket}`,
-            "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT": `s3://${evBucket}`,
-            "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT": `s3://${eBucket}`,
-            ...smtpConfig,
-            ...samlSsoConfig,
-            ...recaptchaServiceConfig,
-            ...openSearchConfig,
-            ...apiEmailLoginConfig,
-            ...githubConfig,
-        } as EnvMap;
+// Returns an EnvVar object that references a secret key.
+function generateEnvVarFromSecret(envVarName: string, secretName: pulumi.Output<string>, secretKey: string) : k8s.types.input.core.v1.EnvVar {
+    return {
+      name: envVarName,
+      valueFrom: {
+        secretKeyRef: {
+          name: secretName,
+          key: secretKey
+        } 
+      }
+    }
+  }
 
-        // Add env vars specific to managing secrets.
-        envVars[secretsIntegration.envVarName] = secretsIntegration.envVarValue;
-
-        return envVars;
-    });
-
-   
 ////////////
 // Deploy services
 // Minimum System Requirements (per replica):
@@ -90,166 +128,187 @@ const apiResources = { requests: { cpu: "2048m", memory: "1024Mi" } };
 const migrationResources = { requests: { cpu: "128m", memory: "128Mi" } };
 const consoleResources = { requests: { cpu: "512m", memory: "512Mi" } };
 
-// Deploy the API service.
-const apiPodBuilder = new kx.PodBuilder({
-    affinity: {
-        // Target the Pods to run on nodes that match the labels for the node
-        // selector.
-        nodeAffinity: {
-            requiredDuringSchedulingIgnoredDuringExecution: {
-                nodeSelectorTerms: [
-                    {
-                        matchExpressions: [
-                            {
-                                key: "beta.kubernetes.io/instance-type",
-                                operator: "In",
-                                values: [config.nodeGroupInstanceType],
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-        // Don't co-locate running Pods with matching labels on the same node,
-        // and spread them per the node hostname.
-        podAntiAffinity: {
-            requiredDuringSchedulingIgnoredDuringExecution: [
-                {
-                    topologyKey: "kubernetes.io/hostname",
-                    labelSelector: {
-                        matchExpressions: [
-                            {
-                                key: "app",
-                                operator: "In",
-                                values: ["service"], // based on labels: {app: service} auto set by PodBuilder that uses the container image name.
-                            },
-                        ],
-                    },
-                },
-            ],
-        },
-    },
-    // Define the Pod tolerations of the tainted Nodes to target.
-    tolerations: [
-        {
-            key: "self-hosted-pulumi",
-            value: "true",
-            effect: "NoSchedule",
-        },
-    ],
-    serviceAccountName: apiServiceAccount.metadata.name,
-    initContainers: [{
-        name: "migration",
-        image: migrationsImage,
-        env: [
-            {
-                name: "PULUMI_DATABASE_ENDPOINT",
-                valueFrom: dbConnSecret.asEnvValue("endpoint"),
-            },
-            {
-                name: "MYSQL_ROOT_USERNAME",
-                valueFrom: dbConnSecret.asEnvValue("username"),
-            },
-            {
-                name: "MYSQL_ROOT_PASSWORD",
-                valueFrom: dbConnSecret.asEnvValue("password"),
-            },
-            {
-                name: "PULUMI_DATABASE_PING_ENDPOINT",
-                valueFrom: dbConnSecret.asEnvValue("host"),
-            }
+////////////
+// Deploy the API (backend) service.
+const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
+  metadata: {
+    namespace: appsNamespaceName,
+    name: `${apiName}-deployment`,
+  },
+  spec: {
+    selector: { matchLabels: apiAppLabel },
+    replicas: 1,
+    template: {
+      metadata: { labels: apiAppLabel },
+      spec: {
+        initContainers: [{
+            name: "pulumi-migration",
+            image: migrationsImage,
+            resources: migrationResources,
+            env: [
+              generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "endpoint"),
+              generateEnvVarFromSecret("MYSQL_ROOT_USERNAME", secrets.DBConnSecret.metadata.name, "username"),
+              generateEnvVarFromSecret("MYSQL_ROOT_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+              generateEnvVarFromSecret("PULUMI_DATABASE_PING_ENDPOINT", secrets.DBConnSecret.metadata.name, "host"),
+              {
+                  name: "RUN_MIGRATIONS_EXTERNALLY",
+                  value: "true"
+              }
+          ]
+        }],
+        volumes: [
+          pulumiEncryptionKey.pulumiLocalKeysVolumeSpec
         ],
-        resources: migrationResources,
-    }],
-    containers: [{
-        image: apiImage,
-        ports: { api: apiPort },
-        env: serviceEnv,
-        volumeMounts: [
-            // Add any files/volumes needed for managing secrets.
-            ...secretsIntegration.mountPoint,
-        ],
-        resources: apiResources,
-    }],
-});
-const apiDeployment = new kx.Deployment(apiName, {
-    metadata: { namespace: config.appsNamespaceName },
-    spec: apiPodBuilder.asDeploymentSpec({ replicas: apiReplicas }),
-}, { provider: k8sprovider, dependsOn: [apiServiceAccount] });
-const apiService = apiDeployment.createService();
-const serviceEndpoint = pulumi.interpolate`${apiSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`;
-export const serviceUrl = pulumi.interpolate`https://${serviceEndpoint}`;
-
-///
-// Deploy the Console.
-const consolePodBuilder = new kx.PodBuilder({
-    affinity: {
-        // Target the Pods to run on nodes that match the labels for the node selector.
-        nodeAffinity: {
-            requiredDuringSchedulingIgnoredDuringExecution: {
-                nodeSelectorTerms: [
-                    {
-                        matchExpressions: [
-                            {
-                                key: "beta.kubernetes.io/instance-type",
-                                operator: "In",
-                                values: [config.nodeGroupInstanceType],
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-        // Don't co-locate running Pods with matching labels on the same node,
-        // and spread them per the node hostname.
-        podAntiAffinity: {
-            requiredDuringSchedulingIgnoredDuringExecution: [
-                {
-                    topologyKey: "kubernetes.io/hostname",
-                    labelSelector: {
-                        matchExpressions: [
-                            {
-                                key: "app",
-                                operator: "In",
-                                values: ["console"], // based on labels: {app: console} auto set by PodBuilder that uses the container image name.
-                            },
-                        ],
-                    },
-                },
+        containers: [
+          {
+            name: apiName,
+            image: apiImage,
+            resources: apiResources,
+            ports: [{ containerPort: apiPort, name: "http" }],
+            volumeMounts: [
+              //Add any files/volumes needed for managing secrets.
+              pulumiEncryptionKey.pulumiLocalKeysVolumeMountSpec
             ],
-        },
+            env: [
+              pulumiEncryptionKey.encryptionServiceEnv,
+              generateEnvVarFromSecret("PULUMI_LICENSE_KEY", secrets.LicenseKeySecret.metadata.name, "key"),
+              generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "endpoint"),
+              generateEnvVarFromSecret("PULUMI_DATABASE_USER_NAME", secrets.DBConnSecret.metadata.name, "username"),
+              generateEnvVarFromSecret("PULUMI_DATABASE_USER_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+              generateEnvVarFromSecret("SAML_CERTIFICATE_PUBLIC_KEY", secrets.SamlSsoSecret.metadata.name, "pubkey"),
+              generateEnvVarFromSecret("SAML_CERTIFICATE_PRIVATE_KEY", secrets.SamlSsoSecret.metadata.name, "privatekey"),
+              generateEnvVarFromSecret("SMTP_SERVER", secrets.SmtpSecret.metadata.name, "server"),
+              generateEnvVarFromSecret("SMTP_USERNAME", secrets.SmtpSecret.metadata.name, "username"),
+              generateEnvVarFromSecret("SMTP_PASSWORD", secrets.SmtpSecret.metadata.name, "password"),
+              generateEnvVarFromSecret("SMTP_GENERIC_SENDER", secrets.SmtpSecret.metadata.name, "fromaddress"),
+              generateEnvVarFromSecret("RECAPTCHA_SECRET_KEY", secrets.RecaptchaSecret.metadata.name, "secretKey"),
+              generateEnvVarFromSecret("PULUMI_SEARCH_PASSWORD", secrets.OpenSearchSecret.metadata.name, "password"),
+              generateEnvVarFromSecret("PULUMI_SEARCH_USER", secrets.OpenSearchSecret.metadata.name, "username"),
+              generateEnvVarFromSecret("PULUMI_SEARCH_DOMAIN", secrets.OpenSearchSecret.metadata.name, "endpoint"),
+              {
+                name: "PULUMI_ENTERPRISE",
+                value: "true",
+              },
+              {
+                name: "PULUMI_API_DOMAIN",
+                value: serviceEndpoint,
+              },
+              {
+                name: "PULUMI_CONSOLE_DOMAIN",
+                value: consoleEndpoint,
+              },
+              {
+                name: "PULUMI_DATABASE_NAME",
+                value: "pulumi",
+              },
+              {
+                name: "AWS_REGION",
+                value: "us-east-1" // this is a dummy value needed to appease the bucket access code.
+              },
+              {
+                name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
+                value: pulumi.interpolate`s3://${config.policyPacksS3BucketName}`
+              },
+              {
+                name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
+                value: pulumi.interpolate`s3://${config.checkpointsS3BucketName}`
+              },
+              {
+                name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
+                value: pulumi.interpolate`s3://${config.escBucketName}`
+              },
+              {
+                name: "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT", 
+                value: pulumi.interpolate`s3://${config.eventsS3BucketName}`,
+              }
+            ],
+          },
+        ],
+      },
     },
-    // Define the Pod tolerations of the tainted Nodes to target.
-    tolerations: [
-        {
-            key: "self-hosted-pulumi",
-            value: "true",
-            effect: "NoSchedule",
-        },
-    ],
-    containers: [{
-        image: consoleImage,
-        ports: { console: consolePort },
-        env: {
-            "PULUMI_CONSOLE_DOMAIN": `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_HOMEPAGE_DOMAIN": `${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_API": `https://${apiSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`,
-            "PULUMI_API_INTERNAL_ENDPOINT": pulumi.interpolate`http://${apiService.metadata.name}:${apiPort}`,
-            "SAML_SSO_ENABLED": `${config.samlSsoEnabled}`,
-            ...recaptchaConsoleConfig,
-            ...consoleEmailLoginConfig,
-            ...githubConfig,
-        },
-        resources: consoleResources,
-    }],
-});
-const consoleDeployment = new kx.Deployment(consoleName, {
-    metadata: { namespace: config.appsNamespaceName },
-    spec: consolePodBuilder.asDeploymentSpec({ replicas: consoleReplicas })
+  },
 }, { provider: k8sprovider });
-const consoleService = consoleDeployment.createService();
-const consoleEndpoint = pulumi.interpolate`${consoleSubdomainName}.${config.hostedZoneDomainSubdomain}.${config.hostedZoneDomainName}`;
-export const consoleURL = pulumi.interpolate`https://${consoleEndpoint}`;
+
+const apiService = new k8s.core.v1.Service(`${commonName}-${apiName}`, {
+  metadata: {
+    name: `${apiName}-service`,
+    namespace: appsNamespaceName,    },
+  spec: {
+    ports: [{ port: 80, targetPort: 8080, name: "api" }],
+    selector: apiAppLabel,
+  },
+}, { provider: k8sprovider, parent: apiDeployment });
+
+
+////////////
+// Deploy the Console (frontend) service.
+const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleName}`, {
+  metadata: {
+    namespace: appsNamespaceName,
+    name: `${consoleName}-deployment`,
+  },
+  spec: {
+    selector: { matchLabels: consoleAppLabel },
+    replicas: 1,
+    template: {
+      metadata: { labels: consoleAppLabel },
+      spec: {
+        containers: [{
+            image: consoleImage,
+            name: consoleName,
+            resources: consoleResources,
+            ports: [{ containerPort: 3000, name: "http" }],
+            env: [
+              {
+                name: "PULUMI_CONSOLE_DOMAIN",
+                value: consoleEndpoint,
+              },
+              {
+                name: "PULUMI_HOMEPAGE_DOMAIN",
+                value: consoleEndpoint,
+              },
+              {
+                name: "SAML_SSO_ENABLED",
+                value: config.samlSsoEnabled
+              },
+              {
+                name: "PULUMI_API",
+                value: pulumi.interpolate`https://${serviceEndpoint}`,
+              },
+              {
+                name: "PULUMI_API_INTERNAL_ENDPOINT",
+                value: pulumi.interpolate`http://${apiService.metadata.name}.${appsNamespaceName}:80`
+              },
+              {
+                name: "PULUMI_HIDE_EMAIL_LOGIN",
+                value: config.consoleHideEmailLogin === "true" ? "true" : undefined,
+              },
+              {
+                name: "PULUMI_HIDE_EMAIL_SIGNUP", 
+                value: config.consoleHideEmailSignup === "true" ? "true" : undefined,
+              },
+              generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
+              generateEnvVarFromSecret("GITHUB_OAUTH_ENDPOINT", secrets.GithubSecret.metadata.name, "oauthEndpoint"),
+              generateEnvVarFromSecret("GITHUB_OAUTH_ID", secrets.GithubSecret.metadata.name, "oauthId"),
+              generateEnvVarFromSecret("GITHUB_OAUTH_SECRET", secrets.GithubSecret.metadata.name, "oauthSecret"),
+          ]
+        }]
+      }
+    }
+  }
+}, { provider: k8sprovider });
+
+const consoleService = new k8s.core.v1.Service(`${commonName}-${consoleName}`, {
+  metadata: {
+    name: `${consoleName}-service`,
+    namespace: appsNamespaceName,
+  },
+  spec: {
+    ports: [{ port: 80, targetPort: 3000, name: "console" }],
+    selector: consoleAppLabel,
+  },
+}, { provider: k8sprovider, parent: consoleDeployment });
+
 
 // Create a PodDisruptionBudget on Pods to ensure availability during evictions
 // by selecting a set of labels.
@@ -409,3 +468,4 @@ const serviceDnsRecord = new aws.route53.Record("serviceEndDnsRecord", {
   ttl: 300,
   records: [ serviceLoadbalancerDnsName]
 })
+

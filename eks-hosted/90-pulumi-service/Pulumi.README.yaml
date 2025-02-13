@@ -38,10 +38,7 @@ config:
 
   # reCAPTCHA Config
   # If not set, then reCAPTCHA will not be enabled during the create account user flow in the console.
-  # See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
-  # Test keys that can be used:
-  # recaptchaSiteKey: "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-  # recaptchaSecretKey: "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+  # To use, create a Cloudflare Turnstile widget - see https://www.cloudflare.com/application-services/products/turnstile/ 
   recaptchaSiteKey: 
   recaptchaSecretKey:
 

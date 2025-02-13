@@ -61,10 +61,6 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 			Value: pulumi.String(args.RecaptchaSecretKey).ToStringOutput(),
 		},
 		{
-			Name:  "LOGIN_RECAPTCHA_SECRET_KEY",
-			Value: pulumi.String(args.RecaptchaSecretKey).ToStringOutput(),
-		},
-		{
 			// TODO: what if this value isn't present? we need to control this a bit better
 			Name:  "PULUMI_SEARCH_PASSWORD",
 			Value: args.OpenSearchPassword,

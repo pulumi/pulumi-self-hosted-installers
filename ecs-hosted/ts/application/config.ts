@@ -43,8 +43,8 @@ export async function hydrateConfig() {
     const openSearchEndpoint = stackConfig.get("opensearchEndpoint");
     const openSearchDomainName = stackConfig.get("opensearchDomainName");
 
-    const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey") ?? "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
-    const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey") ?? "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
+    const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey"); 
+    const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey");
 
     const samlCertPublicKey = stackConfig.getSecret("samlCertPublicKey");
     const samlCertPrivateKey = stackConfig.getSecret("samlCertPrivateKey");

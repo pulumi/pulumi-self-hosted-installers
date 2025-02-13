@@ -10,9 +10,6 @@ const clusterSvcsStackRef = new pulumi.StackReference(pulumiConfig.require("clus
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
 
-const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-
 export const config = {
     // Cluster
     kubeconfig: clusterStackRef.requireOutput("kubeconfig"),
@@ -44,10 +41,8 @@ export const config = {
     smtpGenericSender: pulumiConfig.get("smtpGenericSender"),
 
     // reCAPTCHA Config
-    // Uses test values if not set in config.
-    // See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
-    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
-    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
+    recaptchaSiteKey: pulumiConfig.get("recaptchaSiteKey"), 
+    recaptchaSecretKey: pulumiConfig.get("recaptchaSecretKey"),
 
     // SAML SSO Setting:
     samlSsoEnabled: pulumiConfig.get("samlSsoEnabled") ?? 'false',

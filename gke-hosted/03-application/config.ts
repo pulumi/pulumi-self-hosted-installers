@@ -16,11 +16,6 @@ const stackName2 = stackConfig.require("stackName2");
 const infrastructureStack = new pulumi.StackReference(stackName1);
 const clusterStack = new pulumi.StackReference(stackName2);
 
-// Uses test values if not set in config.
-// See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
-const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-
 export const config = {
     projectName,
     stackName,
@@ -63,8 +58,8 @@ export const config = {
     smtpUsername: stackConfig.get("smtpUsername") || "",
     smtpPassword: stackConfig.getSecret("smtpPassword") || "",
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
-    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
-    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
+    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") || "",
+    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") || "", 
     samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
     ingressAllowList: stackConfig.get("ingressAllowList") || "",
 };

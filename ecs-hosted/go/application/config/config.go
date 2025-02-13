@@ -77,17 +77,9 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	// prefix list is needed for private connection to s3 (fargate control plane)
 	resource.PrefixListId = stackRef.GetStringOutput(pulumi.String("s3EndpointPrefixId"))
 
-	// provide defaults if needed
+	// Captcha 
 	resource.RecaptchaSecretKey = appConfig.Get("recaptchaSecretKey")
-	if resource.RecaptchaSecretKey == "" {
-		resource.RecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-	}
-
-	// provide defaults if needed
 	resource.RecaptchaSiteKey = appConfig.Get("recaptchaSiteKey")
-	if resource.RecaptchaSiteKey == "" {
-		resource.RecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-	}
 
 	// check if saml config is enabled
 	resource.SamlArgs = &SamlArgs{

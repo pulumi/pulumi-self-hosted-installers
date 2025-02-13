@@ -221,10 +221,6 @@ export = async () => {
                 {
                   name: "RECAPTCHA_SECRET_KEY",
                   valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
-                },
-                {
-                  name: "LOGIN_RECAPTCHA_SECRET_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
                 }
               ],
             },
@@ -289,10 +285,6 @@ export = async () => {
               },
               {
                 name: "RECAPTCHA_SITE_KEY",
-                valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
-              },
-              {
-                name: "LOGIN_RECAPTCHA_SITE_KEY",
                 valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
               }
             ]

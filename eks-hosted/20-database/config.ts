@@ -18,7 +18,7 @@ const clusterStackRef = new pulumi.StackReference(`${orgName}/selfhosted-05-eksc
 
 export const config = {
     baseName: pulumiConfig.require("baseName"),
-    dbReplicas: pulumiConfig.getNumber("dbrel") ?? 2,
+    dbReplicas: pulumiConfig.getNumber("dbReplicas") ?? 2,
     dbInstanceType: pulumiConfig.get("dbInstanceType") || "db.r5.large",
 
     // Cluster Infra values via stack reference

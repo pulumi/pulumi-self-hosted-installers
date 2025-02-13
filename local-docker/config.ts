@@ -57,13 +57,6 @@ if (imageRegistryAddress !== DEFAULT_IMAGE_REGISTRY) {
     imageAddressPrefix = `${imageRegistryAddress}/`;
 }
 
-/**
- * Recaptcha - used for protecting "reset password".
- * See https://bit.ly/3gTbFiH for details about default keys.
- */
-const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
-const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
-
 export const config = {
     dataPath,
     licenseData: stackConfig.requireSecret("licenseKey"),
@@ -112,6 +105,6 @@ export const config = {
     smtpPassword: stackConfig.getSecret("smtpPassword") || "",
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
 
-    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
-    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
+    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey"),
+    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey"),
 };
