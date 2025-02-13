@@ -1,11 +1,11 @@
 {
-    "name": "k8s-gke-01-infrastructure",
-    "devDependencies": {
-        "@types/node": "10.17.60"
-    },
-    "dependencies": {
-        "@pulumi/gcp": "8.10.0",
-        "@pulumi/pulumi": "3.142.0",
-        "@pulumi/random": "4.16.7"
-    }
+  "name": "k8s-gke-01-infrastructure",
+  "devDependencies": {
+    "@types/node": "22.10.9"
+  },
+  "dependencies": {
+    "@pulumi/gcp": "8.19.1",
+    "@pulumi/pulumi": "3.150.0",
+    "@pulumi/random": "4.17.0"
+  }
 }

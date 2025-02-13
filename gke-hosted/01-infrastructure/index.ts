@@ -1,4 +1,4 @@
-import * as networking from "./network"
+import * as networking from "./network";
 import * as serviceaccount from "./serviceAccount";
 import * as storage from "./storage";
 import * as db from "./database";
@@ -11,7 +11,8 @@ const storageDetails = new storage.Storage(config.resourceNamePrefix, {
 const sa = new serviceaccount.ServiceAccount(config.resourceNamePrefix, {
     tags: config.baseTags,
     checkpointBucketName: storageDetails.checkpointBucketName,
-    policyBucketName: storageDetails.policyBucketName
+    policyBucketName: storageDetails.policyBucketName,
+    escBucketName: storageDetails.escBucketName,
 });
 
 const network = new networking.Network(config.resourceNamePrefix, {
@@ -29,6 +30,7 @@ export const checkpointBucketId = storageDetails.checkpointBucketId;
 export const policyBucketId = storageDetails.policyBucketId;
 export const checkpointBucketName = storageDetails.checkpointBucketName;
 export const policyBucketName = storageDetails.policyBucketName;
+export const escBucketName = storageDetails.escBucketName;
 export const serviceAccountName = sa.serviceAccountName;
 export const serviceAccountAccessKeyId = sa.serviceAccountAccessKeyId;
 export const serviceAccountSecretAccessKey = sa.serviceAccountSecretAccessKey;

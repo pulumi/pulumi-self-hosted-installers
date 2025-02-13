@@ -9,19 +9,22 @@ const infrastructureStack = new pulumi.StackReference(stackName1);
 const projectName = pulumi.getProject();
 const stackName = pulumi.getStack();
 
-const commonName = stackConfig.get("commonName") || "pulumi-selfhosted"; 
+const commonName = stackConfig.get("commonName") || "pulumi-selfhosted";
 const resourceNamePrefix = `${commonName}-${stackName}`;
 
 const clusterVersion = stackConfig.get("clusterVersion") || "1.30";
 
 export const config = {
-    projectName,
-    stackName,
-    resourceNamePrefix,
-    baseTags: {
-        project: projectName,
-        stack: stackName,
-    },
-    clusterVersion,
-    networkName: <Output<string>>infrastructureStack.requireOutput("networkName"),
+  projectName,
+  stackName,
+  resourceNamePrefix,
+  baseTags: {
+    project: projectName,
+    stack: stackName,
+  },
+  clusterVersion,
+  networkName: <Output<string>>infrastructureStack.requireOutput("networkName"),
+  serviceAccountName: <Output<string>>(
+    infrastructureStack.requireOutput("serviceAccountName")
+  ),
 };

@@ -16,17 +16,17 @@ const stackName2 = stackConfig.require("stackName2");
 const infrastructureStack = new pulumi.StackReference(stackName1);
 const clusterStack = new pulumi.StackReference(stackName2);
 
-// Uses test values if not set in config.
-// See https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha.-what-should-i-do
-const defaultRecaptchaSiteKey = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-const defaultRecaptchaSecretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-
 export const config = {
     projectName,
     stackName,
     resourceNamePrefix,
 
     kubeconfig: clusterStack.requireOutput("kubeconfig"),
+    openSearch: {
+        username: clusterStack.requireOutput("openSearchUsername"),
+        password: clusterStack.requireOutput("openSearchPassword"),
+        endpoint: clusterStack.requireOutput("openSearchEndpoint")
+    },
     licenseKey: stackConfig.requireSecret("licenseKey"),
     database: {
         connectionString: infrastructureStack.requireOutput("dbConnectionString"),
@@ -35,6 +35,7 @@ export const config = {
         password: infrastructureStack.requireOutput("dbPassword"),
         serverName: infrastructureStack.requireOutput("dbServerName")
     },
+    appNamespaceName: clusterStack.requireOutput("appNamespace"),
     migrationImageName: `pulumi/migrations:${imageTag}`,
     consoleImageName: `pulumi/console:${imageTag}`,
     serviceImageName: `pulumi/service:${imageTag}`,
@@ -44,6 +45,7 @@ export const config = {
     policyBlobName: infrastructureStack.requireOutput("policyBucketName"),
     checkpointBlobId: infrastructureStack.requireOutput("checkpointBucketId"),
     checkpointBlobName: infrastructureStack.requireOutput("checkpointBucketName"),
+    escBlobName: infrastructureStack.requireOutput("escBucketName"),
     storageServiceAccountAccessKeyId: infrastructureStack.requireOutput("serviceAccountAccessKeyId"),
     storageServiceAccountSecretAccessKey: infrastructureStack.requireOutput("serviceAccountSecretAccessKey"),
     apiDomain: stackConfig.require("apiDomain"),
@@ -56,8 +58,8 @@ export const config = {
     smtpUsername: stackConfig.get("smtpUsername") || "",
     smtpPassword: stackConfig.getSecret("smtpPassword") || "",
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
-    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") ?? defaultRecaptchaSecretKey,
-    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") ?? defaultRecaptchaSiteKey,
+    recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") || "",
+    recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") || "", 
     samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
     ingressAllowList: stackConfig.get("ingressAllowList") || "",
 };

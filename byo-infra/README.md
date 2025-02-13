@@ -119,8 +119,8 @@ If not set, "forgot password" and email invites will not work but direct sign up
 1. `pulumi config set smtpUsername {smtp username}`
 1. `pulumi config set smtpPassword {smtp password} --secret`
 1. `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
-1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
-1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
+1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a Cloudflare Turnstile widget Site Key)
+1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret` (this must be a Cloudflare Turnstile widget Secret Key)
 Optional setting will use default value if not set.
 1. `pulumi config set samlSsoEnabled true` - set to false by default.
 1. `pulumi up`

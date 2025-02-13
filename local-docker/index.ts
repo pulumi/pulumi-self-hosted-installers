@@ -120,7 +120,6 @@ const serviceContainer = new docker.Container("service", {
         // The site (RECAPTCHA_SITE_KEY) key counterpart for this 
         // must be set in the `console` service below.
         pulumi.interpolate`RECAPTCHA_SECRET_KEY=${config.recaptchaSecretKey}`,
-        pulumi.interpolate`LOGIN_RECAPTCHA_SECRET_KEY=${config.recaptchaSecretKey}`,
     ],
     networksAdvanced: [
         { name: servicesNetworkName, aliases: ["pulumi-api"] },
@@ -161,7 +160,6 @@ const consoleContainer = new docker.Container("console", {
         // The site (RECAPTCHA_SECRET_KEY) key counterpart for this 
         // must be set in the `api` service.
         pulumi.interpolate`RECAPTCHA_SITE_KEY=${config.recaptchaSiteKey}`,
-        pulumi.interpolate`LOGIN_RECAPTCHA_SITE_KEY=${config.recaptchaSiteKey}`,
     ],
     networksAdvanced: [
         { name: servicesNetworkName },

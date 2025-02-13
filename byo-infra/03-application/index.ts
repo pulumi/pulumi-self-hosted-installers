@@ -213,10 +213,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 {
                   name: "RECAPTCHA_SECRET_KEY",
                   valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
-                },
-                {
-                  name: "LOGIN_RECAPTCHA_SECRET_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
                 }
               ],
             },
@@ -280,10 +276,6 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "RECAPTCHA_SITE_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
-                },
-                {
-                  name: "LOGIN_RECAPTCHA_SITE_KEY",
                   valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
                 }
             ]

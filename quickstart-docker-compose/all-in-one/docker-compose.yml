@@ -9,7 +9,7 @@ networks:
 services:
 
   opensearch:
-    image: opensearchproject/opensearch:2.11.1
+    image: opensearchproject/opensearch:2.11.1@sha256:cbca8e35fb333af938289ac0f370abdcbde46dbe7629acc1af0cd4219da85b62
     container_name: search
     ulimits:
       memlock:
@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
 
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.11.1
+    image: opensearchproject/opensearch-dashboards:2.11.1@sha256:223eaaca192bcfe3101ddf49682d1dfb1a4cefbafdae18b54b7562170d29e8d1
     container_name: opensearch-dashboards
     ports:
       - "5601:5601"
@@ -57,7 +57,7 @@ services:
   api:
     ports:
       - "8080:8080"
-    image: "pulumi/service:latest"
+    image: "pulumi/service:latest@sha256:8859f2f188191eb1690e8bcddf5bf08c2e1d7445d67f320541bf72d039774e03"
     env_file: ../service_vars.env
     # Environment variables can be dynamically configured by setting them in your host's environment.
     # Only the keys of such environment variables must be listed below. The value part must be left
@@ -142,7 +142,7 @@ services:
   console:
     ports:
       - "3000:3000"
-    image: "pulumi/console:latest"
+    image: "pulumi/console:latest@sha256:5ae67de9044a6e8131586da828df43212696a1acf73bb947153fcdaa0b6166a8"
     env_file: ../console_vars.env
     networks:
       - pulumi-services
@@ -173,7 +173,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: "mysql:8.0"
+    image: "mysql:8.0@sha256:4f33388ab0a152ca309eeb70cd2e4a9a8989d5006ec2a4890d883afbffd6be4a"
     environment:
       MYSQL_DATABASE: "pulumi"
       # This is set to true because we never expose the db service outside the local network.
@@ -187,7 +187,7 @@ services:
     restart: unless-stopped
 
   migration:
-    image: "pulumi/migrations:latest"
+    image: "pulumi/migrations:latest@sha256:5871c9202412adc775975cd83692a9dd8603a5689d070935b485a6cd28adf135"
     environment:
       PULUMI_DATABASE_ENDPOINT: "${PULUMI_DATABASE_ENDPOINT}"
     networks:

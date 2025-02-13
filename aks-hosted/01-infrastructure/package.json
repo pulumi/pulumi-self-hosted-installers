@@ -1,11 +1,11 @@
 {
     "name": "k8s-azure-01-infrastructure",
     "devDependencies": {
-        "@types/node": "^18.0.0"
+        "@types/node": "22.10.9"
     },
     "dependencies": {
         "@pulumi/azure-native": "^2.41.0",
-        "@pulumi/azuread": "^5.49.1",
+        "@pulumi/azuread": "^6.0.0",
         "@pulumi/pulumi": "^3.116.1",
         "@pulumi/random": "^4.16.1"
     }

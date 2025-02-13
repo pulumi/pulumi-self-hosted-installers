@@ -103,11 +103,9 @@ const recaptchaSecret = new kx.Secret("recaptcha",
 }, { provider })
 const recaptchaServiceConfig = {
     "RECAPTCHA_SECRET_KEY": recaptchaSecret.asEnvValue("secretKey"),
-    "LOGIN_RECAPTCHA_SECRET_KEY": recaptchaSecret.asEnvValue("secretKey"),
 }
 const recaptchaConsoleConfig = {
     "RECAPTCHA_SITE_KEY": recaptchaSecret.asEnvValue("siteKey"),
-    "LOGIN_RECAPTCHA_SITE_KEY": recaptchaSecret.asEnvValue("siteKey"),
 }
 
 // Currently any non-empty value for the disable/hide email env variables will be treated as a "true"

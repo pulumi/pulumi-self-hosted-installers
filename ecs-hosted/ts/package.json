@@ -1,15 +1,15 @@
 {
     "name": "self-hosted-aws-ecs-ts",
     "devDependencies": {
-        "@types/node": "^20",
-        "typescript": "^5.0.0"
+        "@types/node": "22.10.9",
+        "typescript": "5.7.3"
     },
     "dependencies": {
         "@pulumi/aws": "^6.0.0",
         "@pulumi/awsx": "^2.0.0",
         "@pulumi/pulumi": "^3.0.0",
-        "@pulumi/pulumiservice": "^0.22.1",
+        "@pulumi/pulumiservice": "^0.29.0",
         "@pulumi/random": "^4.16.3",
-        "@pulumiverse/time": "^0.0.17"
+        "@pulumiverse/time": "^0.1.0"
     }
 }

@@ -1,0 +1,29 @@
+{
+  // Extend from Pulumi's default renovate config
+  extends: ["github>pulumi/renovate-config//default.json5"],
+  
+  // Ignore specific paths
+  ignorePaths: [
+    "quickstart-docker-compose/all-in-one/*.yml",
+  ],
+  
+  // Package-specific rules
+  packageRules: [
+    {
+      // Allow only minor and patch updates for MySQL
+      matchDatasources: ["docker"],
+      matchPackageNames: ["mysql"],
+      matchUpdateTypes: ["minor", "patch"],
+      enabled: true,
+    },
+    {
+      // Disable updates for OpenSearch
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "opensearch/opensearch", 
+        "opensearchproject/opensearch",
+      ],
+      enabled: false,
+    },
+  ],
+}

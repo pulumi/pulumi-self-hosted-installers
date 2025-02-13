@@ -106,8 +106,8 @@ If not set, "forgot password" and email invites will not work but direct sign up
 1. `pulumi config set smtpUsername {smtp username}`
 1. `pulumi config set smtpPassword {smtp password} --secret`
 1. `pulumi config set smtpFromAddress {smtp from address}` (email address that the outgoing emails come from)
-1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a v2 type recaptcha)
-1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret`
+1. `pulumi config set recaptchaSiteKey {recaptchaSiteKey}` (this must be a Cloudflare Turnstile widget Site Key)
+1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret` (this must be a Cloudflare Turnstile widget Secret Key)
 Optional setting will use default value if not set.
 1. `pulumi config set samlSsoEnabled true` - set to false by default.
 1. `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the service to be open to the any address that can route to it). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range)
