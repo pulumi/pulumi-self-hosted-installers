@@ -42,6 +42,7 @@ services:
       context: ../../cmd/console2
       additional_contexts:
         - pulumi-design-system=../../cmd/pulumi-design-system
+        - workspace-root=../../cmd
       args:
         - SKIP_PULUMI_CONSOLE_DOCKER_BUILD
     environment:
