@@ -1,0 +1,10 @@
+name: gcp-byo-infra
+description: Pulumi program to install Pulumi Cloud self-hosted on pre-deployed cluster and infra
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript

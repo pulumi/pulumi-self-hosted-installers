@@ -1,0 +1,4 @@
+/bin/
+/node_modules/
+keys
+Pulumi.dev.yaml
