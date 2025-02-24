@@ -9,7 +9,7 @@ import {EncryptionService} from "./encryption-service";
 import {NginxIngress} from "./helmNginxIngress";
 
 const k8sProvider = new k8s.Provider("provider", {
-    kubeconfig: config.kubeconfig
+    // kubeconfig: config.kubeconfig
 });
 
 const openSearchPassword = new random.RandomPassword("initialOpenSearchPassword", {
@@ -36,14 +36,6 @@ const insightsDeployment = new search.OpenSearch(
       protect: true
     },
   );
-
-/**
- * NGINX Ingress helm chart
- */
-
-const ingressNginx = new NginxIngress("pulumi-selfhosted", {}, { provider: k8sProvider});
-
-export const ingressIp = ingressNginx.IngressServiceIp;
 
 /**
  * Check pre-requisites.
@@ -293,8 +285,9 @@ const consoleService = new k8s.core.v1.Service(`${commonName}-${consoleName}`, {
   let ingressAnnotations: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
   }> = {
-    "nginx.ingress.kubernetes.io/ssl-redirect": "true",
-    "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
+    // "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+    // "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
+    "kubernetes.io/ingress.class": "gce-internal"
   };
 
 if (config.ingressAllowList.length > 0) {
@@ -311,17 +304,6 @@ const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
     }
     },
     spec: {
-      ingressClassName: "nginx",
-      tls: [
-        {
-          hosts: [config.consoleDomain],
-          secretName: secrets.ConsoleCertificateSecret.metadata.name,
-        },
-        {
-          hosts: [config.apiDomain],
-          secretName: secrets.ApiCertificateSecret.metadata.name,
-        }
-      ],
       rules: [
         {
           host: config.apiDomain,
@@ -359,4 +341,6 @@ const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
         }
       ],
     },
-  }, { provider: k8sProvider, dependsOn: [apiService, consoleService, ingressNginx] });
+  }, { provider: k8sProvider, dependsOn: [apiService, consoleService] });
+
+  export const ingressIp = ingress.status.loadBalancer.ingress[0].ip;
