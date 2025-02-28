@@ -6,7 +6,7 @@ import {config} from "./config";
 import {SecretsCollection} from "./secrets";
 import {SsoCertificate} from "./sso-cert";
 import {EncryptionService} from "./encryption-service";
-import {NginxIngress} from "./helmNginxIngress";
+// import {NginxIngress} from "./helmNginxIngress";
 
 const k8sProvider = new k8s.Provider("provider", {
     // kubeconfig: config.kubeconfig
@@ -282,65 +282,65 @@ const consoleService = new k8s.core.v1.Service(`${commonName}-${consoleName}`, {
     },
   }, { provider: k8sProvider, parent: consoleDeployment });
 
-  let ingressAnnotations: pulumi.Input<{
-    [key: string]: pulumi.Input<string>;
-  }> = {
-    // "nginx.ingress.kubernetes.io/ssl-redirect": "true",
-    // "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
-    "kubernetes.io/ingress.class": "gce-internal"
-  };
+//   let ingressAnnotations: pulumi.Input<{
+//     [key: string]: pulumi.Input<string>;
+//   }> = {
+//     // "nginx.ingress.kubernetes.io/ssl-redirect": "true",
+//     // "nginx.ingress.kubernetes.io/proxy-body-size": "50m",
+//     "kubernetes.io/ingress.class": "gce-internal"
+//   };
 
-if (config.ingressAllowList.length > 0) {
-  ingressAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"] = config.ingressAllowList;
-}
+// if (config.ingressAllowList.length > 0) {
+//   ingressAnnotations["nginx.ingress.kubernetes.io/whitelist-source-range"] = config.ingressAllowList;
+// }
 
-const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
-    kind: "Ingress",
-    metadata: {
-      name: "pulumi-service-ingress",
-      namespace: appNamespace.metadata.name,
-      annotations: {
-        ...ingressAnnotations,
-    }
-    },
-    spec: {
-      rules: [
-        {
-          host: config.apiDomain,
-          http: {
-            paths: [{
-                pathType: "Prefix",
-                path: "/",
-                backend: {
-                  service: {
-                    name: apiService.metadata.name,
-                    port: {
-                      number: 80,
-                    }
-                  }
-                }
-            }],
-          },
-        },
-        {
-          host: config.consoleDomain,
-          http: {
-            paths: [{
-                pathType: "Prefix",
-                path: "/",
-                backend: {
-                  service: {
-                    name: consoleService.metadata.name,
-                    port: {
-                      number: 80
-                    }
-                  }
-                }
-            }]
-          }
-        }
-      ],
-    },
-  }, { provider: k8sProvider, dependsOn: [apiService, consoleService] });
+// const ingress = new k8s.networking.v1.Ingress(`${commonName}-ingress`, {
+//     kind: "Ingress",
+//     metadata: {
+//       name: "pulumi-service-ingress",
+//       namespace: appNamespace.metadata.name,
+//       annotations: {
+//         ...ingressAnnotations,
+//     }
+//     },
+//     spec: {
+//       rules: [
+//         {
+//           host: config.apiDomain,
+//           http: {
+//             paths: [{
+//                 pathType: "Prefix",
+//                 path: "/",
+//                 backend: {
+//                   service: {
+//                     name: apiService.metadata.name,
+//                     port: {
+//                       number: 80,
+//                     }
+//                   }
+//                 }
+//             }],
+//           },
+//         },
+//         {
+//           host: config.consoleDomain,
+//           http: {
+//             paths: [{
+//                 pathType: "Prefix",
+//                 path: "/",
+//                 backend: {
+//                   service: {
+//                     name: consoleService.metadata.name,
+//                     port: {
+//                       number: 80
+//                     }
+//                   }
+//                 }
+//             }]
+//           }
+//         }
+//       ],
+//     },
+//   }, { provider: k8sProvider, dependsOn: [apiService, consoleService] });
 
-  export const ingressIp = ingress.status.loadBalancer.ingress[0].ip;
+//   export const ingressIp = ingress.status.loadBalancer.ingress[0].ip;

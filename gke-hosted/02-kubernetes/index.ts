@@ -15,42 +15,42 @@ const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
   tags: config.baseTags,
 });
 
-const commonName = "pulumi-selfhosted";
+// const commonName = "pulumi-selfhosted";
 
 export const kubeconfig = pulumi.secret(cluster.Kubeconfig);
 
-const provider = new k8s.Provider(
-  "k8s-provider",
-  {
-    kubeconfig,
-  },
-  { dependsOn: cluster },
-);
+// const provider = new k8s.Provider(
+//   "k8s-provider",
+//   {
+//     kubeconfig,
+//   },
+//   { dependsOn: cluster },
+// );
 
-const ingress = new NginxIngress(
-  "pulumi-selfhosted",
-  {
-    provider,
-  },
-  { dependsOn: cluster },
-);
+// const ingress = new NginxIngress(
+//   "pulumi-selfhosted",
+//   {
+//     provider,
+//   },
+//   { dependsOn: cluster },
+// );
 
-const initialAdminPassword = new random.RandomPassword(
-  "initialSearchAdminPassword",
-  {
-    length: 20,
-  },
-);
+// const initialAdminPassword = new random.RandomPassword(
+//   "initialSearchAdminPassword",
+//   {
+//     length: 20,
+//   },
+// );
 
-const appsNamespace = new k8s.core.v1.Namespace(
-  `${commonName}-apps`,
-  {
-    metadata: {
-      name: `${commonName}-apps`,
-    },
-  },
-  { provider },
-);
+// const appsNamespace = new k8s.core.v1.Namespace(
+//   `${commonName}-apps`,
+//   {
+//     metadata: {
+//       name: `${commonName}-apps`,
+//     },
+//   },
+//   { provider },
+// );
 
 /* We're going to put the opensearch containers in the same namespace as the pulumi service 
 *  to work around issues with TLS
@@ -69,24 +69,24 @@ const appsNamespace = new k8s.core.v1.Namespace(
  * Therefore, we're creating a namespace and applying a difference security policy so that we can do this.
  * See: https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-security
  */
-const search = new OpenSearch(
-  "pulumi-selfhosted",
-  {
-    namespace: appsNamespace.metadata.name,
-    serviceAccount: config.serviceAccountName,
-    intitialAdminPassword: initialAdminPassword.result,
-    sysctlInit: false,
-  },
-  {
-    provider,
-    dependsOn: [cluster],
-  },
-);
+// const search = new OpenSearch(
+//   "pulumi-selfhosted",
+//   {
+//     namespace: appsNamespace.metadata.name,
+//     serviceAccount: config.serviceAccountName,
+//     intitialAdminPassword: initialAdminPassword.result,
+//     sysctlInit: false,
+//   },
+//   {
+//     provider,
+//     dependsOn: [cluster],
+//   },
+// );
 
-export const ingressNamespace = ingress.IngressNamespace;
-export const ingressServiceIp = ingress.IngressServiceIp;
-export const stackName2 = config.stackName;
-export const openSearchPassword = initialAdminPassword.result;
-export const appNamespace = appsNamespace.metadata.name;
-export const openSearchUsername = "admin";
-export const openSearchEndpoint = pulumi.interpolate`https://opensearch-cluster-master:9200`;
+// export const ingressNamespace = ingress.IngressNamespace;
+// export const ingressServiceIp = ingress.IngressServiceIp;
+// export const stackName2 = config.stackName;
+// export const openSearchPassword = initialAdminPassword.result;
+// export const appNamespace = appsNamespace.metadata.name;
+// export const openSearchUsername = "admin";
+// export const openSearchEndpoint = pulumi.interpolate`https://opensearch-cluster-master:9200`;
