@@ -38,6 +38,7 @@ fi
 
 if [ ! -d "$PULUMI_DATA_PATH" ]; then
     mkdir -p "${PULUMI_DATA_PATH}"
+    # Ensure that the data path is writable by the `pulumi` user in the container.
     chown -R 2018:2018 "${PULUMI_DATA_PATH}"
     chmod -R 777 "${PULUMI_DATA_PATH}"
 fi
