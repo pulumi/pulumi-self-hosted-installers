@@ -89,18 +89,22 @@ if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORA
     echo "Checkpoint object storage configuration not found. Defaulting to local path..."
     export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"
 fi
-if [ ! -d "${PULUMI_LOCAL_OBJECTS}" ]; then
-    mkdir -p "${PULUMI_LOCAL_OBJECT}"
-    chmod 777 "${PULUMI_LOCAL_OBJECTS}"
+if [ -n "${PULUMI_LOCAL_OBJECTS:-}" ]; then
+    if [ ! -d "${PULUMI_LOCAL_OBJECTS}" ]; then
+        mkdir -p "${PULUMI_LOCAL_OBJECT}"
+        chmod 777 "${PULUMI_LOCAL_OBJECTS}"
+    fi
 fi
 
 if [[ -z "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-}" ]] && [[ -z "${PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:-}" ]]; then
     echo "Policy pack object storage configuration not found. Defaulting to local path..."
     export PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS="${PULUMI_DATA_PATH}/policypacks"
 fi
-if [ ! -d "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}" ]; then
-    mkdir -p "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}"
-    chmod 777 "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}"
+if [ -n "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-}" ]; then
+    if [ ! -d "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}" ]; then
+        mkdir -p "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}"
+        chmod 777 "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}"
+    fi
 fi
 
 
