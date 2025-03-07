@@ -76,8 +76,8 @@ services:
           - pulumi-api
     volumes:
       - $PULUMI_LOCAL_KEYS:$PULUMI_LOCAL_KEYS
-      - $PULUMI_DATA_PATH/checkpoints:$PULUMI_DATA_PATH/checkpoints
-      - $PULUMI_DATA_PATH/policy_packs:$PULUMI_DATA_PATH/policy_packs
+      - $PULUMI_LOCAL_OBJECTS:$PULUMI_LOCAL_OBJECTS
+      - $PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:$PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/status"]
       interval: 30s

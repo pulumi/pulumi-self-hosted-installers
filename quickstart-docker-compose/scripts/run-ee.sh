@@ -38,6 +38,9 @@ fi
 
 if [ ! -d "$PULUMI_DATA_PATH" ]; then
     mkdir -p "${PULUMI_DATA_PATH}"
+    mkdir -p "${PULUMI_DATA_PATH}"/localkeys
+    mkdir -p "${PULUMI_DATA_PATH}"/checkpoints
+    mkdir -p "${PULUMI_DATA_PATH}"/policypacks
     chmod -R 777 "${PULUMI_DATA_PATH}"
 fi
 
