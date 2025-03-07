@@ -36,15 +36,16 @@ if [ -z "${PULUMI_DATA_PATH:-}" ]; then
     export PULUMI_DATA_PATH="${DEFAULT_DATA_PATH}"
 fi
 
-if [ ! -d "$PULUMI_DATA_PATH" ]; then
+if [ ! -d "${PULUMI_DATA_PATH}" ]; then
     mkdir -p "${PULUMI_DATA_PATH}"
-    mkdir -p "${PULUMI_DATA_PATH}"/localkeys
-    mkdir -p "${PULUMI_DATA_PATH}"/checkpoints
-    mkdir -p "${PULUMI_DATA_PATH}"/policypacks
     chmod -R 777 "${PULUMI_DATA_PATH}"
 fi
 
 export PULUMI_LOCAL_KEYS=${PULUMI_DATA_PATH}/localkeys
+if [ ! -d "${PULUMI_LOCAL_KEYS}" ]; then
+    mkdir -p "${PULUMI_LOCAL_KEYS}"
+    chmod 777 "${PULUMI_LOCAL_KEYS}"
+fi
 if [ -f "$PULUMI_LOCAL_KEYS" ]; then
     echo "Using local key from $PULUMI_LOCAL_KEYS"
 else
@@ -91,11 +92,20 @@ if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORA
     echo "Checkpoint object storage configuration not found. Defaulting to local path..."
     export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"
 fi
+if [ ! -d "${PULUMI_LOCAL_OBJECTS}" ]; then
+    mkdir -p "${PULUMI_LOCAL_OBJECT}"
+    chmod 777 "${PULUMI_LOCAL_OBJECTS}"
+fi
 
 if [[ -z "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-}" ]] && [[ -z "${PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:-}" ]]; then
     echo "Policy pack object storage configuration not found. Defaulting to local path..."
     export PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS="${PULUMI_DATA_PATH}/policypacks"
 fi
+if [ ! -d "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}" ]; then
+    mkdir -p "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}"
+    chmod 777 "${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS}"
+fi
+
 
 docker_compose_stop() {
     if [ -z "${DOCKER_COMPOSE_ARGS:-}" ]; then
