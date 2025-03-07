@@ -47,7 +47,7 @@ if [ -f "$PULUMI_LOCAL_KEYS" ]; then
 else
     echo "Configuring new key for local object store encryption"
     head -c 32 /dev/random >$PULUMI_LOCAL_KEYS
-    chmod 666 $PULUMI_LOCAL_KEYS
+    chmod 644 $PULUMI_LOCAL_KEYS
 fi
 
 if docker network inspect pulumi-self-hosted-installers >/dev/null 2>&1; then
