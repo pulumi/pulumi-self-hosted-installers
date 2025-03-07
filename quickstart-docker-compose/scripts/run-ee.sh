@@ -91,7 +91,7 @@ if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORA
 fi
 if [ -n "${PULUMI_LOCAL_OBJECTS:-}" ]; then
     if [ ! -d "${PULUMI_LOCAL_OBJECTS}" ]; then
-        mkdir -p "${PULUMI_LOCAL_OBJECT}"
+        mkdir -p "${PULUMI_LOCAL_OBJECTS}"
         chmod 777 "${PULUMI_LOCAL_OBJECTS}"
     fi
 fi
