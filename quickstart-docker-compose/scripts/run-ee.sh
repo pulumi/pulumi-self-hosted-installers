@@ -42,15 +42,12 @@ if [ ! -d "${PULUMI_DATA_PATH}" ]; then
 fi
 
 export PULUMI_LOCAL_KEYS=${PULUMI_DATA_PATH}/localkeys
-if [ ! -d "${PULUMI_LOCAL_KEYS}" ]; then
-    mkdir -p "${PULUMI_LOCAL_KEYS}"
-    chmod 777 "${PULUMI_LOCAL_KEYS}"
-fi
 if [ -f "$PULUMI_LOCAL_KEYS" ]; then
     echo "Using local key from $PULUMI_LOCAL_KEYS"
 else
     echo "Configuring new key for local object store encryption"
     head -c 32 /dev/random >$PULUMI_LOCAL_KEYS
+    chmod 666 $PULUMI_LOCAL_KEYS
 fi
 
 if docker network inspect pulumi-self-hosted-installers >/dev/null 2>&1; then
