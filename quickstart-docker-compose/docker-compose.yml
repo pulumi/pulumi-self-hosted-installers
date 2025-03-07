@@ -81,17 +81,17 @@ services:
         source: ${PULUMI_LOCAL_KEYS:-/dev/null}
         target: ${PULUMI_LOCAL_KEYS:-/dev/null}
         bind:
-          createHostPath: false
+          create_host_path: false
       - type: bind
         source: ${PULUMI_LOCAL_OBJECTS:-/dev/null}
         target: ${PULUMI_LOCAL_OBJECTS:-/dev/null}
         bind:
-          createHostPath: false
+          create_host_path: false
       - type: bind
         source: ${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-/dev/null}
         target: ${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-/dev/null}
         bind:
-          createHostPath: false
+          create_host_path: false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/status"]
       interval: 30s
