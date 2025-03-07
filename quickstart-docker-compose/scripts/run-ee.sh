@@ -38,6 +38,7 @@ fi
 
 if [ ! -d "$PULUMI_DATA_PATH" ]; then
     mkdir -p "${PULUMI_DATA_PATH}"
+    chmod 777 "${PULUMI_DATA_PATH}"
 fi
 
 export PULUMI_LOCAL_KEYS=${PULUMI_DATA_PATH}/localkeys
