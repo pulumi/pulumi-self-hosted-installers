@@ -117,9 +117,23 @@ services:
         aliases:
           - pulumi-api
     volumes:
-      - $PULUMI_LOCAL_KEYS:$PULUMI_LOCAL_KEYS
-      - $PULUMI_DATA_PATH/checkpoints:$PULUMI_DATA_PATH/checkpoints
-      - $PULUMI_DATA_PATH/policy_packs:$PULUMI_DATA_PATH/policy_packs
+    # These volumes need correct write permissions for the pulumi user,
+    # so we ensure the paths have been pre-prepped if the variable is set.
+      - type: bind
+        source: ${PULUMI_LOCAL_KEYS:-/dev/null}
+        target: ${PULUMI_LOCAL_KEYS:-/dev/null}
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PULUMI_LOCAL_OBJECTS:-/dev/null}
+        target: ${PULUMI_LOCAL_OBJECTS:-/dev/null}
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-/dev/null}
+        target: ${PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:-/dev/null}
+        bind:
+          create_host_path: false
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/status"]
       interval: 10s
