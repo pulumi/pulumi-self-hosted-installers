@@ -1,7 +1,7 @@
 {
   "name": "k8s-gke-02-kubernetes-cluster",
   "devDependencies": {
-    "@types/node": "22.10.9"
+    "@types/node": "22.13.10"
   },
   "dependencies": {
     "@pulumi/gcp": "8.21.0",
