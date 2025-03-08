@@ -2,7 +2,7 @@
     "name": "self-hosted-aws-ecs-ts",
     "devDependencies": {
         "@types/node": "22.13.10",
-        "typescript": "5.7.3"
+        "typescript": "5.8.2"
     },
     "dependencies": {
         "@pulumi/aws": "^6.0.0",
