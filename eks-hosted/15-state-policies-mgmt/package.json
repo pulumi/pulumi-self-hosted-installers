@@ -1,7 +1,7 @@
 {
   "name": "eks-installer-state-policies-mgmt",
   "devDependencies": {
-    "typescript": "5.7.3"
+    "typescript": "5.8.2"
   },
   "dependencies": {
     "@pulumi/aws": "6.70.1",
