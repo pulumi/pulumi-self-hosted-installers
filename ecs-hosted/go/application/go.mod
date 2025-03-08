@@ -5,9 +5,9 @@ go 1.22
 toolchain go1.23.5
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.33.0
-	github.com/aws/aws-sdk-go-v2/config v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.8
+	github.com/aws/aws-sdk-go-v2 v1.36.3
+	github.com/aws/aws-sdk-go-v2/config v1.29.9
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.54.1
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.71.0
 	github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common v3.0
 	github.com/pulumi/pulumi-tls/sdk/v5 v5.1.0
