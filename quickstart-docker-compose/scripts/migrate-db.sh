@@ -53,8 +53,11 @@ DB_QUERY_STRING='?'
 # order to be consistent with the way the database certificates are passed into the API service container, i.e. the value
 # of the cert not the file path.
 if [ -n "${DATABASE_CA_CERTIFICATE:-}" ]; then
-    echo "${DATABASE_CA_CERTIFICATE}" > cacert.pem
-    DB_QUERY_STRING="${DB_QUERY_STRING}&tls=custom&x-tls-ca=cacert.pem"
+    CA_CERT_PATH=$(mktemp -d)/cacert.pem
+    echo "${DATABASE_CA_CERTIFICATE}" > ${CA_CERT_PATH}
+    # Need to url encode the path
+    CA_CERT_PATH=$(sed 's:/:%2f:g' <<< ${CA_CERT_PATH})
+    DB_QUERY_STRING="${DB_QUERY_STRING}&tls=custom&x-tls-ca=${CA_CERT_PATH}"
 fi
 
 # If METADATA_LOCK_WAIT_TIMEOUT is set, then enable the special extensions we've added to our fork of
