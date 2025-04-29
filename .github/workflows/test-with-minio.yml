@@ -44,8 +44,10 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}" >> $GITHUB_ENV
 
           checkpoint_endpoint="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
+          checkpoint_endpoint_v2="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
           pp_endpoint="s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
           echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${checkpoint_endpoint}" >> $GITHUB_ENV
+          echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2=${checkpoint_endpoint_v2}" >> $GITHUB_ENV
           echo "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${pp_endpoint}" >> $GITHUB_ENV
 
       - uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5

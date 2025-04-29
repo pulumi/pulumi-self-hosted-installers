@@ -192,7 +192,11 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
-                  value: config.checkpointBucketConnectionString 
+                  value: config.checkpointBucketConnectionString
+                },
+                {
+                  name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2",
+                  value: config.checkpointBucketConnectionStringV2
                 },
                 {
                   name: "SMTP_SERVER",
