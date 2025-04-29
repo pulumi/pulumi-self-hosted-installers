@@ -17,6 +17,7 @@ export = async () => {
     // Create S3 Buckets for the service checkpoints and policy packs.
     // Pulumi API (service) needs to be able to read/write to these buckets via IAM policy
     const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, { protect: true });
+    const checkpointsBucketV2 = new aws.s3.Bucket(`pulumi-checkpoints-v2`, {}, { protect: true });
     const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true });
     const metadataBucket= new aws.s3.Bucket(`pulumi-service-metadata`, {}, { protect: true });
 
@@ -50,6 +51,7 @@ export = async () => {
         accountId: config.accountId,
         containerCpu: config.api.apiContainerCpu,
         checkPointbucket: checkpointsBucket,
+        checkPointbucketV2: checkpointsBucketV2,
         containerMemoryReservation: config.api.apiContainerMemoryReservation,
         database: config.database,
         disableEmailLogin: config.api.apiDisableEmailLogin,
@@ -124,6 +126,7 @@ export = async () => {
 
     return {
         checkpointsS3BucketName: checkpointsBucket.id,
+        checkpointsS3BucketNameV2: checkpointsBucket.id,
         policyPacksS3BucketName: policyPacksBucket.id,
         metadataS3BucketName: metadataBucket.id,
 

@@ -99,6 +99,7 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
         endpoint?: string
     }
     checkPointbucket: s3.Bucket,
+    checkPointbucketV2: s3.Bucket,
     policyPacksBucket: s3.Bucket,
     metadataBucket: s3.Bucket
 }
@@ -133,6 +134,7 @@ export interface ApiServiceEnvironmentArgs {
     databaseEndpoint: string,
     databasePort: number,
     checkpointBucket: string,
+    checkpointBucketV2: string,
     policyPackBucket: string,
     metadataBucket: string,
     samlSsoPublicCert?: string | undefined,
