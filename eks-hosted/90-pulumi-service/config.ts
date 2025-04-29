@@ -37,9 +37,11 @@ export const config = {
 
     // state and policy and events buckets
     checkpointsS3BucketName: statePolicyStackRef.requireOutput("checkpointsS3BucketName"),
+    checkpointsS3BucketNameV2: statePolicyStackRef.requireOutput("checkpointsS3BucketNameV2"),
     policyPacksS3BucketName: statePolicyStackRef.requireOutput("policyPacksS3BucketName"),
     eventsS3BucketName: statePolicyStackRef.requireOutput("eventsS3BucketName"),
-    
+    eventsS3BucketNameV2: statePolicyStackRef.requireOutput("eventsS3BucketNameV2"),
+
     // Database stack outputs
     dbConn: dbStackRef.requireOutput("dbConn"),
 
