@@ -11,6 +11,7 @@ const storageDetails = new storage.Storage(config.resourceNamePrefix, {
 const sa = new serviceaccount.ServiceAccount(config.resourceNamePrefix, {
     tags: config.baseTags,
     checkpointBucketName: storageDetails.checkpointBucketName,
+    checkpointBucketNameV2: storageDetails.checkpointBucketNameV2,
     policyBucketName: storageDetails.policyBucketName,
     escBucketName: storageDetails.escBucketName,
 });
@@ -31,8 +32,10 @@ const database = new db.Database(config.resourceNamePrefix, {
 });
 
 export const checkpointBucketId = storageDetails.checkpointBucketId;
+export const checkpointBucketIdV2 = storageDetails.checkpointBucketIdV2;
 export const policyBucketId = storageDetails.policyBucketId;
 export const checkpointBucketName = storageDetails.checkpointBucketName;
+export const checkpointBucketNameV2 = storageDetails.checkpointBucketNameV2;
 export const policyBucketName = storageDetails.policyBucketName;
 export const escBucketName = storageDetails.escBucketName;
 export const serviceAccountName = sa.serviceAccountName;

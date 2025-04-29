@@ -36,6 +36,21 @@ func main() {
 			return err
 		}
 
+		checkpointsBucketV2, err := s3.NewBucket(ctx, "pulumi-checkpoints-v2", &s3.BucketArgs{}, pulumi.Protect(true))
+		if err != nil {
+			return err
+		}
+		_, err = s3.NewBucketVersioningV2(ctx, "pulumi-checkpoints-v2-versioning", &s3.BucketVersioningV2Args{
+			Bucket: checkpointsBucketV2.ID(),
+			VersioningConfiguration: &s3.BucketVersioningV2VersioningConfigurationArgs{
+				Status: pulumi.String("Enabled"),
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+
 		policypackBucket, err := s3.NewBucket(ctx, "pulumi-policypacks", &s3.BucketArgs{}, pulumi.Protect(true))
 		if err != nil {
 			return err
@@ -200,6 +215,7 @@ func main() {
 		}
 
 		ctx.Export("checkpointsS3BucketName", checkpointsBucket.Bucket)
+		ctx.Export("checkpointsS3BucketNameV2", checkpointsBucketV2.Bucket)
 		ctx.Export("policyPacksS3BucketName", policypackBucket.Bucket)
 		ctx.Export("metadataS3BucketName", metadataBucket.Bucket)
 		ctx.Export("publicLoadBalancerDnsName", trafficManager.Public.LoadBalancer.DnsName)

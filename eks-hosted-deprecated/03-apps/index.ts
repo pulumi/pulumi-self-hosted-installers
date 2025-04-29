@@ -125,13 +125,14 @@ const consoleEmailLoginConfig = {
 const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, { protect: true});
 const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true});
 export const checkpointsS3BucketName = checkpointsBucket.id;
+export const checkpointsS3BucketNameV2 = checkpointsBucket.id;
 export const policyPacksS3BucketName = policyPacksBucket.id;
 
 // Environment variables for the API service.
 const awsRegion = pulumi.output(aws.getRegion())
 const serviceEnv = pulumi
-    .all([checkpointsS3BucketName, policyPacksS3BucketName, awsRegion.name])
-    .apply(([cBucket, pBucket, regionName]) => {
+    .all([checkpointsS3BucketName, checkpointsS3BucketNameV2, policyPacksS3BucketName, awsRegion.name])
+    .apply(([cBucket, cBucketV2, pBucket, regionName]) => {
         const envVars = {
             "AWS_REGION": regionName,
             "PULUMI_LICENSE_KEY": licenseKeySecret.asEnvValue("key"),
@@ -143,6 +144,7 @@ const serviceEnv = pulumi
             "MYSQL_ROOT_PASSWORD": dbConnSecret.asEnvValue("password"),
             "PULUMI_DATABASE_NAME": "pulumi",
             "PULUMI_OBJECTS_BUCKET": cBucket,
+            "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2": cBucketV2,
             "PULUMI_POLICY_PACK_BUCKET": pBucket,
             ...smtpConfig,
             ...samlSsoConfig,

@@ -299,6 +299,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		args.DatabaseArgs.Port,
 		secrets.Secrets,
 		args.CheckPointbucket.Bucket,
+		args.CheckPointbucketV2.Bucket,
 		args.PolicyPacksBucket.Bucket,
 		args.MetadataBucket.Bucket,
 		args.LogDriver,
@@ -319,15 +320,16 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		dbPort := applyArgs[1].(int)
 		secretsOutput := applyArgs[2].([]map[string]any)
 		checkpointBucket := applyArgs[3].(string)
-		policypackBucket := applyArgs[4].(string)
-		metadataBucket := applyArgs[5].(string)
-		logDriver := applyArgs[6].(log.LogDriver)
-		OpenSearchUser := applyArgs[7].(string)
-		OpenSearchEndpoint := applyArgs[8].(string)
+		checkpointBuckeV2 := applyArgs[4].(string)
+		policypackBucket := applyArgs[5].(string)
+		metadataBucket := applyArgs[6].(string)
+		logDriver := applyArgs[7].(log.LogDriver)
+		OpenSearchUser := applyArgs[8].(string)
+		OpenSearchEndpoint := applyArgs[9].(string)
 
 		samlCertPublicKey := ""
-		if len(inputs) > 7 {
-			samlCertPublicKey = applyArgs[7].(string)
+		if len(inputs) > 8 {
+			samlCertPublicKey = applyArgs[8].(string)
 		}
 
 		envArgs := &ApiContainerEnvironment{
@@ -335,6 +337,7 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 			DbEndpoint:         dbEndpoint,
 			DbPort:             dbPort,
 			CheckPointBucket:   checkpointBucket,
+			CheckPointBucketV2: checkpointBuckeV2,
 			PolicyPackBucket:   policypackBucket,
 			MetadataBucket:     metadataBucket,
 			SamlPublicKey:      samlCertPublicKey,
@@ -463,6 +466,7 @@ func newApiEnvironmentVariables(environmentArgs ApiContainerEnvironment) []map[s
 		CreateEnvVar("PULUMI_API_DOMAIN", args.ApiUrl),
 		CreateEnvVar("PULUMI_CONSOLE_DOMAIN", args.ConsoleUrl),
 		CreateEnvVar("PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.CheckPointBucket),
+		CreateEnvVar("PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2", "s3://"+environmentArgs.CheckPointBucketV2),
 		CreateEnvVar("PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.PolicyPackBucket),
 		CreateEnvVar("PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.MetadataBucket),
 		CreateEnvVar("PULUMI_KMS_KEY", args.KmsServiceKeyId),
@@ -528,6 +532,7 @@ type ApiContainerServiceArgs struct {
 	RootDomain                 string
 	WhiteListCidrBlocks        []string
 	CheckPointbucket           *s3.Bucket
+	CheckPointbucketV2         *s3.Bucket
 	PolicyPacksBucket          *s3.Bucket
 	MetadataBucket             *s3.Bucket
 	ExecuteMigrations          bool
@@ -549,6 +554,7 @@ type ApiContainerEnvironment struct {
 	DbEndpoint         string
 	DbPort             int
 	CheckPointBucket   string
+	CheckPointBucketV2 string
 	PolicyPackBucket   string
 	MetadataBucket     string
 	SamlPublicKey      string

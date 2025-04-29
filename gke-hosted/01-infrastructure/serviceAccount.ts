@@ -5,6 +5,7 @@ import { Output } from "@pulumi/pulumi";
 export interface ServiceAccountArgs {
     policyBucketName: pulumi.Output<string>;
     checkpointBucketName: pulumi.Output<string>;
+    checkpointBucketNameV2: pulumi.Output<string>;
     escBucketName: pulumi.Output<string>;
     tags?: pulumi.Input<{
         [key: string]: pulumi.Input<string>;
@@ -29,6 +30,12 @@ export class ServiceAccount extends pulumi.ComponentResource {
         const gcpProject = gcp.config.project!;
         const checkpointBucketIAMMember = new gcp.storage.BucketIAMMember(`${saName}-checkpoint-bucket-iam`, {
             bucket: args.checkpointBucketName,
+            role: "roles/storage.objectAdmin",
+            member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
+        }, { parent: serviceAccount });
+
+        const checkpointBucketV2IAMMember = new gcp.storage.BucketIAMMember(`${saName}-checkpoint-bucket-v2-iam`, {
+            bucket: args.checkpointBucketNameV2,
             role: "roles/storage.objectAdmin",
             member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
         }, { parent: serviceAccount });

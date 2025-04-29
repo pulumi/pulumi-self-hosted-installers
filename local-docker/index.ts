@@ -104,6 +104,7 @@ const serviceContainer = new docker.Container("service", {
         pulumi.interpolate`AWS_SECRET_ACCESS_KEY=${config.storageSecretKey}`,
 
         pulumi.interpolate`PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${config.storageCheckpointBucket}`,
+        pulumi.interpolate`PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2=${config.storageCheckpointBucketV2}`,
         pulumi.interpolate`PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${config.storagePolicyPackBucket}`,
 
         pulumi.interpolate`PULUMI_LOCAL_KEYS=${localKeysDataPath}`,
