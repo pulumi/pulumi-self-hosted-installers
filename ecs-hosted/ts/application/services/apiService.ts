@@ -188,6 +188,7 @@ export class ApiService extends pulumi.ComponentResource {
                 serviceSecrets.outputs,
                 this.baseArgs.policyPacksBucket.bucket,
                 this.baseArgs.checkPointbucket.bucket,
+                this.baseArgs.checkPointbucketV2.bucket,
                 this.baseArgs.metadataBucket.bucket,
                 this.baseArgs.samlCertPrivateKey,
                 this.baseArgs.samlCertPublicKey,
@@ -197,6 +198,7 @@ export class ApiService extends pulumi.ComponentResource {
                 secrets,
                 policyBucket,
                 checkpointBucket,
+                checkpointBucketV2,
                 metadataBucket,
                 samlPrivateKey,
                 samlPublicKey,
@@ -221,6 +223,7 @@ export class ApiService extends pulumi.ComponentResource {
                         databaseEndpoint: this.baseArgs.database.dbClusterEndpoint,
                         databasePort: this.baseArgs.database.dbPort,
                         checkpointBucket: checkpointBucket,
+                        checkpointBucketV2: checkpointBucketV2,
                         policyPackBucket: policyBucket,
                         metadataBucket: metadataBucket,
                         samlSsoPrivateCert: samlPrivateKey,
@@ -372,6 +375,10 @@ export class ApiService extends pulumi.ComponentResource {
             {
                 name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
                 value: `s3://${args.checkpointBucket}`,
+            },
+            {
+                name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2",
+                value: `s3://${args.checkpointBucketV2}`,
             },
             {
                 name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",

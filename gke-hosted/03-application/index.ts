@@ -179,6 +179,10 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   value: pulumi.interpolate`s3://${config.checkpointBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 },
                 {
+                  name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2",
+                  value: pulumi.interpolate`s3://${config.checkpointBlobNameV2}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
+                },
+                {
                   name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
                   value: pulumi.interpolate`s3://${config.escBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 }

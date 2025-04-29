@@ -88,6 +88,7 @@ export const config = {
     storageAccessKey: stackConfig.require("storageAccessKey"),
     storageSecretKey: stackConfig.requireSecret("storageSecretKey"),
     storageCheckpointBucket: stackConfig.require("storageCheckpointBucket"),
+    storageCheckpointBucketV2: stackConfig.require("storageCheckpointBucketV2"),
     storagePolicyPackBucket: stackConfig.require("storagePolicyPackBucket"),
 
     disableNginxProxy,

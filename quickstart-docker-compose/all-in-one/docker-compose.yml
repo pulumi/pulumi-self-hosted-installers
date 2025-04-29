@@ -87,6 +87,7 @@ services:
       # Checkpoint object storage (configure one)
       PULUMI_LOCAL_OBJECTS:
       PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:
+      PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2:
       # Policy pack object storage (configure one)
       PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:
       PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:

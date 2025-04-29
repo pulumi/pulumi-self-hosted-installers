@@ -210,12 +210,20 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 value: pulumi.interpolate`s3://${config.checkpointsS3BucketName}`
               },
               {
+                name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2",
+                value: pulumi.interpolate`s3://${config.checkpointsS3BucketNameV2}`
+              },
+              {
                 name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
                 value: pulumi.interpolate`s3://${config.escBucketName}`
               },
               {
                 name: "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT", 
                 value: pulumi.interpolate`s3://${config.eventsS3BucketName}`,
+              },
+              {
+                name: "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT_V2",
+                value: pulumi.interpolate`s3://${config.eventsS3BucketNameV2}`,
               }
             ],
           },
