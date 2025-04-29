@@ -30,7 +30,7 @@ export class EncryptionService extends ComponentResource {
         if (args.awsKMSKeyArn) {
             this.encryptionServiceEnv = {
                 name: "PULUMI_KMS_KEY",
-                value: undefined
+                value: args.awsKMSKeyArn
             }
         } else {
             // Need to use a local key
