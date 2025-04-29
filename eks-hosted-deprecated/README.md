@@ -168,10 +168,11 @@ Options:
 
     ```bash
     Outputs:
-      checkpointsS3BucketName: "pulumi-checkpoints-3ee87c0"
-      consoleEndpoint        : "https://app.pulumi.example.com"
-      policyPacksS3BucketName: "pulumi-policypacks-2424c2a"
-      serviceEndpoint        : "https://api.pulumi.example.com"
+      checkpointsS3BucketName  : "pulumi-checkpoints-3ee87c0"
+      checkpointsS3BucketNameV2: "pulumi-checkpoints-XXXXXX"
+      consoleEndpoint          : "https://app.pulumi.example.com"
+      policyPacksS3BucketName  : "pulumi-policypacks-2424c2a"
+      serviceEndpoint          : "https://api.pulumi.example.com"
     ```
 
 ## Use self-hosted Pulumi
