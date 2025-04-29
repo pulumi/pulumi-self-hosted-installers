@@ -187,6 +187,10 @@ export = async () => {
                   value: interpolate`azblob://${config.checkpointBlobName}`
                 },
                 {
+                  name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2",
+                  value: interpolate`azblob://${config.checkpointBlobNameV2}`
+                },
+                {
                   name: "AZURE_STORAGE_ACCOUNT",
                   value: config.storageAccountName
                 },

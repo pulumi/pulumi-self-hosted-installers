@@ -14,8 +14,10 @@ export class Storage extends ComponentResource {
     public readonly storageAccountKey1: Output<string>;
     public readonly storageAccountKey2: Output<string>;
     public readonly checkpointBlobId: Output<string>;
+    public readonly checkpointBlobIdV2: Output<string>;
     public readonly policyBlobId: Output<string>;
     public readonly checkpointBlobName: Output<string>;
+    public readonly checkpointBlobNameV2: Output<string>;
     public readonly policyBlobName: Output<string>;
     constructor(name: string, args: StorageArgs) {
         super("x:infrastructure:storage", name);
@@ -35,6 +37,11 @@ export class Storage extends ComponentResource {
             accountName: storageAccount.name,
         }, { parent: storageAccount, protect: true });
 
+        const checkpointBlobV2 = new storage.BlobContainer(`pulumicheckpoints-v2`, {
+            resourceGroupName: args.resourceGroupName,
+            accountName: storageAccount.name,
+        }, { parent: storageAccount, protect: true });
+
         const policyBlob = new storage.BlobContainer(`pulumipolicypacks`, {
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
@@ -48,9 +55,11 @@ export class Storage extends ComponentResource {
         this.storageAccountKey1 = secret(storageAccountKeys.keys[0].value);
         this.storageAccountKey2 = secret(storageAccountKeys.keys[1].value);
         this.checkpointBlobId = checkpointBlob.id;
+        this.checkpointBlobIdV2 = checkpointBlobV2.id;
         this.policyBlobId = policyBlob.id;
         this.storageAccountId = storageAccount.id
         this.checkpointBlobName = checkpointBlob.name;
+        this.checkpointBlobNameV2 = checkpointBlobV2.name;
         this.policyBlobName = policyBlob.name;
         this.storageAccountName = storageAccount.name;
 
@@ -59,8 +68,10 @@ export class Storage extends ComponentResource {
             storageAccountKey1: this.storageAccountKey1,
             storageAccountKey2: this.storageAccountKey2,
             checkpointBlobId: this.checkpointBlobId,
+            checkpointBlobIdV2: this.checkpointBlobIdV2,
             policyBlobId: this.policyBlobId,
             checkpointBlobName: this.checkpointBlobName,
+            checkpointBlobNameV2: this.checkpointBlobNameV2,
             policyBlogName: this.policyBlobName,
             storageAccountName: this.storageAccountName
         });
