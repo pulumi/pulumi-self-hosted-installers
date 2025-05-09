@@ -8,7 +8,7 @@ require (
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.80.0
 	github.com/pulumi/pulumi-random/sdk/v4 v4.18.2
 	github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common v3.0
-	github.com/pulumi/pulumi/sdk/v3 v3.167.0
+	github.com/pulumi/pulumi/sdk/v3 v3.169.0
 	github.com/pulumiverse/pulumi-time/sdk v0.0.17
 )
 
