@@ -39,9 +39,9 @@ func publishPolicyPack(t *testing.T) string {
 
 	testOrgName := newOrgReq.OrgName
 	// Pack and push a Policy Pack for the organization.
-	_, _, npmErr = testEnv.GetCommandResults("pulumi", "policy", "publish", testOrgName)
+	stdout, stderr, npmErr := testEnv.GetCommandResults("pulumi", "policy", "publish", testOrgName)
 	if npmErr != nil {
-		t.Fatalf("Error publishing policy pack: %v", npmErr)
+		t.Fatalf("Error publishing policy pack: %v\nStdout: %s\nStderr: %s", npmErr, stdout, stderr)
 	}
 
 	req := apitype.UpdatePolicyGroupRequest{
