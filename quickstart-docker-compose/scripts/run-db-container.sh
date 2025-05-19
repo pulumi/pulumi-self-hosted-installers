@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script sets up a docker bridge network called pulumi-self-hosted-installers,
 # then starts a MySQL v5.7 container in that network.

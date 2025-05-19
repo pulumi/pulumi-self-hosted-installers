@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This script is the main starting point for the quickstart solutions for self-hosted Pulumi Service.
 # By default, this script will use the docker-compose.yml file (and an override file, if present) in the root
 # directory of pulumi-self-hosted-installers.
