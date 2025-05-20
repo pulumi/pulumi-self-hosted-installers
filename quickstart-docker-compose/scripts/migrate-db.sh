@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Bring the DB instance up-to-date with all current migrations.
 # Migrations will be executed as the password-less pulumi_service DB user unless

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script update a DB instance running inside a
 # container by running the DB migrations against it.
