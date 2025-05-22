@@ -12,10 +12,7 @@ set -e
 echo "Waiting for MySQL to come alive ..."
 
 # Credentials is a JSON string with the following format:
-# {
-#   "username": "<username>",
-#   "password": "<password>"
-# }
+# MYSQL_ROOT_CREDENTIALS='{"username":"user","password":"pass"}'
 # If MYSQL_ROOT_CREDENTIALS is not set, then the script will use the
 # MYSQL_ROOT_USERNAME and MYSQL_ROOT_PASSWORD environment variables.
 if [ -n "${MYSQL_ROOT_CREDENTIALS:-}" ]; then
@@ -26,6 +23,7 @@ if [ -n "${MYSQL_ROOT_CREDENTIALS:-}" ]; then
         echo "Warning: MYSQL_ROOT_PASSWORD is set and will be overwritten from MYSQL_ROOT_CREDENTIALS." >&2
     fi
 
+    # We use python3 here because it's already required by migrate-db.sh
     if command -v python3 >/dev/null 2>&1; then
         # Validate JSON format
         if ! python3 -c "import sys, json; d=json.load(sys.stdin); assert 'username' in d and 'password' in d" <<< "${MYSQL_ROOT_CREDENTIALS}" 2>/dev/null; then
