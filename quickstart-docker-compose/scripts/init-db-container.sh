@@ -11,7 +11,7 @@ set -e
 
 echo "Waiting for MySQL to come alive ..."
 
-# Credentials is a JSON string with the following format:
+# MYSQL_ROOT_CREDENTIALS is a JSON string with the following format:
 # {
 #   "username": "<username>",
 #   "password": "<password>"
