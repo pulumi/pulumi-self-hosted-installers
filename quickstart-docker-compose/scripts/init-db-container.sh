@@ -18,17 +18,17 @@ echo "Waiting for MySQL to come alive ..."
 # }
 # If MYSQL_ROOT_CREDENTIALS is not set, then the script will use the
 # MYSQL_ROOT_USERNAME and MYSQL_ROOT_PASSWORD environment variables.
-if [ -z "${MYSQL_ROOT_CREDENTIALS:-}" ]; then
+if [ -n "${MYSQL_ROOT_CREDENTIALS:-}" ]; then
     if [ -n "${MYSQL_ROOT_USERNAME:-}" ]; then
-        echo "Warning: MYSQL_ROOT_USERNAME is set and will be overwritten from MYSQL_ROOT_CREDENTIALS."
+        echo "Warning: MYSQL_ROOT_USERNAME is set and will be overwritten from MYSQL_ROOT_CREDENTIALS." >&2
     fi
     if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
-        echo "Warning: MYSQL_ROOT_PASSWORD is set and will be overwritten from MYSQL_ROOT_CREDENTIALS."
+        echo "Warning: MYSQL_ROOT_PASSWORD is set and will be overwritten from MYSQL_ROOT_CREDENTIALS." >&2
     fi
 
     if command -v python3 >/dev/null 2>&1; then
         # Validate JSON format
-        if ! python3 -c "import sys, json; json.load(sys.stdin)" <<< "${MYSQL_ROOT_CREDENTIALS}" 2>/dev/null; then
+        if ! python3 -c "import sys, json; d=json.load(sys.stdin); assert 'username' in d and 'password' in d" <<< "${MYSQL_ROOT_CREDENTIALS}" 2>/dev/null; then
             echo "Error: MYSQL_ROOT_CREDENTIALS must be valid JSON with username and password."
             exit 1
         fi
