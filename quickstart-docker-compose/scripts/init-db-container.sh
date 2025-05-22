@@ -11,8 +11,37 @@ set -e
 
 echo "Waiting for MySQL to come alive ..."
 
-if [ -z "${MYSQL_ROOT_USERNAME:-}" ]; then
-    MYSQL_ROOT_USERNAME=root
+# Credentials is a JSON string with the following format:
+# {
+#   "username": "<username>",
+#   "password": "<password>"
+# }
+# If MYSQL_ROOT_CREDENTIALS is not set, then the script will use the
+# MYSQL_ROOT_USERNAME and MYSQL_ROOT_PASSWORD environment variables.
+if [ -z "${MYSQL_ROOT_CREDENTIALS:-}" ]; then
+    if [ -n "${MYSQL_ROOT_USERNAME:-}" ]; then
+        echo "Warning: MYSQL_ROOT_USERNAME is set and will be overwritten from MYSQL_ROOT_CREDENTIALS."
+    fi
+    if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
+        echo "Warning: MYSQL_ROOT_PASSWORD is set and will be overwritten from MYSQL_ROOT_CREDENTIALS."
+    fi
+
+    if command -v python3 >/dev/null 2>&1; then
+        # Validate JSON format
+        if ! python3 -c "import sys, json; json.load(sys.stdin)" <<< "${MYSQL_ROOT_CREDENTIALS}" 2>/dev/null; then
+            echo "Error: MYSQL_ROOT_CREDENTIALS must be valid JSON with username and password."
+            exit 1
+        fi
+        MYSQL_ROOT_USERNAME=$(python3 -c "import sys, json; print(json.load(sys.stdin)['username'])" <<< "${MYSQL_ROOT_CREDENTIALS}")
+        MYSQL_ROOT_PASSWORD=$(python3 -c "import sys, json; print(json.load(sys.stdin)['password'])" <<< "${MYSQL_ROOT_CREDENTIALS}")
+    else
+        echo "python3 is required to parse MYSQL_ROOT_CREDENTIALS but is not installed."
+        exit 1
+    fi
+else
+    if [ -z "${MYSQL_ROOT_USERNAME:-}" ]; then
+        MYSQL_ROOT_USERNAME=root
+    fi
 fi
 
 if [ -z "${MYSQL_PORT:-}" ]; then
