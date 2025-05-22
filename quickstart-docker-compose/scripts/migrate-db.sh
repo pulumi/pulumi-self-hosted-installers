@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Bring the DB instance up-to-date with all current migrations.
 # Migrations will be executed as the password-less pulumi_service DB user unless
@@ -46,7 +46,12 @@ if [ -z "${PULUMI_LOCAL_DATABASE_ENDPOINT:-}" ]; then
     PULUMI_LOCAL_DATABASE_ENDPOINT=localhost:3306
 fi
 
-DB_QUERY_STRING='?'
+urlencode () {
+    python3 -c "import sys, urllib.parse as ul; \
+        print (ul.quote_plus(sys.argv[1]))" "$1"
+}
+
+DB_QUERY_STRING=''
 # Check to see if we should connect to the database using TLS. We do this by checking to see if the DATABASE_CA_CERTIFICATE
 # environment variable is set. If it is we assume the user would like to connect via TLS using the provided CA certificate.
 # This environment variable needs to be set to the value of the certificate and not a filepath. This was done this way in
@@ -56,7 +61,7 @@ if [ -n "${DATABASE_CA_CERTIFICATE:-}" ]; then
     CA_CERT_PATH=$(mktemp -d)/cacert.pem
     echo "${DATABASE_CA_CERTIFICATE}" > ${CA_CERT_PATH}
     # Need to url encode the path
-    CA_CERT_PATH=$(sed 's:/:%2f:g' <<< ${CA_CERT_PATH})
+    CA_CERT_PATH=$(urlencode ${CA_CERT_PATH})
     DB_QUERY_STRING="${DB_QUERY_STRING}&tls=custom&x-tls-ca=${CA_CERT_PATH}"
 fi
 
@@ -67,12 +72,15 @@ if [ -n "${METADATA_LOCK_WAIT_TIMEOUT:-}" ]; then
     DB_QUERY_STRING="${DB_QUERY_STRING}&x-metadata-lock-timeout=${METADATA_LOCK_WAIT_TIMEOUT}&x-metadata-lock-retries=${METADATA_LOCK_RETRIES:-20}"
 fi
 
+if [ -n "${MIGRATIONS_TABLE_NAME:-}" ]; then
+    DB_QUERY_STRING="${DB_QUERY_STRING}&x-migrations-table=${MIGRATIONS_TABLE_NAME}"
+fi
+
 # URL encode the connection string since it might contain special chars.
 # See https://github.com/golang-migrate/migrate#database-urls
-URL_ENCODED_DB_PASSWORD=$(python3 -c "import sys, urllib.parse as ul; \
-    print (ul.quote_plus(sys.argv[1]))" "${DB_PASSWORD}")
+URL_ENCODED_DB_PASSWORD=$(urlencode "${DB_PASSWORD}")
 
-DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/${PULUMI_LOCAL_DATABASE_NAME}${DB_QUERY_STRING}"
+DB_CONNECTION_STRING="mysql://${DB_USER}:${URL_ENCODED_DB_PASSWORD}@tcp(${PULUMI_LOCAL_DATABASE_ENDPOINT})/${PULUMI_LOCAL_DATABASE_NAME}?${DB_QUERY_STRING}"
 
 if [ -z "${MIGRATIONS_DIR:-}" ]; then
     MIGRATIONS_DIR=migrations
