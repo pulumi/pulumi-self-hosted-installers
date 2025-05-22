@@ -4,8 +4,8 @@
     "typescript": "5.8.2"
   },
   "dependencies": {
-    "@pulumi/aws": "6.80.0",
+    "@pulumi/aws": "6.81.0",
     "@pulumi/kubernetes": "4.23.0",
-    "@pulumi/pulumi": "3.170.0"
+    "@pulumi/pulumi": "3.171.0"
   }
 }
