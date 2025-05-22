@@ -11,8 +11,8 @@ set -e
 
 echo "Waiting for MySQL to come alive ..."
 
-# Credentials is a JSON string with the following format:
-# MYSQL_ROOT_CREDENTIALS='{"username":"user","password":"pass"}'
+# MYSQL_ROOT_CREDENTIALS is a JSON string with the following format:
+#   '{"username":"user", "password":"pass"}'
 # If MYSQL_ROOT_CREDENTIALS is not set, then the script will use the
 # MYSQL_ROOT_USERNAME and MYSQL_ROOT_PASSWORD environment variables.
 if [ -n "${MYSQL_ROOT_CREDENTIALS:-}" ]; then
