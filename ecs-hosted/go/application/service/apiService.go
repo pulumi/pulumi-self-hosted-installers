@@ -8,11 +8,11 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/kms"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/lb"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/utils"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/utils"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 

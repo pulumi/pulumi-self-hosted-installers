@@ -5,11 +5,11 @@ import (
 
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/service"
-	tls "github.com/pulumi/pulumi-tls/sdk/v4/go/tls"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/service"
+	"github.com/pulumi/pulumi-tls/sdk/v5/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -41,7 +41,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-    
+
 		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{
 			Versioning: &s3.BucketVersioningArgs{
 				Enabled: pulumi.Bool(true),

@@ -9,9 +9,9 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ecs"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/iam"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/utils"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/utils"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
