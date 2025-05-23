@@ -4,7 +4,7 @@ import (
 	// "fmt"
 
 	// "github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ecs"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/config"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 

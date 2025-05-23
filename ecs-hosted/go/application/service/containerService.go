@@ -9,8 +9,8 @@ import (
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/iam"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/kms"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/lb"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/common"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 

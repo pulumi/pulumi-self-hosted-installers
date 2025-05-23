@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/application/log"
+	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
@@ -77,7 +77,7 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	// prefix list is needed for private connection to s3 (fargate control plane)
 	resource.PrefixListId = stackRef.GetStringOutput(pulumi.String("s3EndpointPrefixId"))
 
-	// Captcha 
+	// Captcha
 	resource.RecaptchaSecretKey = appConfig.Get("recaptchaSecretKey")
 	resource.RecaptchaSiteKey = appConfig.Get("recaptchaSiteKey")
 
