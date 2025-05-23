@@ -8,8 +8,8 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 ## Revision History
 
-Version ID | Date | Note
----|---|---
+Version ID | Date       | Note
+---|------------|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 04/15/2022 | Golang application now supports Pulumi Service operating in a private, no public internet access environment. This configuration, which is disabled by default, can be enabled by setting the `enablePrivateLoadBalancerAndLimitEgress` configuration value in both the `application` and `dns` stack configurations.
 3 | 05/03/2022 | README.md split into Golang and Typescript specific versions
@@ -17,6 +17,7 @@ Version ID | Date | Note
 5 | 01/20/2023 | MySQL 8 support.
 6 | 07/17/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble.
 7 | 10/20/2024 | Add ESC deployment to the installer.
+8 | 05/23/2025 | Updated Go module.
 
 ## User Guides
 
