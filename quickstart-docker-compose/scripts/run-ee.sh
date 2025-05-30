@@ -85,7 +85,7 @@ if [ -z "${PULUMI_SEARCH_PASSWORD:-}" ]; then
     export PULUMI_SEARCH_PASSWORD=admin
 fi
 
-if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" ]]; then
+if [[ -z "${PULUMI_LOCAL_OBJECTS:-}" ]] && [[ -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT:-}" && -z "${PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2:-}" ]]; then
     echo "Checkpoint object storage configuration not found. Defaulting to local path..."
     export PULUMI_LOCAL_OBJECTS="${PULUMI_DATA_PATH}/checkpoints"
 fi
