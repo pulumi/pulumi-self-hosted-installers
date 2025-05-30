@@ -27,6 +27,11 @@ func TestStackUpdateForMinioStorage(t *testing.T) {
 		t.Fatalf("Checkpoint storage endpoint is not an S3-compatible endpoint instead it was %s", checkpointStorageEndpoint)
 	}
 
+	checkpointStorageEndpointV2 := os.Getenv("PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT_V2")
+	if !strings.HasPrefix(checkpointStorageEndpointV2, "s3://") {
+		t.Fatalf("Checkpoint v2 storage endpoint is not an S3-compatible endpoint instead it was %s", checkpointStorageEndpointV2)
+	}
+
 	// testApp is the name of the folder and it just so happens the Pulumi
 	// project name is the same too in Pulumi.yaml.
 	testApp := "test-pulumi-app"
