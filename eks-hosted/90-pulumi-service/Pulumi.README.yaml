@@ -23,8 +23,7 @@ config:
   hostedZoneDomainSubdomain: pulumiservice 
 
   # Either set the AWS KMS Key ARN to use for encrypting secrets or set a local key to use.
-  # If providing the KMS key ARN, be sure there is a policy attached to it that allows instanceRole (see 01-iam project) to use it.
-  # See secrets-management.ts for what permissions are needed.
+  # If providing the KMS key ARN, be sure to add the EKS instance role defined in 01-iam as a key user.
   awsKMSKeyArn: 
   # If setting a local key run the following to generate 32 random characters: 
   # openssl rand -base64 32| cut -c -32 | pulumi config set encryptionKey --secret
