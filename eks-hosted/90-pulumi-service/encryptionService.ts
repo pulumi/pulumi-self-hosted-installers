@@ -19,8 +19,8 @@ export interface EncryptionServiceArgs {
 // When the above issue is addressed, this code can be modified to set things up using the GCP key service and 
 // just return empty volume specs with no need to update the index.ts program.
 export class EncryptionService extends ComponentResource {
-    pulumiLocalKeysVolumeSpec: k8s.types.input.core.v1.Volume;
-    pulumiLocalKeysVolumeMountSpec: k8s.types.input.core.v1.VolumeMount;
+    pulumiLocalKeysVolumes: k8s.types.input.core.v1.Volume[];
+    pulumiLocalKeysVolumeMounts: k8s.types.input.core.v1.VolumeMount[]; 
     encryptionServiceEnv: k8s.types.input.core.v1.EnvVar;
     constructor(name: string, args: EncryptionServiceArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:encryption-service", name, opts);
@@ -32,6 +32,8 @@ export class EncryptionService extends ComponentResource {
                 name: "PULUMI_KMS_KEY",
                 value: args.awsKMSKeyArn
             }
+            this.pulumiLocalKeysVolumes = []
+            this.pulumiLocalKeysVolumeMounts = [];
         } else {
             // Need to use a local key
 
@@ -53,24 +55,24 @@ export class EncryptionService extends ComponentResource {
 
             // construct volume spec and mount specs to use the secret as a file as per:
             // https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod
-            this.pulumiLocalKeysVolumeSpec = {
+            this.pulumiLocalKeysVolumes = [{
                 name: volumeName,
                 secret: {
                     secretName: secretName,
                 }
-            };
+            }];
 
             // construct the volume mount spec 
-            this.pulumiLocalKeysVolumeMountSpec = {
+            this.pulumiLocalKeysVolumeMounts = [{
                 name: volumeName,
                 mountPath: `/${volumeName}`,
                 readOnly: true,
-            };
+            }];
         }
 
         this.registerOutputs({
-            pulumiLocalKeysVolumeSpec: this.pulumiLocalKeysVolumeSpec,
-            pulumiLocalKeysVolumeMountSpec: this.pulumiLocalKeysVolumeMountSpec,
+            pulumiLocalKeysVolumes: this.pulumiLocalKeysVolumes,
+            pulumiLocalKeysVolumeMounts: this.pulumiLocalKeysVolumeMounts,
             encryptionServiceEnv: this.encryptionServiceEnv
         })
     }

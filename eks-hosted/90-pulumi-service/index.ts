@@ -156,19 +156,14 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               }
           ]
         }],
-        volumes: [
-          pulumiEncryptionKey.pulumiLocalKeysVolumeSpec
-        ],
+        volumes: pulumiEncryptionKey.pulumiLocalKeysVolumes,
         containers: [
           {
             name: apiName,
             image: apiImage,
             resources: apiResources,
             ports: [{ containerPort: apiPort, name: "http" }],
-            volumeMounts: [
-              //Add any files/volumes needed for managing secrets.
-              pulumiEncryptionKey.pulumiLocalKeysVolumeMountSpec
-            ],
+            volumeMounts: pulumiEncryptionKey.pulumiLocalKeysVolumeMounts,
             env: [
               pulumiEncryptionKey.encryptionServiceEnv,
               generateEnvVarFromSecret("PULUMI_LICENSE_KEY", secrets.LicenseKeySecret.metadata.name, "key"),
@@ -281,11 +276,11 @@ const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleNam
               },
               {
                 name: "PULUMI_HIDE_EMAIL_LOGIN",
-                value: config.consoleHideEmailLogin === "true" ? "true" : undefined,
+                value: config.consoleHideEmailLogin,
               },
               {
                 name: "PULUMI_HIDE_EMAIL_SIGNUP", 
-                value: config.consoleHideEmailSignup === "true" ? "true" : undefined,
+                value: config.consoleHideEmailSignup,
               },
               generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
               generateEnvVarFromSecret("GITHUB_OAUTH_ENDPOINT", secrets.GithubSecret.metadata.name, "oauthEndpoint"),
