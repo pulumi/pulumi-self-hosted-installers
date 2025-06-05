@@ -9,4 +9,5 @@ config:
 
   # Opensearch configuration
   # Use "pulumi config set opensearchPassword --secret <password>"
+  # Password must be a minimum 8 character password and must contain at least one uppercase letter, one lowercase letter, one digit, and one special character that is strong. Password strength can be tested here: https://lowe.github.io/tryzxcvbn
   opensearchPassword: 
