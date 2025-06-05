@@ -114,7 +114,7 @@ export class OpenSearch extends ComponentResource {
                 extraEnvs: [
                     {
                         name: "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
-                        value: "ChangeMe1234!"
+                        value: args.intitialAdminPassword
                     }
                 ],
                 rbac: {
