@@ -46,11 +46,15 @@ fi
 
 MYSQL_CONT=$(docker ps --filter "name=pulumi-db" --format "{{.ID}}")
 
+# Make sure MYSQL_DATA_PATH is owned by the calling user
+mkdir -p "${MYSQL_DATA_PATH}"
+
 if [ -z "${MYSQL_CONT:-}" ]; then
     # Boot up a MySQL 8.0 database.
     MYSQL_CONT=$(docker run \
         --name pulumi-db -p ${MYSQL_PORT}:3306 --rm -d \
         --network pulumi-self-hosted-installers \
+        --user "$(id -u):$(id -g)" \
         -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e MYSQL_DATABASE="${PULUMI_DATABASE_NAME:-pulumi}" \
         -v "${MYSQL_DATA_PATH}":/var/lib/mysql \
