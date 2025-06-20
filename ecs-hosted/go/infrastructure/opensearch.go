@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cloudwatch"
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/opensearch"
+	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/cloudwatch"
+	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/opensearch"
 	"github.com/pulumi/pulumi-random/sdk/v4/go/random"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-time/sdk/go/time"
@@ -254,8 +254,8 @@ func newLogGroup(ctx *pulumi.Context, name string, opts ...pulumi.ResourceOption
 type OpenSearch struct {
 	pulumi.ResourceState
 
-	DomainName   pulumi.StringOutput
-	Endpoint pulumi.StringOutput
-	Password pulumi.StringOutput
-	User     pulumi.StringOutput
+	DomainName pulumi.StringOutput
+	Endpoint   pulumi.StringOutput
+	Password   pulumi.StringOutput
+	User       pulumi.StringOutput
 }
