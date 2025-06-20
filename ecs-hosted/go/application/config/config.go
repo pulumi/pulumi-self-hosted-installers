@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws"
+	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -185,10 +185,10 @@ type ConfigArgs struct {
 	ConsoleHideEmailSignup            bool
 
 	// Insights Related Values
-	OpenSearchUser     pulumi.StringOutput
-	OpenSearchPassword pulumi.StringOutput
-	OpenSearchDomainName   pulumi.StringOutput
-	OpenSearchEndpoint pulumi.StringOutput
+	OpenSearchUser       pulumi.StringOutput
+	OpenSearchPassword   pulumi.StringOutput
+	OpenSearchDomainName pulumi.StringOutput
+	OpenSearchEndpoint   pulumi.StringOutput
 
 	// Configuration for Both
 	SamlArgs *SamlArgs

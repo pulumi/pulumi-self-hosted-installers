@@ -3,8 +3,8 @@ package main
 import (
 	"strings"
 
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/ec2"
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
+	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
+	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/s3"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
 	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
@@ -135,7 +135,7 @@ func main() {
 			ImagePrefix:                config.ImagePrefix,
 			LicenseKey:                 config.LicenseKey,
 			LogDriver:                  apiLogs,
-			MetadataBucket:							metadataBucket,
+			MetadataBucket:             metadataBucket,
 			PolicyPacksBucket:          policypackBucket,
 			RecaptchaSecretKey:         config.RecaptchaSecretKey,
 			RootDomain:                 domain,
