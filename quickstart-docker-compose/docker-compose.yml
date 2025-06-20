@@ -13,7 +13,7 @@ services:
   api:
     ports:
       - "8080:8080"
-    image: "pulumi/service:latest@sha256:3c12fe33e2b91617b3f739e7b3c8a0b98f34657b19a0049152a12a052d45e0aa"
+    image: "pulumi/service:latest@sha256:c624bfd136de6c34a047087c325aeacedf6e9efb6e85d522b6c7415adccfa96d"
     env_file: service_vars.env
     environment:
       PULUMI_LICENSE_KEY:
@@ -106,7 +106,7 @@ services:
   console:
     ports:
       - "3000:3000"
-    image: "pulumi/console:latest@sha256:7e394b49ba65c28b4fe9f983afd91c0da6deffbaaf15c58ce108993844259a39"
+    image: "pulumi/console:latest@sha256:8701894a95f3270d18fb95c54949ebe47c019b34c322e9816e2561d84598967a"
     networks:
       - pulumi-services
     env_file: console_vars.env
