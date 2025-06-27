@@ -1,0 +1,35 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#FBBC05,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
+    classDef network fill:#EA4335,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph APP["03-application: Pulumi Services"]
+        subgraph APPS["Kubernetes Deployments"]
+            API_SVC[Pulumi API Service<br/>pulumi/service Image<br/>2048m CPU, 1024Mi Memory]:::pulumi
+            CONSOLE_SVC[Pulumi Console Service<br/>pulumi/console Image<br/>1024m CPU, 512Mi Memory]:::pulumi
+            MIGRATION[Database Migration<br/>Init Container<br/>pulumi/migrations Image]:::pulumi
+        end
+        
+        subgraph INGRESS["NGINX Ingress Configuration"]
+            SSL_REDIRECT[SSL Redirect Enforcement<br/>Force HTTPS<br/>Security Headers]:::network
+            INGRESS_RULES[Path-based Routing<br/>api.domain + app.domain<br/>TLS Termination]:::network
+            IP_ALLOWLIST[Optional IP Allowlist<br/>CIDR-based Access<br/>Security Annotations]:::security
+        end
+    end
+    
+    subgraph SEC["Security & Configuration"]
+        TLS_CERTS[TLS Certificates<br/>API & Console<br/>External Provision]:::security
+        DB_CREDS[Database Credentials<br/>Cloud SQL Connection<br/>Private Access]:::security
+        STORAGE_KEYS[Service Account Keys<br/>HMAC Credentials<br/>S3-compatible Access]:::security
+    end
+    
+    TLS_CERTS --> INGRESS_RULES
+    INGRESS_RULES --> API_SVC
+    INGRESS_RULES --> CONSOLE_SVC
+    SSL_REDIRECT --> INGRESS_RULES
+    IP_ALLOWLIST --> INGRESS_RULES
+    
+    DB_CREDS --> API_SVC
+    STORAGE_KEYS --> API_SVC
+    MIGRATION --> API_SVC

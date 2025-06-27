@@ -1,0 +1,31 @@
+{
+  "name": "pulumi-self-hosted-installers",
+  "version": "1.0.0",
+  "description": "Development tools for Pulumi Self-Hosted Installers",
+  "private": true,
+  "scripts": {
+    "lint:markdown": "markdownlint-cli **/*.md --ignore node_modules",
+    "lint:mermaid": "npm run validate:diagrams",
+    "lint": "npm run lint:markdown && npm run lint:mermaid",
+    "validate:diagrams": "echo \"Note: Most diagrams are now standalone .mmd files. Use validate:standalone instead.\"",
+    "validate:standalone": "find . -name '*.mmd' -not -path './node_modules/*' -exec sh -c 'echo \"Validating: $1\" && mmdc --input \"$1\" --output /tmp/test-$(basename \"$1\").svg --quiet' _ {} \\;",
+    "validate:all": "npm run validate:diagrams && npm run validate:standalone",
+    "generate:diagrams": "find . -name '*.mmd' -not -path './node_modules/*' -exec sh -c 'echo \"Generating SVG for: $1\" && mmdc --input \"$1\" --output \"${1%.mmd}.svg\" --backgroundColor white' _ {} \\;"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^10.6.1",
+    "markdownlint-cli": "^0.38.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "pulumi",
+    "infrastructure",
+    "aws",
+    "azure", 
+    "gcp",
+    "kubernetes",
+    "documentation"
+  ]
+}

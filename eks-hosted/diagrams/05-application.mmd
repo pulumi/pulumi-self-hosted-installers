@@ -1,0 +1,46 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#8B0000,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph APP["Application Layer: Pulumi Services"]
+        subgraph PULUMI_SVCS["90-pulumi-service: Core Services"]
+            API_SVC[Pulumi API Service<br/>Kubernetes Deployment<br/>Auto Scaling]:::pulumi
+            CONSOLE_SVC[Pulumi Console<br/>Web Interface<br/>React Application]:::pulumi
+            MIGRATION[Database Migration<br/>Job Runner<br/>Schema Updates]:::pulumi
+        end
+        
+        subgraph K8S_CONFIG["Kubernetes Configuration"]
+            SECRETS[Kubernetes Secrets<br/>DB Credentials<br/>License Keys]:::security
+            CONFIG_MAPS[Config Maps<br/>Environment Variables<br/>Service Config]:::k8s
+            SERVICES[Kubernetes Services<br/>Internal Networking<br/>Service Discovery]:::k8s
+        end
+        
+        subgraph INGRESS_CONFIG["Ingress Configuration"]
+            ALB_INGRESS[ALB Ingress<br/>HTTPS Termination<br/>Path-based Routing]:::network
+            DNS_RECORDS[Route 53 Records<br/>api.domain.com<br/>app.domain.com]:::network
+            CERTS[ACM Certificates<br/>TLS Encryption<br/>Auto Renewal]:::security
+        end
+        
+        subgraph ESC_LAYER["30-esc: Pulumi ESC"]
+            ESC_SVC[Pulumi ESC Service<br/>Environment Config<br/>Secret Management]:::pulumi
+            ESC_STORAGE[ESC Storage<br/>Configuration Data<br/>Version Control]:::security
+        end
+    end
+    
+    SECRETS --> API_SVC
+    SECRETS --> CONSOLE_SVC
+    CONFIG_MAPS --> API_SVC
+    CONFIG_MAPS --> CONSOLE_SVC
+    SERVICES --> ALB_INGRESS
+    
+    ALB_INGRESS --> API_SVC
+    ALB_INGRESS --> CONSOLE_SVC
+    DNS_RECORDS --> ALB_INGRESS
+    CERTS --> ALB_INGRESS
+    
+    ESC_SVC --> ESC_STORAGE
+    API_SVC --> ESC_SVC
+    MIGRATION --> API_SVC

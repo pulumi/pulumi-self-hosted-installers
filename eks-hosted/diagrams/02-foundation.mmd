@@ -1,0 +1,30 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph FOUNDATION["Foundation Layer: IAM & Networking"]
+        subgraph IAM_LAYER["01-iam: IAM Resources"]
+            EKS_ROLE[Amazon EKS<br/>Cluster Service Role<br/>Required Policies]:::aws
+            NODE_ROLE[Amazon EKS<br/>Node Group Role<br/>Worker Permissions]:::aws
+            ALB_POLICY[AWS Load Balancer<br/>Controller Policy<br/>Ingress Management]:::aws
+        end
+        
+        subgraph NET_LAYER["02-networking: VPC Infrastructure"]
+            VPC[Amazon VPC<br/>CIDR: 10.0.0.0/16<br/>Multi-AZ Design]:::network
+            PUB_SUBNETS[Public Subnets<br/>Internet Gateway<br/>NAT Gateway Hosts]:::network
+            PRIV_SUBNETS[Private Subnets<br/>NAT Gateway Route<br/>EKS Node Groups]:::network
+            IGW[Internet Gateway<br/>Public Access<br/>Outbound Traffic]:::network
+            NAT[NAT Gateway<br/>Private Outbound<br/>High Availability]:::network
+        end
+    end
+    
+    EKS_ROLE --> VPC
+    NODE_ROLE --> PRIV_SUBNETS
+    ALB_POLICY --> PUB_SUBNETS
+    
+    VPC --> PUB_SUBNETS
+    VPC --> PRIV_SUBNETS
+    PUB_SUBNETS --> IGW
+    PUB_SUBNETS --> NAT
+    PRIV_SUBNETS --> NAT

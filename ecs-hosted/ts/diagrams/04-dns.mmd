@@ -1,0 +1,19 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef dns fill:#00A1C9,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph DNS["DNS: Route 53 Records"]
+        ROUTE53[Amazon Route 53<br/>A Records<br/>api.domain.com<br/>app.domain.com]:::dns
+        ACM[AWS Certificate Manager<br/>SSL/TLS Certificates<br/>Domain Validation]:::aws
+    end
+    
+    subgraph EXT_DNS["External DNS Requirements"]
+        DOMAIN[Domain Registration<br/>Route 53 Hosted Zone<br/>DNS Management]:::dns
+        ALB_REF[Application Load Balancer<br/>From Application Stack<br/>DNS Name & Zone ID]:::network
+    end
+    
+    DOMAIN --> ROUTE53
+    ALB_REF --> ROUTE53
+    ACM --> ALB_REF

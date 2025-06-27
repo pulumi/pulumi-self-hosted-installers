@@ -1,0 +1,30 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph FLOW["Data Flow Patterns"]
+        API[Pulumi API Service<br/>Container Service<br/>State Management]:::pulumi
+        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management]:::pulumi
+        MIGRATION[Database Migration<br/>Schema Updates<br/>Initialization Tasks]:::pulumi
+        
+        AURORA_DB[Amazon Aurora MySQL<br/>Primary Database<br/>Application State]:::storage
+        S3_STATE[Amazon S3 Buckets<br/>Checkpoint Storage<br/>Policy Packs]:::storage
+        OPENSEARCH_IDX[Amazon OpenSearch<br/>Resource Index<br/>Search Engine]:::storage
+        
+        ECR_IMGS[Amazon ECR<br/>Container Images<br/>pulumi/service]:::external
+        SMTP_SVC[SMTP Service<br/>Email Notifications<br/>User Communications]:::external
+    end
+    
+    API -.->|Read/Write| AURORA_DB
+    API -.->|Store State| S3_STATE
+    API -.->|Index Resources| OPENSEARCH_IDX
+    API -.->|Send Emails| SMTP_SVC
+    
+    CONSOLE -.->|API Requests| API
+    MIGRATION -.->|Schema Updates| AURORA_DB
+    
+    ECR_IMGS -.->|Pull Images| API
+    ECR_IMGS -.->|Pull Images| CONSOLE
+    ECR_IMGS -.->|Pull Images| MIGRATION

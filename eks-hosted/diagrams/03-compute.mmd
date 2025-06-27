@@ -1,0 +1,32 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph COMPUTE["Compute Layer: EKS & Services"]
+        subgraph EKS_CLUSTER["05-eks-cluster: Kubernetes"]
+            EKS[Amazon EKS Cluster<br/>Kubernetes v1.28<br/>Managed Control Plane]:::k8s
+            NODES[EKS Node Groups<br/>EC2 Instances<br/>Auto Scaling]:::k8s
+            FARGATE[EKS Fargate<br/>Serverless Pods<br/>On-Demand]:::k8s
+        end
+        
+        subgraph CLUSTER_SVCS["10-cluster-svcs: Load Balancing"]
+            ALB_CONTROLLER[AWS Load Balancer<br/>Controller<br/>Ingress Management]:::aws
+            INGRESS_CLASS[Ingress Class<br/>ALB Configuration<br/>Traffic Routing]:::network
+            TARGET_GROUPS[Target Groups<br/>Health Checks<br/>Service Discovery]:::network
+        end
+    end
+    
+    subgraph NET_REF["From Foundation"]
+        VPC_REF[Amazon VPC<br/>Network Reference<br/>Subnet Integration]:::network
+        IAM_REF[IAM Roles<br/>Service Permissions<br/>Security Context]:::aws
+    end
+    
+    VPC_REF --> EKS
+    IAM_REF --> EKS
+    EKS --> NODES
+    EKS --> FARGATE
+    EKS --> ALB_CONTROLLER
+    ALB_CONTROLLER --> INGRESS_CLASS
+    INGRESS_CLASS --> TARGET_GROUPS

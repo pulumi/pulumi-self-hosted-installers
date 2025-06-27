@@ -1,0 +1,27 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
+    classDef azure fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph CERT["Certificate Management - Optional"]
+        subgraph AUTO["Automated Certificate Management"]
+            CERT_MANAGER[cert-manager<br/>Helm Chart v1.12.1<br/>Azure DNS Integration]:::k8s
+            
+            MANAGED_ID[Azure Managed Identity<br/>Workload Identity<br/>OIDC Integration]:::azure
+            
+            FED_CRED[Federated Identity Credential<br/>DNS Challenge Auth<br/>AKS Service Account]:::security
+        end
+        
+        subgraph MANUAL["Manual Certificate Option"]
+            TLS_MANUAL[External TLS Certificates<br/>Let's Encrypt<br/>Custom CA]:::security
+        end
+    end
+    
+    subgraph EXT["External Dependencies"]
+        DNS_ZONE[Azure DNS Zone<br/>DNS01 Challenge<br/>Automatic Validation]:::azure
+    end
+    
+    DNS_ZONE --> CERT_MANAGER
+    MANAGED_ID --> FED_CRED
+    FED_CRED --> CERT_MANAGER
