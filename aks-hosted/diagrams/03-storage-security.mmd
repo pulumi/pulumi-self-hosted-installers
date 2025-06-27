@@ -1,0 +1,17 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
+    
+    subgraph STORAGE["Azure Storage & Security"]
+        subgraph BLOB["Azure Storage Account"]
+            STORAGE_ACCOUNT[Azure Storage Account<br/>General Purpose v2<br/>Blob Containers]:::storage
+            CHECKPOINT_CONTAINER[Blob Container<br/>Checkpoints<br/>Pulumi State Storage]:::storage
+            POLICY_CONTAINER[Blob Container<br/>Policy Packs<br/>Policy Storage]:::storage
+        end
+        
+        KEY_VAULT[Azure Key Vault<br/>RSA Encryption Key<br/>Access Policies]:::security
+    end
+    
+    STORAGE_ACCOUNT --> CHECKPOINT_CONTAINER
+    STORAGE_ACCOUNT --> POLICY_CONTAINER

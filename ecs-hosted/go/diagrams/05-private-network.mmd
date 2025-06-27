@@ -1,0 +1,30 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef secure fill:#8B0000,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph PRIVATE["Private Network Configuration"]
+        PRIVATE_NLB[Network Load Balancer<br/>Internal Only<br/>Private Subnets]:::network
+        
+        API_PRIVATE[Pulumi API Service<br/>Restricted Security Groups<br/>No Outbound Internet]:::pulumi
+        
+        CONSOLE_PRIVATE[Pulumi Console<br/>Restricted Security Groups<br/>Internal Load Balancer]:::pulumi
+        
+        VPC_ISOLATED[VPC Configuration<br/>Isolated Subnets<br/>No NAT Gateways]:::secure
+        
+        INTERNAL_DNS[Internal DNS Records<br/>api-internal.domain.com<br/>Corporate DNS Integration]:::secure
+    end
+    
+    subgraph CONFIG["Configuration Flags"]
+        PRIVATE_FLAG[enablePrivateLoadBalancer<br/>AndLimitEgress<br/>Boolean Configuration]:::secure
+    end
+    
+    PRIVATE_FLAG --> API_PRIVATE
+    PRIVATE_FLAG --> CONSOLE_PRIVATE
+    PRIVATE_FLAG --> PRIVATE_NLB
+    PRIVATE_FLAG --> INTERNAL_DNS
+    
+    VPC_ISOLATED --> API_PRIVATE
+    VPC_ISOLATED --> CONSOLE_PRIVATE
+    PRIVATE_NLB --> INTERNAL_DNS

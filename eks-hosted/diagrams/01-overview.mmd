@@ -1,0 +1,17 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '20px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph LR
+    classDef stage fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:16px
+    
+    IAM[01-iam<br/>IAM Roles]:::stage
+    NET[02-networking<br/>VPC Setup]:::stage
+    EKS[05-eks-cluster<br/>Kubernetes]:::stage
+    SVC[10-cluster-svcs<br/>Load Balancer]:::stage
+    DB[20-database<br/>RDS Aurora]:::stage
+    PULUMI[90-pulumi-service<br/>Applications]:::stage
+    
+    IAM --> NET
+    NET --> EKS
+    EKS --> SVC
+    EKS --> DB
+    SVC --> PULUMI
+    DB --> PULUMI

@@ -1,0 +1,38 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#8B0000,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph STORAGE["Storage Layer: Database & State"]
+        subgraph RDS_LAYER["20-database: Amazon RDS"]
+            AURORA[Amazon Aurora MySQL<br/>Multi-AZ Cluster<br/>Automated Backups]:::storage
+            DB_SUBNET[DB Subnet Group<br/>Private Subnets<br/>VPC Isolation]:::storage
+            DB_SECURITY[DB Security Group<br/>Port 3306<br/>EKS Access Only]:::security
+        end
+        
+        subgraph STATE_LAYER["15-state-policies-mgmt: S3 Storage"]
+            S3_CHECKPOINTS[S3 Bucket<br/>Pulumi Checkpoints<br/>Versioning Enabled]:::storage
+            S3_POLICIES[S3 Bucket<br/>Policy Packs<br/>Access Control]:::storage
+            S3_METADATA[S3 Bucket<br/>Service Metadata<br/>Configuration]:::storage
+        end
+        
+        subgraph SEARCH_LAYER["25-insights: OpenSearch"]
+            OPENSEARCH[Amazon OpenSearch<br/>Resource Search<br/>Analytics Engine]:::storage
+            OS_DOMAIN[OpenSearch Domain<br/>VPC Deployment<br/>Fine-grained Access]:::storage
+        end
+    end
+    
+    subgraph SECURITY["Security & Access"]
+        KMS[AWS Key Management<br/>Encryption Keys<br/>Data Protection]:::security
+        IAM_POLICIES[IAM Policies<br/>Service Access<br/>Least Privilege]:::aws
+    end
+    
+    AURORA --> DB_SUBNET
+    AURORA --> DB_SECURITY
+    S3_CHECKPOINTS --> IAM_POLICIES
+    S3_POLICIES --> IAM_POLICIES
+    S3_METADATA --> IAM_POLICIES
+    OPENSEARCH --> OS_DOMAIN
+    KMS --> AURORA
+    KMS --> S3_CHECKPOINTS

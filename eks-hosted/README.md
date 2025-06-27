@@ -160,3 +160,22 @@ Destroy the following stacks in the given order.
 At this point, you should be able to login to the service. Note, it may take a few minutes for DNS to populate and/or caches to update.
 If you have stacks deployed but they do not show up on the resources page, an admin can go to Settings->Self-hosted and reindex the search cluster.
 
+## Architecture Diagrams
+
+### Overview - Deployment Flow
+![Overview Diagram](./diagrams/01-overview.svg)
+
+### Foundation Layer - AWS Identity & Networking
+![Foundation Diagram](./diagrams/02-foundation.svg)
+
+### Compute Layer - Amazon EKS
+![Compute Diagram](./diagrams/03-compute.svg)
+
+### Storage Layer - Data & State
+![Storage Diagram](./diagrams/04-storage.svg)
+
+### Application Layer - Pulumi Services
+![Application Diagram](./diagrams/05-application.svg)
+
+> **Note**: The architecture diagrams are maintained as standalone mermaid files in the [`diagrams/`](./diagrams/) directory. You can view them individually or use `npm run validate:standalone` to validate all diagrams.
+

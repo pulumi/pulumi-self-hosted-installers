@@ -1,0 +1,38 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph APP["03-application: Pulumi Services"]
+        subgraph APPS["Kubernetes Deployments"]
+            API_SERVICE[Pulumi API Service<br/>pulumi/service Image<br/>2048m CPU, 1024Mi Memory]:::pulumi
+            CONSOLE_SERVICE[Pulumi Console Service<br/>pulumi/console Image<br/>1024m CPU, 512Mi Memory]:::pulumi
+        end
+        
+        subgraph SEARCH["Optional Search"]
+            OPENSEARCH[OpenSearch StatefulSet<br/>Persistent Volume Claims<br/>Azure Disk Storage]:::storage
+            OS_DASHBOARD[OpenSearch Dashboards<br/>Management Interface<br/>Search Analytics]:::storage
+        end
+        
+        subgraph INGRESS_CFG["NGINX Ingress Configuration"]
+            INGRESS_RULES[Kubernetes Ingress<br/>api.domain + app.domain<br/>TLS Termination]:::network
+            IP_ALLOWLIST[Optional IP Allowlisting<br/>CIDR-based Access<br/>Security Annotations]:::security
+        end
+    end
+    
+    subgraph SEC["Security Configuration"]
+        DB_SECRETS[Database Credentials<br/>MySQL Connection<br/>Private Access Only]:::security
+        TLS_SECRETS[TLS Certificates<br/>Manual or cert-manager<br/>Let's Encrypt Support]:::security
+        LICENSE_SECRET[License Key<br/>Pulumi Enterprise<br/>Feature Enablement]:::security
+    end
+    
+    TLS_SECRETS --> INGRESS_RULES
+    INGRESS_RULES --> API_SERVICE
+    INGRESS_RULES --> CONSOLE_SERVICE
+    IP_ALLOWLIST --> INGRESS_RULES
+    
+    DB_SECRETS --> API_SERVICE
+    LICENSE_SECRET --> API_SERVICE
+    OPENSEARCH --> API_SERVICE

@@ -1,0 +1,11 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '20px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph LR
+    classDef stage fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:16px
+    
+    INFRA[01-infrastructure<br/>Foundation Services]:::stage
+    K8S[02-kubernetes<br/>AKS Cluster]:::stage
+    APP[03-application<br/>Pulumi Services]:::stage
+    
+    INFRA --> K8S
+    INFRA --> APP
+    K8S --> APP

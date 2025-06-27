@@ -1,0 +1,10 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '20px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph LR
+    classDef stage fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:16px
+    
+    INFRA[infrastructure<br/>Base Resources]:::stage
+    APP[application<br/>ECS Services]:::stage
+    DNS[dns<br/>Route53 Records]:::stage
+    
+    INFRA --> APP
+    APP --> DNS

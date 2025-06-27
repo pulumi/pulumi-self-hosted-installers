@@ -1,0 +1,34 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph APP["Application: ECS Services"]
+        subgraph S3["Amazon S3 Storage"]
+            S3_CHECKPOINT[S3 Bucket<br/>Pulumi Checkpoints<br/>Versioning Enabled]:::storage
+            S3_POLICY[S3 Bucket<br/>Policy Packs<br/>Versioning Enabled]:::storage
+            S3_METADATA[S3 Bucket<br/>Service Metadata<br/>Versioning Enabled]:::storage
+        end
+        
+        subgraph ECS["Amazon ECS Fargate"]
+            API_SERVICE[ECS Fargate Service<br/>Pulumi API<br/>pulumi/service image]:::pulumi
+            CONSOLE_SERVICE[ECS Fargate Service<br/>Pulumi Console<br/>pulumi/console image]:::pulumi
+            MIGRATION_TASK[ECS Task Definition<br/>Database Migration<br/>pulumi/migrations image]:::pulumi
+        end
+        
+        PUBLIC_ALB[Application Load Balancer<br/>Internet-facing<br/>SSL Termination]:::network
+    end
+    
+    subgraph SEC["Security & Access"]
+        IAM_ROLES[AWS IAM Roles<br/>ECS Task Roles<br/>Execution Roles]:::aws
+        SECURITY_GROUPS[Amazon EC2<br/>Security Groups<br/>Least Privilege Rules]:::network
+        SECRETS[AWS Secrets Manager<br/>Database Credentials<br/>SMTP Configuration]:::aws
+    end
+    
+    API_SERVICE --> PUBLIC_ALB
+    CONSOLE_SERVICE --> PUBLIC_ALB
+    S3_CHECKPOINT --> API_SERVICE
+    S3_POLICY --> API_SERVICE
+    S3_METADATA --> API_SERVICE
