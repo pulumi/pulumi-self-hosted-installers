@@ -1,0 +1,23 @@
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    
+    subgraph INFRA["Infrastructure: AWS Foundation"]
+        AURORA[Amazon Aurora MySQL<br/>Multi-AZ Cluster<br/>MySQL 8.0 Engine]:::storage
+        
+        VPC_ENDPOINTS[AWS VPC Endpoints<br/>S3 Gateway Endpoint<br/>ECR Interface Endpoints]:::network
+        
+        OPENSEARCH[Amazon OpenSearch<br/>Managed Domain<br/>Resource Search Engine]:::storage
+        
+        KMS[AWS Key Management<br/>Customer Managed Key<br/>Data Encryption]:::aws
+    end
+    
+    subgraph EXT["External Prerequisites"]
+        VPC[Amazon VPC<br/>Public Subnets<br/>Private Subnets<br/>Isolated Subnets]:::network
+    end
+    
+    VPC --> AURORA
+    VPC --> VPC_ENDPOINTS  
+    VPC --> OPENSEARCH

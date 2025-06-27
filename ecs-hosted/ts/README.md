@@ -361,3 +361,141 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 [kms]: https://aws.amazon.com/kms/
 [opensearch]: https://aws.amazon.com/opensearch-service/
 [esc]: https://www.pulumi.com/docs/esc/
+
+## Architecture Diagrams
+
+### Overview - Deployment Flow
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '24px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph LR
+    classDef stage fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:20px
+    
+    INFRA[infrastructure<br/>Base Resources]:::stage
+    APP[application<br/>ECS Services]:::stage
+    DNS[dns<br/>Route53 Records]:::stage
+    
+    INFRA --> APP
+    APP --> DNS
+```
+
+### Infrastructure Layer - AWS Foundation Services
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph INFRA["Infrastructure Stack: Base Resources"]
+        AURORA[Amazon Aurora MySQL<br/>Multi-AZ Cluster<br/>MySQL 8.0 Engine<br/>Automated Backups]:::storage
+        
+        VPC_ENDPOINTS[AWS VPC Endpoints<br/>S3 Gateway Endpoint<br/>ECR Interface Endpoints<br/>Secrets Manager Interface]:::network
+        
+        OPENSEARCH[Amazon OpenSearch Service<br/>Managed Domain<br/>Resource Search Engine<br/>VPC-based Deployment]:::storage
+        
+        KMS[AWS Key Management Service<br/>Customer Managed Key<br/>Data Encryption<br/>Service Integration]:::aws
+    end
+    
+    subgraph EXT["External Prerequisites"]
+        VPC[Amazon VPC<br/>Public Subnets<br/>Private Subnets<br/>Isolated Subnets]:::network
+    end
+    
+    VPC --> AURORA
+    VPC --> VPC_ENDPOINTS  
+    VPC --> OPENSEARCH
+```
+
+### Application Layer - Amazon ECS Fargate Services
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph APP["Application Stack: ECS Services"]
+        subgraph S3["Amazon S3 Storage"]
+            S3_CHECKPOINT[S3 Bucket<br/>Pulumi Checkpoints<br/>Versioning Enabled]:::storage
+            S3_POLICY[S3 Bucket<br/>Policy Packs<br/>Versioning Enabled]:::storage
+            S3_METADATA[S3 Bucket<br/>Service Metadata<br/>Versioning Enabled]:::storage
+        end
+        
+        subgraph ECS["Amazon ECS Fargate"]
+            API_SERVICE[ECS Fargate Service<br/>Pulumi API<br/>pulumi/service image<br/>Auto Scaling Enabled]:::pulumi
+            CONSOLE_SERVICE[ECS Fargate Service<br/>Pulumi Console<br/>pulumi/console image<br/>Web Interface]:::pulumi
+            MIGRATION_TASK[ECS Task Definition<br/>Database Migration<br/>pulumi/migrations image<br/>One-time Execution]:::pulumi
+        end
+        
+        PUBLIC_ALB[Application Load Balancer<br/>Internet-facing<br/>SSL Termination<br/>Target Groups]:::network
+    end
+    
+    subgraph SEC["Security & Access"]
+        IAM_ROLES[AWS IAM Roles<br/>ECS Task Roles<br/>Execution Roles<br/>Service Policies]:::aws
+        SECURITY_GROUPS[Amazon EC2<br/>Security Groups<br/>Least Privilege Rules<br/>VPC-based Access]:::network
+        SECRETS[AWS Secrets Manager<br/>Database Credentials<br/>SMTP Configuration<br/>License Keys]:::aws
+    end
+    
+    API_SERVICE --> PUBLIC_ALB
+    CONSOLE_SERVICE --> PUBLIC_ALB
+    S3_CHECKPOINT --> API_SERVICE
+    S3_POLICY --> API_SERVICE
+    S3_METADATA --> API_SERVICE
+```
+
+### DNS Layer - Route 53 & Certificate Management
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef dns fill:#00A1C9,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph DNS["DNS Stack: Route 53 Records"]
+        ROUTE53[Amazon Route 53<br/>A Records<br/>api.domain.com<br/>app.domain.com]:::dns
+        ACM[AWS Certificate Manager<br/>SSL/TLS Certificates<br/>Domain Validation<br/>Wildcard Support]:::aws
+    end
+    
+    subgraph EXT_DNS["External DNS Requirements"]
+        DOMAIN[Domain Registration<br/>Route 53 Hosted Zone<br/>DNS Management<br/>Certificate Coverage]:::dns
+        ALB_REF[Application Load Balancer<br/>From Application Stack<br/>DNS Name & Zone ID<br/>HTTPS Endpoints]:::network
+    end
+    
+    DOMAIN --> ROUTE53
+    ALB_REF --> ROUTE53
+    ACM --> ALB_REF
+```
+
+### Data Flow - Service Interactions
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph FLOW["Data Flow Patterns"]
+        API[Pulumi API Service<br/>Container Service<br/>State Management<br/>Resource Operations]:::pulumi
+        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management<br/>Dashboard Views]:::pulumi
+        MIGRATION[Database Migration<br/>Schema Updates<br/>Initialization Tasks<br/>Version Management]:::pulumi
+        
+        AURORA_DB[Amazon Aurora MySQL<br/>Primary Database<br/>Application State<br/>User Data]:::storage
+        S3_STATE[Amazon S3 Buckets<br/>Checkpoint Storage<br/>Policy Packs<br/>Metadata]:::storage
+        OPENSEARCH_IDX[Amazon OpenSearch<br/>Resource Index<br/>Search Engine<br/>Analytics Data]:::storage
+        
+        ECR_IMGS[Amazon ECR<br/>Container Images<br/>pulumi/service<br/>pulumi/console]:::external
+        SMTP_SVC[SMTP Service<br/>Email Notifications<br/>User Communications<br/>Alert System]:::external
+    end
+    
+    API -.->|Read/Write| AURORA_DB
+    API -.->|Store State| S3_STATE
+    API -.->|Index Resources| OPENSEARCH_IDX
+    API -.->|Send Emails| SMTP_SVC
+    
+    CONSOLE -.->|API Requests| API
+    MIGRATION -.->|Schema Updates| AURORA_DB
+    
+    ECR_IMGS -.->|Pull Images| API
+    ECR_IMGS -.->|Pull Images| CONSOLE
+    ECR_IMGS -.->|Pull Images| MIGRATION
+```
