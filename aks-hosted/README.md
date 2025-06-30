@@ -184,3 +184,217 @@ Due to the dependencies between the stacks, you'll need to reverse the order tha
 * The SSO certificate has the `currentYear()` in the name. This means that it will get replaced during the first deployment
  of each calendar year. The expiry date on the certificate is set to 400 days so that although a deployment may not
  happen each year, it will be necessary to do so otherwise the certificate will expire.
+
+## Architecture Diagrams
+
+### Overview - Deployment Flow
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '24px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph LR
+    classDef stage fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:20px
+    
+    INFRA[01-infrastructure<br/>Foundation Services]:::stage
+    K8S[02-kubernetes<br/>AKS Cluster]:::stage
+    APP[03-application<br/>Pulumi Services]:::stage
+    
+    INFRA --> K8S
+    INFRA --> APP
+    K8S --> APP
+```
+
+### Infrastructure Layer - Azure Foundation Services
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef azure fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:18px
+    
+    subgraph INFRA["01-infrastructure: Foundation Services"]
+        subgraph AD["Azure Active Directory"]
+            AD_PRINCIPAL[Azure AD Service Principal<br/>AKS Authentication<br/>Client Credentials<br/>RBAC Integration]:::security
+            AD_ADMIN[Azure AD Admin Group<br/>User Assignment<br/>Role Mapping<br/>Access Control]:::security
+        end
+        
+        subgraph NET["Azure Virtual Network"]
+            VNET[Azure Virtual Network<br/>Custom or Existing VNet<br/>Regional Deployment<br/>Private Networking]:::network
+            AKS_SUBNET[AKS Subnet<br/>10.2.1.0/24<br/>Kubernetes Nodes<br/>Azure CNI]:::network
+            DB_SUBNET[Database Subnet<br/>10.2.2.0/24<br/>Delegated to MySQL<br/>Private Access]:::network
+        end
+        
+        subgraph DB["Azure Database for MySQL"]
+            MYSQL[MySQL Flexible Server<br/>Private DNS Zone<br/>VNet-only Access<br/>SSL Configuration]:::storage
+            DB_PULUMI[MySQL Database<br/>Name: pulumi<br/>Application Schema<br/>Required Database]:::storage
+        end
+    end
+    
+    VNET --> AKS_SUBNET
+    VNET --> DB_SUBNET
+    DB_SUBNET --> MYSQL
+    AD_PRINCIPAL --> VNET
+```
+
+### Storage & Security Layer - Azure Foundation
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:18px
+    
+    subgraph STORAGE["Azure Storage & Security"]
+        subgraph BLOB["Azure Storage Account"]
+            STORAGE_ACCOUNT[Azure Storage Account<br/>General Purpose v2<br/>Blob Containers<br/>Access Control]:::storage
+            CHECKPOINT_CONTAINER[Blob Container<br/>Checkpoints<br/>Pulumi State Storage<br/>Versioning Support]:::storage
+            POLICY_CONTAINER[Blob Container<br/>Policy Packs<br/>Policy Storage<br/>Access Policies]:::storage
+        end
+        
+        KEY_VAULT[Azure Key Vault<br/>RSA Encryption Key<br/>Access Policies<br/>Crypto Operations]:::security
+    end
+    
+    STORAGE_ACCOUNT --> CHECKPOINT_CONTAINER
+    STORAGE_ACCOUNT --> POLICY_CONTAINER
+```
+
+### Kubernetes Layer - Azure Kubernetes Service
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:18px
+    
+    subgraph K8S["02-kubernetes: AKS Cluster & Services"]
+        subgraph CLUSTER["Azure Kubernetes Service"]
+            AKS[Azure Kubernetes Service<br/>Managed Kubernetes<br/>v1.29.4<br/>Azure AD + RBAC + CNI]:::k8s
+            NODE_POOL[AKS Node Pool<br/>2x Standard_DS3_v2<br/>30GB OS Disks<br/>Auto-scaling Enabled]:::k8s
+        end
+        
+        subgraph INGRESS["Ingress Components"]
+            NGINX[NGINX Ingress Controller<br/>Helm Chart v4.6.1<br/>Static IP Assignment<br/>External Traffic Policy Local]:::k8s
+            LOAD_BALANCER[Azure Load Balancer<br/>Public/Private Option<br/>Standard SKU<br/>Zone-redundant]:::network
+        end
+    end
+    
+    subgraph NET_REF["From Infrastructure"]
+        VNET_REF[Azure Virtual Network<br/>AKS Subnet Reference<br/>Stack Dependencies<br/>Network Integration]:::network
+        AD_REF[Azure AD Principal<br/>Authentication Reference<br/>RBAC Configuration<br/>Identity Integration]:::security
+    end
+    
+    VNET_REF --> AKS
+    AD_REF --> AKS
+    AKS --> NODE_POOL
+    AKS --> NGINX
+    NGINX --> LOAD_BALANCER
+```
+
+### Certificate Management - Optional Automation
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:18px
+    classDef azure fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph CERT["Certificate Management - Optional"]
+        subgraph AUTO["Automated Certificate Management"]
+            CERT_MANAGER[cert-manager<br/>Helm Chart v1.12.1<br/>Azure DNS Integration<br/>ACME DNS01 Challenge]:::k8s
+            
+            MANAGED_ID[Azure Managed Identity<br/>Workload Identity<br/>OIDC Integration<br/>Federated Credentials]:::azure
+            
+            FED_CRED[Federated Identity Credential<br/>DNS Challenge Auth<br/>AKS Service Account<br/>Token Exchange]:::security
+        end
+        
+        subgraph MANUAL["Manual Certificate Option"]
+            TLS_MANUAL[External TLS Certificates<br/>Let's Encrypt<br/>Custom CA<br/>Self-signed Certificates]:::security
+        end
+    end
+    
+    subgraph EXT["External Dependencies"]
+        DNS_ZONE[Azure DNS Zone<br/>DNS01 Challenge<br/>Automatic Validation<br/>Domain Control]:::azure
+    end
+    
+    DNS_ZONE --> CERT_MANAGER
+    MANAGED_ID --> FED_CRED
+    FED_CRED --> CERT_MANAGER
+```
+
+### Application Layer - Pulumi Services
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:18px
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph APP["03-application: Pulumi Services"]
+        subgraph APPS["Kubernetes Deployments"]
+            API_SERVICE[Pulumi API Service<br/>pulumi/service Image<br/>2048m CPU, 1024Mi Memory<br/>Init Container Migrations]:::pulumi
+            CONSOLE_SERVICE[Pulumi Console Service<br/>pulumi/console Image<br/>1024m CPU, 512Mi Memory<br/>Web Interface]:::pulumi
+        end
+        
+        subgraph SEARCH["Optional Search"]
+            OPENSEARCH[OpenSearch StatefulSet<br/>Persistent Volume Claims<br/>Azure Disk Storage<br/>Resource Search Engine]:::storage
+            OS_DASHBOARD[OpenSearch Dashboards<br/>Management Interface<br/>Search Analytics<br/>Query Interface]:::storage
+        end
+        
+        subgraph INGRESS_CFG["NGINX Ingress Configuration"]
+            INGRESS_RULES[Kubernetes Ingress<br/>api.domain + app.domain<br/>TLS Termination<br/>SSL Redirect]:::network
+            IP_ALLOWLIST[Optional IP Allowlisting<br/>CIDR-based Access<br/>Security Annotations<br/>Network Policies]:::security
+        end
+    end
+    
+    subgraph SEC["Security Configuration"]
+        DB_SECRETS[Database Credentials<br/>MySQL Connection<br/>Private Access Only<br/>Secure Storage]:::security
+        TLS_SECRETS[TLS Certificates<br/>Manual or cert-manager<br/>Let's Encrypt Support<br/>Domain Validation]:::security
+        LICENSE_SECRET[License Key<br/>Pulumi Enterprise<br/>Feature Enablement<br/>Service Activation]:::security
+    end
+    
+    TLS_SECRETS --> INGRESS_RULES
+    INGRESS_RULES --> API_SERVICE
+    INGRESS_RULES --> CONSOLE_SERVICE
+    IP_ALLOWLIST --> INGRESS_RULES
+    
+    DB_SECRETS --> API_SERVICE
+    LICENSE_SECRET --> API_SERVICE
+    OPENSEARCH --> API_SERVICE
+```
+
+### Data Flow - Service Interactions
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:18px
+    
+    subgraph FLOW["Data Flow Patterns"]
+        API[Pulumi API Service<br/>Kubernetes Deployment<br/>State Management<br/>Resource Operations]:::pulumi
+        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management<br/>Dashboard Views]:::pulumi
+        MIGRATION[Database Migration<br/>Init Container<br/>Schema Updates<br/>Version Management]:::pulumi
+        
+        MYSQL_DB[Azure Database for MySQL<br/>Private Connection<br/>Application Database<br/>VNet-only Access]:::storage
+        BLOB_STORAGE[Azure Blob Storage<br/>Checkpoint Storage<br/>Policy Packs<br/>Object Storage]:::storage
+        KEY_VAULT_ENC[Azure Key Vault<br/>Encryption Keys<br/>Crypto Operations<br/>Secret Management]:::security
+        
+        AZURE_LB[Azure Load Balancer<br/>Public/Private Option<br/>Traffic Distribution<br/>Health Probes]:::network
+        
+        DNS_EXT[Domain Registration<br/>DNS Management<br/>api.domain.com<br/>app.domain.com]:::external
+        SMTP_EXT[SMTP Service<br/>Office 365 / External<br/>Email Notifications<br/>Password Reset]:::external
+    end
+    
+    API -.->|Private Connection| MYSQL_DB
+    API -.->|Blob Storage API| BLOB_STORAGE
+    API -.->|Encryption Operations| KEY_VAULT_ENC
+    API -.->|Email Notifications| SMTP_EXT
+    
+    CONSOLE -.->|Internal API| API
+    MIGRATION -.->|Schema Updates| MYSQL_DB
+    
+    AZURE_LB -.->|HTTPS Traffic| API
+    AZURE_LB -.->|HTTPS Traffic| CONSOLE
+    DNS_EXT -.->|DNS Resolution| AZURE_LB
+```

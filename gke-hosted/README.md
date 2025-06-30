@@ -195,3 +195,37 @@ The resultant X.key.pem and X.cert.pem files will be used when configuring the `
 1. Click on the file that was copied to your Finder window and slide it into the "System Keychains" folder in"Keychain Access".
 1. Double-click the cert file in "Keychain Access" and select "Trust" and change the settings to "Always Trust" and exit the windows.
 1. Point your browser at you `api.XXXX` URL and repeat the process for it's certificate.
+
+## Architecture Diagrams
+
+The architecture diagrams below are available as standalone mermaid files in the [`diagrams/`](./diagrams/) directory for better maintainability and validation.
+
+### Overview - Deployment Flow
+```mermaid-file
+diagrams/01-overview.mmd
+```
+
+### Infrastructure Layer - Google Cloud Foundation  
+```mermaid-file
+diagrams/02-infrastructure.mmd
+```
+
+### Kubernetes Layer - Google Kubernetes Engine
+```mermaid-file
+diagrams/03-kubernetes.mmd
+```
+
+### Application Layer - Pulumi Services & Configuration
+```mermaid-file
+diagrams/04-application.mmd
+```
+
+### Security & Encryption Services  
+```mermaid-file
+diagrams/05-security.mmd
+```
+
+### Data Flow - Service Interactions
+```mermaid-file
+diagrams/06-data-flow.mmd
+```

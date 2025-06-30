@@ -160,3 +160,137 @@ Destroy the following stacks in the given order.
 At this point, you should be able to login to the service. Note, it may take a few minutes for DNS to populate and/or caches to update.
 If you have stacks deployed but they do not show up on the resources page, an admin can go to Settings->Self-hosted and reindex the search cluster.
 
+## Architecture Diagrams
+
+### Overview - Deployment Flow
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '24px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph LR
+    classDef stage fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:20px
+    
+    IAM[01-iam<br/>Identity & Access]:::stage
+    NET[02-networking<br/>VPC & Subnets]:::stage 
+    EKS[05-eks-cluster<br/>Kubernetes]:::stage
+    SVC[10-cluster-svcs<br/>Ingress & DNS]:::stage
+    S3[15-state-policies<br/>Storage Buckets]:::stage
+    DB[20-database<br/>Aurora MySQL]:::stage
+    OS[25-insights<br/>OpenSearch]:::stage
+    ESC[30-esc<br/>ESC Storage]:::stage
+    APP[90-pulumi-service<br/>Applications]:::stage
+    
+    IAM --> EKS
+    NET --> EKS  
+    EKS --> SVC
+    EKS --> DB
+    EKS --> OS
+    SVC --> APP
+    S3 --> APP
+    DB --> APP
+    OS --> APP
+    ESC --> APP
+```
+
+### Foundation Layer - AWS Identity & Networking
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef net fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph IAM["01-iam: AWS Identity"]
+        EKS_ROLE[EKS Service Role<br/>AmazonEKSClusterPolicy]:::aws
+        NODE_ROLE[Worker Node Role<br/>CNI + Registry + Worker]:::aws
+        ALB_ROLE[ALB Controller Role<br/>Load Balancer Management]:::aws
+    end
+    
+    subgraph VPC["02-networking: Amazon VPC"]
+        VPC_NET[VPC 172.16.0.0/16<br/>Internet + NAT Gateways]:::net
+        PUB_NETS[Public Subnets<br/>3 Availability Zones]:::net
+        PRIV_NETS[Private Subnets<br/>3 Availability Zones]:::net
+        
+        VPC_NET --> PUB_NETS
+        VPC_NET --> PRIV_NETS
+    end
+```
+
+### Compute Layer - Amazon EKS
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef svc fill:#00A1C9,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph EKS["05-eks-cluster: Amazon EKS"]
+        CLUSTER[EKS Control Plane<br/>Kubernetes v1.30.3<br/>Managed Logging]:::k8s
+        STD_NODES[Standard Node Group<br/>t3.xlarge, 2-5 nodes]:::k8s
+        PUL_NODES[Pulumi Node Group<br/>t3.xlarge, 3-5 nodes<br/>Tainted for Pulumi]:::k8s
+        
+        CLUSTER --> STD_NODES
+        CLUSTER --> PUL_NODES
+    end
+    
+    subgraph SVC["10-cluster-svcs: Kubernetes Services"]
+        COREDNS[CoreDNS Add-on<br/>DNS Resolution]:::svc
+        ALB_CTRL[ALB Controller<br/>Helm v1.10.1]:::svc
+        ALB_SG[Security Groups<br/>HTTP/HTTPS Rules]:::svc
+    end
+```
+
+### Storage Layer - Data & State
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef db fill:#0F4C75,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph S3["15-state-policies: Amazon S3"]
+        S3_CHECK[Checkpoints Bucket<br/>Pulumi State Storage]:::storage
+        S3_POLICY[Policy Packs Bucket<br/>Policy Storage]:::storage
+        S3_EVENTS[Events Bucket<br/>Audit Logs]:::storage
+    end
+    
+    subgraph DB["20-database: Amazon Aurora"]
+        AURORA[Aurora MySQL Cluster<br/>v8.0, Multi-AZ<br/>7-day Backups]:::db
+        DB_PRIMARY[Primary Instance<br/>db.r5.large]:::db
+        DB_REPLICA[Read Replica<br/>Cross-AZ Failover]:::db
+        
+        AURORA --> DB_PRIMARY
+        AURORA --> DB_REPLICA
+    end
+    
+    subgraph ESC["30-esc: ESC Storage"]
+        S3_ESC[ESC S3 Bucket<br/>Environments & Secrets]:::storage
+    end
+```
+
+### Application Layer - Pulumi Services
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontSize': '22px', 'fontFamily': 'Arial, sans-serif'}}}%%
+graph TD
+    classDef app fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef search fill:#FF6B6B,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    classDef dns fill:#4ECDC4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:18px
+    
+    subgraph SEARCH["25-insights: OpenSearch"]
+        OS_CLUSTER[OpenSearch Cluster<br/>3 nodes, 2Gi each]:::search
+        OS_DASH[OpenSearch Dashboards<br/>Analytics Interface]:::search
+        
+        OS_CLUSTER --> OS_DASH
+    end
+    
+    subgraph APP["90-pulumi-service: Applications"]
+        API[Pulumi API Service<br/>2 replicas, 2048m CPU<br/>Pod Anti-Affinity]:::app
+        CONSOLE[Pulumi Console<br/>2 replicas, 512m CPU<br/>Web Interface]:::app
+        SECRETS[Kubernetes Secrets<br/>DB + License + SMTP]:::app
+    end
+    
+    subgraph DNS["External: DNS & Certificates"]
+        ACM[AWS Certificate Manager<br/>Wildcard SSL]:::dns
+        R53[Route 53 Records<br/>api.domain.com<br/>app.domain.com]:::dns
+        ALB_ING[ALB Ingress<br/>SSL Termination]:::dns
+        
+        ACM --> ALB_ING
+        ALB_ING --> R53
+    end
+```
+
