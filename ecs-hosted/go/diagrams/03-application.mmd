@@ -1,9 +1,13 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef aws fill:#FF9900,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF
     
     subgraph APP["Application: ECS Services"]
         subgraph S3["Amazon S3 Storage"]

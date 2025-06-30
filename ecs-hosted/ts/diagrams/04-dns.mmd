@@ -1,8 +1,12 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef dns fill:#00A1C9,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef dns fill:#00A1C9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef aws fill:#FF9900,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph DNS["DNS: Route 53 Records"]
         ROUTE53[Amazon Route 53<br/>A Records<br/>api.domain.com<br/>app.domain.com]:::dns

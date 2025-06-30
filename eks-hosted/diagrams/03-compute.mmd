@@ -1,26 +1,30 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef awsCompute fill:#2E7D32,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef awsInfra fill:#FF9900,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF
+    classDef awsNetwork fill:#D32F2F,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph COMPUTE["Compute Layer: EKS & Services"]
         subgraph EKS_CLUSTER["05-eks-cluster: Kubernetes"]
-            EKS[Amazon EKS Cluster<br/>Kubernetes v1.28<br/>Managed Control Plane]:::k8s
-            NODES[EKS Node Groups<br/>EC2 Instances<br/>Auto Scaling]:::k8s
-            FARGATE[EKS Fargate<br/>Serverless Pods<br/>On-Demand]:::k8s
+            EKS[Amazon EKS Cluster<br/>Kubernetes v1.28<br/>Managed Control Plane]:::awsCompute
+            NODES[EKS Node Groups<br/>EC2 Instances<br/>Auto Scaling]:::awsCompute
+            FARGATE[EKS Fargate<br/>Serverless Pods<br/>On-Demand]:::awsCompute
         end
         
         subgraph CLUSTER_SVCS["10-cluster-svcs: Load Balancing"]
-            ALB_CONTROLLER[AWS Load Balancer<br/>Controller<br/>Ingress Management]:::aws
-            INGRESS_CLASS[Ingress Class<br/>ALB Configuration<br/>Traffic Routing]:::network
-            TARGET_GROUPS[Target Groups<br/>Health Checks<br/>Service Discovery]:::network
+            ALB_CONTROLLER[AWS Load Balancer<br/>Controller<br/>Ingress Management]:::awsInfra
+            INGRESS_CLASS[Ingress Class<br/>ALB Configuration<br/>Traffic Routing]:::awsNetwork
+            TARGET_GROUPS[Target Groups<br/>Health Checks<br/>Service Discovery]:::awsNetwork
         end
     end
     
     subgraph NET_REF["From Foundation"]
-        VPC_REF[Amazon VPC<br/>Network Reference<br/>Subnet Integration]:::network
-        IAM_REF[IAM Roles<br/>Service Permissions<br/>Security Context]:::aws
+        VPC_REF[Amazon VPC<br/>Network Reference<br/>Subnet Integration]:::awsNetwork
+        IAM_REF[IAM Roles<br/>Service Permissions<br/>Security Context]:::awsInfra
     end
     
     VPC_REF --> EKS

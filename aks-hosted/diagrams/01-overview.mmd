@@ -1,10 +1,18 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '20px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph LR
-    classDef stage fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:16px
+    classDef azureInfra fill:#0078D4,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef azureCompute fill:#0078D4,stroke:#4d5bd9,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef pulumiService fill:#4d5bd9,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF,font-weight:bold
     
-    INFRA[01-infrastructure<br/>Foundation Services]:::stage
-    K8S[02-kubernetes<br/>AKS Cluster]:::stage
-    APP[03-application<br/>Pulumi Services]:::stage
+    subgraph FLOW["Azure Deployment Flow"]
+        INFRA["🏗️ 01-infrastructure<br/>Azure Foundation Services<br/>VNet • Database • Identity"]:::azureInfra
+        K8S["⚙️ 02-kubernetes<br/>Azure Kubernetes Service<br/>AKS Cluster • Node Pools"]:::azureCompute  
+        APP["🚀 03-application<br/>Pulumi Service Platform<br/>API • Console • Management"]:::pulumiService
+    end
     
     INFRA --> K8S
     INFRA --> APP

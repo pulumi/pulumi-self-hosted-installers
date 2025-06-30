@@ -1,8 +1,12 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef gcp fill:#4285F4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef storage fill:#0F9D58,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#EA4335,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef gcp fill:#4285F4,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef storage fill:#0F9D58,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#EA4335,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph INFRA["01-infrastructure: Foundation Services"]
         subgraph NET["Google Cloud Networking"]

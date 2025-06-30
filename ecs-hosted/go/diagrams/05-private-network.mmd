@@ -1,8 +1,12 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef secure fill:#8B0000,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef secure fill:#8B0000,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph PRIVATE["Private Network Configuration"]
         PRIVATE_NLB[Network Load Balancer<br/>Internal Only<br/>Private Subnets]:::network

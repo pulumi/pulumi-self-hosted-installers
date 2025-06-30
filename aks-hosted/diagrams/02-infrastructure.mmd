@@ -1,25 +1,29 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef azure fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
+    classDef azureInfra fill:#0078D4,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef azureStorage fill:#1976D2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef azureNetwork fill:#D32F2F,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef azureSecure fill:#7B1FA2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph INFRA["01-infrastructure: Foundation"]
         subgraph AD["Azure Active Directory"]
-            AD_PRINCIPAL[Azure AD Service Principal<br/>AKS Authentication<br/>Client Credentials]:::security
-            AD_ADMIN[Azure AD Admin Group<br/>User Assignment<br/>Role Mapping]:::security
+            AD_PRINCIPAL[Azure AD Service Principal<br/>AKS Authentication<br/>Client Credentials]:::azureSecure
+            AD_ADMIN[Azure AD Admin Group<br/>User Assignment<br/>Role Mapping]:::azureSecure
         end
         
         subgraph NET["Azure Virtual Network"]
-            VNET[Azure Virtual Network<br/>Custom or Existing VNet<br/>Regional Deployment]:::network
-            AKS_SUBNET[AKS Subnet<br/>10.2.1.0/24<br/>Kubernetes Nodes]:::network
-            DB_SUBNET[Database Subnet<br/>10.2.2.0/24<br/>Delegated to MySQL]:::network
+            VNET[Azure Virtual Network<br/>Custom or Existing VNet<br/>Regional Deployment]:::azureNetwork
+            AKS_SUBNET[AKS Subnet<br/>10.2.1.0/24<br/>Kubernetes Nodes]:::azureNetwork
+            DB_SUBNET[Database Subnet<br/>10.2.2.0/24<br/>Delegated to MySQL]:::azureNetwork
         end
         
         subgraph DB["Azure Database for MySQL"]
-            MYSQL[MySQL Flexible Server<br/>Private DNS Zone<br/>VNet-only Access]:::storage
-            DB_PULUMI[MySQL Database<br/>Name: pulumi<br/>Application Schema]:::storage
+            MYSQL[MySQL Flexible Server<br/>Private DNS Zone<br/>VNet-only Access]:::azureStorage
+            DB_PULUMI[MySQL Database<br/>Name: pulumi<br/>Application Schema]:::azureStorage
         end
     end
     

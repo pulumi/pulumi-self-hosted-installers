@@ -1,21 +1,26 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef awsInfra fill:#FF9900,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF
+    classDef awsSecure fill:#7B1FA2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef awsNetwork fill:#D32F2F,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph FOUNDATION["Foundation Layer: IAM & Networking"]
         subgraph IAM_LAYER["01-iam: IAM Resources"]
-            EKS_ROLE[Amazon EKS<br/>Cluster Service Role<br/>Required Policies]:::aws
-            NODE_ROLE[Amazon EKS<br/>Node Group Role<br/>Worker Permissions]:::aws
-            ALB_POLICY[AWS Load Balancer<br/>Controller Policy<br/>Ingress Management]:::aws
+            EKS_ROLE[Amazon EKS<br/>Cluster Service Role<br/>Required Policies]:::awsSecure
+            NODE_ROLE[Amazon EKS<br/>Node Group Role<br/>Worker Permissions]:::awsSecure
+            ALB_POLICY[AWS Load Balancer<br/>Controller Policy<br/>Ingress Management]:::awsSecure
         end
         
         subgraph NET_LAYER["02-networking: VPC Infrastructure"]
-            VPC[Amazon VPC<br/>CIDR: 10.0.0.0/16<br/>Multi-AZ Design]:::network
-            PUB_SUBNETS[Public Subnets<br/>Internet Gateway<br/>NAT Gateway Hosts]:::network
-            PRIV_SUBNETS[Private Subnets<br/>NAT Gateway Route<br/>EKS Node Groups]:::network
-            IGW[Internet Gateway<br/>Public Access<br/>Outbound Traffic]:::network
-            NAT[NAT Gateway<br/>Private Outbound<br/>High Availability]:::network
+            VPC[Amazon VPC<br/>CIDR: 10.0.0.0/16<br/>Multi-AZ Design]:::awsNetwork
+            PUB_SUBNETS[Public Subnets<br/>Internet Gateway<br/>NAT Gateway Hosts]:::awsNetwork
+            PRIV_SUBNETS[Private Subnets<br/>NAT Gateway Route<br/>EKS Node Groups]:::awsNetwork
+            IGW[Internet Gateway<br/>Public Access<br/>Outbound Traffic]:::awsNetwork
+            NAT[NAT Gateway<br/>Private Outbound<br/>High Availability]:::awsNetwork
         end
     end
     
