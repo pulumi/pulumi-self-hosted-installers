@@ -1,25 +1,29 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
-    classDef azure fill:#0078D4,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef k8s fill:#326CE5,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#FFB900,stroke:#f7bf2a,stroke-width:4px,color:#000000
+    classDef azure fill:#0078D4,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef k8s fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph CERT["Certificate Management - Optional"]
         subgraph AUTO["Automated Certificate Management"]
-            CERT_MANAGER[cert-manager<br/>Helm Chart v1.12.1<br/>Azure DNS Integration]:::k8s
+            CERT_MANAGER[cert-manager<br/>Helm Chart v1.12.1<br/>Azure DNS Integration]:::k8sService
             
-            MANAGED_ID[Azure Managed Identity<br/>Workload Identity<br/>OIDC Integration]:::azure
+            MANAGED_ID[Azure Managed Identity<br/>Workload Identity<br/>OIDC Integration]:::azureInfra
             
-            FED_CRED[Federated Identity Credential<br/>DNS Challenge Auth<br/>AKS Service Account]:::security
+            FED_CRED[Federated Identity Credential<br/>DNS Challenge Auth<br/>AKS Service Account]:::azureSecure
         end
         
         subgraph MANUAL["Manual Certificate Option"]
-            TLS_MANUAL[External TLS Certificates<br/>Let's Encrypt<br/>Custom CA]:::security
+            TLS_MANUAL[External TLS Certificates<br/>Let's Encrypt<br/>Custom CA]:::azureSecure
         end
     end
     
     subgraph EXT["External Dependencies"]
-        DNS_ZONE[Azure DNS Zone<br/>DNS01 Challenge<br/>Automatic Validation]:::azure
+        DNS_ZONE[Azure DNS Zone<br/>DNS01 Challenge<br/>Automatic Validation]:::azureInfra
     end
     
     DNS_ZONE --> CERT_MANAGER

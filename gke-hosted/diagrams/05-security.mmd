@@ -1,8 +1,12 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef security fill:#FBBC05,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
-    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef security fill:#FBBC05,stroke:#f7bf2a,stroke-width:4px,color:#000000
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph SECURITY["Security Configuration"]
         subgraph ENC["Encryption Service"]

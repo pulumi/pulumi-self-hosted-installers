@@ -1,8 +1,12 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
     
     subgraph FLOW["Data Flow Patterns"]
         API[Pulumi API Service<br/>Container Service<br/>State Management]:::pulumi

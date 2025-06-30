@@ -1,21 +1,25 @@
-%%{init: {'theme':'base', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'Arial, sans-serif'}}}%%
+---
+config:
+  look: neo
+  theme: base
+---
 graph TD
-    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef pulumi fill:#8A63D2,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:3px,color:#FFFFFF,font-size:14px
-    classDef security fill:#FFB900,stroke:#232F3E,stroke-width:3px,color:#000000,font-size:14px
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef security fill:#FFB900,stroke:#f7bf2a,stroke-width:4px,color:#000000
     
     subgraph FLOW["Data Flow Patterns"]
-        API[Pulumi API Service<br/>Kubernetes Deployment<br/>State Management]:::pulumi
-        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management]:::pulumi
-        MIGRATION[Database Migration<br/>Init Container<br/>Schema Updates]:::pulumi
+        API[Pulumi API Service<br/>Kubernetes Deployment<br/>State Management]:::pulumiService
+        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management]:::pulumiService
+        MIGRATION[Database Migration<br/>Init Container<br/>Schema Updates]:::pulumiService
         
-        MYSQL_DB[Azure Database MySQL<br/>Private Connection<br/>Application Database]:::storage
-        BLOB_STORAGE[Azure Blob Storage<br/>Checkpoint Storage<br/>Policy Packs]:::storage
-        KEY_VAULT_ENC[Azure Key Vault<br/>Encryption Keys<br/>Crypto Operations]:::security
+        MYSQL_DB[Azure Database MySQL<br/>Private Connection<br/>Application Database]:::azureStorage
+        BLOB_STORAGE[Azure Blob Storage<br/>Checkpoint Storage<br/>Policy Packs]:::azureStorage
+        KEY_VAULT_ENC[Azure Key Vault<br/>Encryption Keys<br/>Crypto Operations]:::azureSecure
         
-        AZURE_LB[Azure Load Balancer<br/>Public/Private Option<br/>Traffic Distribution]:::network
+        AZURE_LB[Azure Load Balancer<br/>Public/Private Option<br/>Traffic Distribution]:::azureNetwork
         
         DNS_EXT[Domain Registration<br/>DNS Management<br/>A Records]:::external
         SMTP_EXT[SMTP Service<br/>Office 365 / External<br/>Email Notifications]:::external
