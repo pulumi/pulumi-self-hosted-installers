@@ -1,0 +1,41 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef security fill:#FBBC05,stroke:#f7bf2a,stroke-width:4px,color:#000000
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    
+    subgraph SECURITY["Security Configuration"]
+        subgraph ENC["Encryption Service"]
+            LOCAL_ENC[Local Key Encryption<br/>32-byte Random Key<br/>Volume Mount]:::security
+        end
+        
+        subgraph SSO["SSO Configuration"]
+            SAML_CERT[Self-signed SAML Cert<br/>400-day Validity<br/>Annual Auto-rotation]:::security
+        end
+        
+        subgraph SECRETS["Kubernetes Secrets"]
+            SMTP_CONFIG[SMTP Configuration<br/>External Provider<br/>Email Notifications]:::security
+            LICENSE[License Key<br/>Pulumi Enterprise<br/>Service Activation]:::security
+        end
+    end
+    
+    subgraph EXT["External Requirements"]
+        TLS_EXTERNAL[External TLS Certificates<br/>Let's Encrypt<br/>Custom CA<br/>Self-signed Option]:::external
+        SMTP_EXTERNAL[SMTP Service<br/>Gmail / Office 365<br/>Corporate Email]:::external
+    end
+    
+    subgraph SVC["Service Integration"]
+        API_REF[Pulumi API Service<br/>Configuration Injection<br/>Environment Variables]:::pulumi
+    end
+    
+    TLS_EXTERNAL --> SAML_CERT
+    SMTP_EXTERNAL --> SMTP_CONFIG
+    
+    LOCAL_ENC --> API_REF
+    SAML_CERT --> API_REF
+    SMTP_CONFIG --> API_REF
+    LICENSE --> API_REF

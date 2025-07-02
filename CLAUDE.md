@@ -198,25 +198,46 @@ All platform README files use **standalone mermaid diagrams** stored in `diagram
 - **Pattern**: infrastructure → kubernetes → application  
 - **Features**: Azure AD integration, automated certificate management, workload identity
 
-### Mermaid Diagram Best Practices
-When working with Mermaid diagrams in this repository:
+### Enterprise Mermaid Diagram Standards
+All diagrams in this repository follow enterprise-grade styling standards:
 
-1. **Syntax Validation**: Use `npm run validate:standalone` before committing
-2. **Service Names**: Include actual cloud service names (e.g., "Amazon EKS" not "EKS")
-3. **Avoid Parentheses**: Don't use `()` in node labels as they cause parse errors
-4. **Font Sizing**: Use reduced font sizes (18-20px) to prevent text overflow in diagram boxes
-5. **Text Length**: Keep node labels concise to fit within diagram boundaries
-6. **Color Coding**: Use consistent CSS classes for service types:
-   - `awsService`/`azureInfra`/`gcpInfra`: Cloud provider services
-   - `k8sService`: Kubernetes components
-   - `pulumiService`: Pulumi application services
-   - `storageService`: Storage and database services
-   - `networkService`: Networking components
-   - `securityService`: Security and authentication services
+**Core Configuration**: 
+```yaml
+---
+config:
+  look: neo
+  theme: base
+---
+```
 
-7. **Structure**: Organize diagrams with subgraphs for logical groupings
-8. **Dependencies**: Show both stack-level and resource-level dependencies
-9. **Data Flow**: Use dotted lines for data/network flow patterns
+**Enterprise Styling Requirements**:
+1. **Neo Look + Base Theme**: Professional appearance with light background compatibility for README files
+2. **Official Pulumi Branding**: Use authentic Pulumi brand colors:
+   - Primary Pulumi: `#4d5bd9` (Pulumi Blue)
+   - Accent Color: `#f7bf2a` (Pulumi Yellow)
+3. **4px Borders**: Enterprise visual weight with `stroke-width:4px`
+4. **Bold Typography**: Add `font-weight:bold` to all class definitions
+5. **YAML Frontmatter**: Replace legacy `%%{init: {...}}%%` syntax
+
+**Cloud Provider Color Scheme**:
+- **AWS Services**: `#FF9900` (Amazon Orange) with Pulumi accent borders
+- **Azure Services**: `#0078D4` (Microsoft Blue) with Pulumi accent borders  
+- **Google Cloud**: `#4285F4` (Google Blue) with Pulumi accent borders
+- **Pulumi Services**: `#4d5bd9` with `#f7bf2a` borders
+- **Security**: `#7B1FA2` (Professional Purple)
+- **Storage**: `#1976D2` (Professional Blue)
+- **Networking**: `#D32F2F` (Enterprise Red)
+
+**Professional Structure**:
+- Use subgraphs for logical component grouping
+- Include emojis and detailed descriptions for visual hierarchy
+- Maintain consistent service categorization across platforms
+- Include actual cloud service names (e.g., "Amazon EKS", "Azure Kubernetes Service")
+
+**Validation & Generation**:
+1. **Syntax Validation**: Always run `npm run validate:standalone` before committing
+2. **SVG Generation**: Use `npm run generate:diagrams` to create enterprise-styled SVGs
+3. **Version Control**: Commit both `.mmd` source files and generated `.svg` files
 
 ### Common Diagram Issues and Solutions
 

@@ -1,0 +1,50 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef pulumiService fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef k8sService fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef awsSecure fill:#7B1FA2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef awsNetwork fill:#D32F2F,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    
+    subgraph APP["Application Layer: Pulumi Services"]
+        subgraph PULUMI_SVCS["90-pulumi-service: Core Services"]
+            API_SVC[Pulumi API Service<br/>Kubernetes Deployment<br/>Auto Scaling]:::pulumiService
+            CONSOLE_SVC[Pulumi Console<br/>Web Interface<br/>React Application]:::pulumiService
+            MIGRATION[Database Migration<br/>Job Runner<br/>Schema Updates]:::pulumiService
+        end
+        
+        subgraph K8S_CONFIG["Kubernetes Configuration"]
+            SECRETS[Kubernetes Secrets<br/>DB Credentials<br/>License Keys]:::awsSecure
+            CONFIG_MAPS[Config Maps<br/>Environment Variables<br/>Service Config]:::k8sService
+            SERVICES[Kubernetes Services<br/>Internal Networking<br/>Service Discovery]:::k8sService
+        end
+        
+        subgraph INGRESS_CONFIG["Ingress Configuration"]
+            ALB_INGRESS[ALB Ingress<br/>HTTPS Termination<br/>Path-based Routing]:::awsNetwork
+            DNS_RECORDS[Route 53 Records<br/>api.domain.com<br/>app.domain.com]:::awsNetwork
+            CERTS[ACM Certificates<br/>TLS Encryption<br/>Auto Renewal]:::awsSecure
+        end
+        
+        subgraph ESC_LAYER["30-esc: Pulumi ESC"]
+            ESC_SVC[Pulumi ESC Service<br/>Environment Config<br/>Secret Management]:::pulumiService
+            ESC_STORAGE[ESC Storage<br/>Configuration Data<br/>Version Control]:::awsSecure
+        end
+    end
+    
+    SECRETS --> API_SVC
+    SECRETS --> CONSOLE_SVC
+    CONFIG_MAPS --> API_SVC
+    CONFIG_MAPS --> CONSOLE_SVC
+    SERVICES --> ALB_INGRESS
+    
+    ALB_INGRESS --> API_SVC
+    ALB_INGRESS --> CONSOLE_SVC
+    DNS_RECORDS --> ALB_INGRESS
+    CERTS --> ALB_INGRESS
+    
+    ESC_SVC --> ESC_STORAGE
+    API_SVC --> ESC_SVC
+    MIGRATION --> API_SVC

@@ -1,0 +1,32 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef storage fill:#0F9D58,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#EA4335,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    
+    subgraph FLOW["Data Flow Patterns"]
+        API[Pulumi API Service<br/>Kubernetes Deployment<br/>State Management]:::pulumi
+        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management]:::pulumi
+        MIGRATION[Database Migration<br/>Init Container<br/>Schema Updates]:::pulumi
+        
+        MYSQL_DB[Cloud SQL MySQL<br/>Private Connection<br/>Application Database]:::storage
+        GCS_STATE[Google Cloud Storage<br/>S3-compatible API<br/>Checkpoint Storage]:::storage
+        
+        EXTERNAL_LB[Google Cloud LB<br/>External IP Address<br/>HTTPS Traffic]:::network
+        
+        DNS_EXT[Domain Registration<br/>DNS Management<br/>A Records]:::external
+    end
+    
+    API -.->|Private| MYSQL_DB
+    API -.->|HMAC Auth| GCS_STATE
+    CONSOLE -.->|Internal| API
+    MIGRATION -.->|Schema| MYSQL_DB
+    
+    EXTERNAL_LB -.->|HTTPS| API
+    EXTERNAL_LB -.->|HTTPS| CONSOLE
+    DNS_EXT -.->|DNS| EXTERNAL_LB

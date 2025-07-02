@@ -1,0 +1,25 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef k8s fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#EA4335,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef gcp fill:#4285F4,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    
+    subgraph K8S["02-kubernetes: GKE Cluster"]
+        GKE[Google Kubernetes Engine<br/>Autopilot Cluster<br/>Kubernetes v1.30]:::k8s
+        
+        NGINX_INGRESS[NGINX Ingress Controller<br/>Helm Chart v4.7.1<br/>2 Replicas]:::k8s
+        
+        EXTERNAL_IP[Google Cloud Load Balancer<br/>External IP Address<br/>Global Access]:::network
+    end
+    
+    subgraph NET_REF["From Infrastructure"]
+        VPC_REF[Google Cloud VPC<br/>Network Reference<br/>Stack Dependencies]:::gcp
+    end
+    
+    VPC_REF --> GKE
+    GKE --> NGINX_INGRESS
+    NGINX_INGRESS --> EXTERNAL_IP

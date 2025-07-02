@@ -1,0 +1,200 @@
+# Pulumi Self-Hosted Installers - .gitignore
+
+# Pulumi-specific files
+# Stack configuration files that may contain secrets
+Pulumi.*.yaml
+!Pulumi.README.yaml
+!Pulumi.example.yaml
+
+# Pulumi state and outputs
+.pulumi/
+pulumi.out
+
+# Node.js / TypeScript
+node_modules/
+package-lock.json
+*.tsbuildinfo
+dist/
+build/
+.npm/
+.nyc_output/
+coverage/
+
+# TypeScript compiler output
+*.js.map
+*.d.ts.map
+
+# Go
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+vendor/
+
+# Go test files
+*.test
+*.out
+
+# Go module download cache
+go/pkg/mod/
+
+# Go workspace file
+go.work
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.envrc
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cloud provider credentials
+.aws/
+.azure/
+.gcp/
+gcloud/
+.config/gcloud/
+
+# Terraform (in case any .tf files are present)
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+.terraformrc
+terraform.rc
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# TLS/SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.cert
+*.ca-bundle
+*.p12
+*.pfx
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Local test outputs
+test-output/
+test-results/
+
+# Generated SVG files from mermaid (except for diagram documentation)
+*.svg
+!*/diagrams/*.svg
+!*/*/diagrams/*.svg
+
+# Coverage reports
+coverage.out
+*.lcov
+
+# Local development overrides
+local.yaml
+local.json
+override.yaml
+override.json
+
+# IDE workspace files
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json.example
+!.vscode/tasks.json.example
+!.vscode/launch.json.example
+!.vscode/extensions.json.example
+
+# Vim
+*.swp
+*.swo
+Session.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Local stack-specific overrides
+local-*
+dev-*
+test-*
+staging-*
+prod-*
+
+# Generated documentation
+docs/generated/
+docs/build/
+
+# Local configuration files that might contain secrets
+config.local.*
+settings.local.*
+
+# Build artifacts
+out/
+target/

@@ -1,0 +1,38 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef external fill:#FFA500,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef security fill:#FFB900,stroke:#f7bf2a,stroke-width:4px,color:#000000
+    
+    subgraph FLOW["Data Flow Patterns"]
+        API[Pulumi API Service<br/>Kubernetes Deployment<br/>State Management]:::pulumiService
+        CONSOLE[Pulumi Console<br/>Web Interface<br/>User Management]:::pulumiService
+        MIGRATION[Database Migration<br/>Init Container<br/>Schema Updates]:::pulumiService
+        
+        MYSQL_DB[Azure Database MySQL<br/>Private Connection<br/>Application Database]:::azureStorage
+        BLOB_STORAGE[Azure Blob Storage<br/>Checkpoint Storage<br/>Policy Packs]:::azureStorage
+        KEY_VAULT_ENC[Azure Key Vault<br/>Encryption Keys<br/>Crypto Operations]:::azureSecure
+        
+        AZURE_LB[Azure Load Balancer<br/>Public/Private Option<br/>Traffic Distribution]:::azureNetwork
+        
+        DNS_EXT[Domain Registration<br/>DNS Management<br/>A Records]:::external
+        SMTP_EXT[SMTP Service<br/>Office 365 / External<br/>Email Notifications]:::external
+    end
+    
+    API -.->|Private| MYSQL_DB
+    API -.->|Blob API| BLOB_STORAGE
+    API -.->|Encryption| KEY_VAULT_ENC
+    API -.->|Email| SMTP_EXT
+    
+    CONSOLE -.->|Internal API| API
+    MIGRATION -.->|Schema| MYSQL_DB
+    
+    AZURE_LB -.->|HTTPS| API
+    AZURE_LB -.->|HTTPS| CONSOLE
+    DNS_EXT -.->|DNS| AZURE_LB

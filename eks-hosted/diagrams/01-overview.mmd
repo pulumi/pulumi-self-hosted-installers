@@ -1,0 +1,27 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef awsInfra fill:#FF9900,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef awsCompute fill:#FF9900,stroke:#4d5bd9,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef awsNetwork fill:#FF9900,stroke:#805ac3,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef awsStorage fill:#FF9900,stroke:#bd4c85,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef pulumiService fill:#4d5bd9,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    
+    subgraph FLOW["AWS EKS Deployment Flow"]
+        IAM["🔐 01-iam<br/>IAM Roles & Policies<br/>EKS • ALB • Node Permissions"]:::awsInfra
+        NET["🌐 02-networking<br/>VPC & Subnets<br/>Multi-AZ • NAT • Security Groups"]:::awsNetwork
+        EKS["⚙️ 05-eks-cluster<br/>Amazon EKS<br/>Managed Kubernetes • Fargate"]:::awsCompute
+        SVC["⚖️ 10-cluster-svcs<br/>Application Load Balancer<br/>Ingress • Service Discovery"]:::awsNetwork
+        DB["🗄️ 20-database<br/>Aurora MySQL<br/>Multi-AZ • Automated Backups"]:::awsStorage
+        PULUMI["🚀 90-pulumi-service<br/>Pulumi Service Platform<br/>API • Console • Management"]:::pulumiService
+    end
+    
+    IAM --> NET
+    NET --> EKS
+    EKS --> SVC
+    EKS --> DB
+    SVC --> PULUMI
+    DB --> PULUMI
