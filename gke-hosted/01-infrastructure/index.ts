@@ -21,9 +21,12 @@ const network = new networking.Network(config.resourceNamePrefix, {
 
 const database = new db.Database(config.resourceNamePrefix, {
     vpcId: network.networkId,
-    networkName: network.networkName,
     dbInstanceType: config.dbInstanceType,
     dbUser: config.dbUser,
+    enableGeneralLog: config.dbEnableGeneralLog,
+    backupRetentionDays: config.dbBackupRetentionDays,
+    maintenanceDay: config.dbMaintenanceDay,
+    maintenanceHour: config.dbMaintenanceHour,
     tags: config.baseTags,
 });
 

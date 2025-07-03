@@ -7,7 +7,10 @@ export interface DatabaseArgs {
     vpcId: pulumi.Input<string>,
     dbInstanceType: string,
     dbUser: string,
-    networkName: pulumi.Input<string>,
+    enableGeneralLog?: boolean,
+    backupRetentionDays?: number,
+    maintenanceDay?: number,
+    maintenanceHour?: number,
     tags?: pulumi.Input<{
         [key: string]: pulumi.Input<string>;
     }>,
@@ -24,55 +27,55 @@ export class Database extends pulumi.ComponentResource {
     constructor(name: string, args: DatabaseArgs, opts?: ComponentResourceOptions) {
         super("x:infrastructure:database", name, opts);
 
-        // Create KMS key ring for database encryption
+        // Get region from GCP provider config
+        const region = gcp.config.region;
+        if (!region) {
+            throw new Error("GCP region must be configured (gcp:region)");
+        }
+
+        // Create KMS key ring for database encryption (regional for best practices)
         const keyRing = new gcp.kms.KeyRing(`${name}-db-keyring`, {
-            location: "global",
+            location: region,
         }, { parent: this });
 
-        // Create KMS key for database encryption
+        // Create KMS key for database encryption with 90-day rotation (industry standard)
         const dbKmsKey = new gcp.kms.CryptoKey(`${name}-db-encryption-key`, {
             keyRing: keyRing.id,
-            rotationPeriod: "2592000s", // 30 days
+            rotationPeriod: "7776000s", // 90 days (industry standard for database encryption keys)
             purpose: "ENCRYPT_DECRYPT",
             labels: args.tags,
         }, { parent: this });
 
         // Grant Cloud SQL service account access to KMS key
         const project = gcp.organizations.getProject({});
-        const sqlServiceAccount = project.then(proj => 
+        const sqlServiceAccount = project.then(proj =>
             `service-${proj.number}@gcp-sa-cloud-sql.iam.gserviceaccount.com`
         );
 
-        const kmsBinding = new gcp.kms.CryptoKeyIAMBinding(`${name}-db-kms-binding`, {
+        // Use IAMMember for additive IAM binding (doesn't replace existing members)
+        const kmsBinding = new gcp.kms.CryptoKeyIAMMember(`${name}-db-kms-member`, {
             cryptoKeyId: dbKmsKey.id,
             role: "roles/cloudkms.cryptoKeyEncrypterDecrypter",
-            members: [pulumi.interpolate`serviceAccount:${sqlServiceAccount}`],
+            member: pulumi.interpolate`serviceAccount:${sqlServiceAccount}`,
         }, { parent: this });
 
-        // Get authorized networks for firewall rules (GKE subnet CIDR)
-        const authorizedNetworks = [
-            {
-                name: "gke-cluster-subnet",
-                value: "10.0.0.0/8" // Internal GCP network range
-            }
-        ];
-
         const dbInstance = new gcp.sql.DatabaseInstance(`${name}-db`, {
+            region: region,
             databaseVersion: "MYSQL_8_0",
             settings: {
                 tier: args.dbInstanceType,
                 ipConfiguration: {
                     ipv4Enabled: false,
                     privateNetwork: args.vpcId,
-                    requireSsl: true,
-                    authorizedNetworks: authorizedNetworks,
+                    sslMode: "ENCRYPTED_ONLY",
                 },
-                // Enable audit logging
                 databaseFlags: [
-                    { name: "general_log", value: "on" },
+                    // Slow query log for performance tuning (minimal overhead)
                     { name: "slow_query_log", value: "on" },
                     { name: "log_output", value: "FILE" },
-                    { name: "long_query_time", value: "2" }
+                    { name: "long_query_time", value: "2" },
+                    // General log only if explicitly enabled (10-30% performance impact)
+                    ...(args.enableGeneralLog ? [{ name: "general_log", value: "on" }] : [])
                 ],
                 // Configure encrypted backups
                 backupConfiguration: {
@@ -80,20 +83,19 @@ export class Database extends pulumi.ComponentResource {
                     startTime: "03:00",
                     pointInTimeRecoveryEnabled: true,
                     backupRetentionSettings: {
-                        retainedBackups: 30,
+                        retainedBackups: args.backupRetentionDays || 30,
                         retentionUnit: "COUNT"
                     },
                     transactionLogRetentionDays: 7
                 },
-                // Maintenance window during low-traffic hours
                 maintenanceWindow: {
-                    day: 1, // Sunday
-                    hour: 3,
+                    day: args.maintenanceDay || 1,
+                    hour: args.maintenanceHour || 3,
                     updateTrack: "stable"
                 },
-                // Performance insights
                 insightsConfig: {
                     queryInsightsEnabled: true,
+                    queryPlansPerMinute: 5,
                     queryStringLength: 1024,
                     recordApplicationTags: true,
                     recordClientAddress: true
