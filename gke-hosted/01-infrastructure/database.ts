@@ -7,7 +7,6 @@ export interface DatabaseArgs {
     vpcId: pulumi.Input<string>,
     dbInstanceType: string,
     dbUser: string,
-    networkName: pulumi.Input<string>,
     tags?: pulumi.Input<{
         [key: string]: pulumi.Input<string>;
     }>,
