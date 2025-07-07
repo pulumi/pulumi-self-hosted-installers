@@ -184,3 +184,28 @@ Due to the dependencies between the stacks, you'll need to reverse the order tha
 * The SSO certificate has the `currentYear()` in the name. This means that it will get replaced during the first deployment
  of each calendar year. The expiry date on the certificate is set to 400 days so that although a deployment may not
  happen each year, it will be necessary to do so otherwise the certificate will expire.
+
+## Architecture Diagrams
+
+### Overview - Deployment Flow
+![Overview Diagram](./diagrams/01-overview.svg)
+
+### Infrastructure Layer - Azure Foundation Services
+![Infrastructure Diagram](./diagrams/02-infrastructure.svg)
+
+### Storage & Security Layer - Azure Foundation
+![Storage & Security Diagram](./diagrams/03-storage-security.svg)
+
+### Kubernetes Layer - Azure Kubernetes Service
+![Kubernetes Diagram](./diagrams/04-kubernetes.svg)
+
+### Certificate Management - Optional Automation
+![Certificate Management Diagram](./diagrams/05-cert-management.svg)
+
+### Application Layer - Pulumi Services
+![Application Diagram](./diagrams/06-application.svg)
+
+### Data Flow - Service Interactions
+![Data Flow Diagram](./diagrams/07-data-flow.svg)
+
+> **Note**: The architecture diagrams are maintained as standalone mermaid files in the [`diagrams/`](./diagrams/) directory. You can view them individually or use `npm run validate:standalone` to validate all diagrams.

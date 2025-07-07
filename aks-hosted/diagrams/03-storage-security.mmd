@@ -1,0 +1,21 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef storage fill:#00BCF2,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef security fill:#FFB900,stroke:#f7bf2a,stroke-width:4px,color:#000000
+    
+    subgraph STORAGE["Azure Storage & Security"]
+        subgraph BLOB["Azure Storage Account"]
+            STORAGE_ACCOUNT[Azure Storage Account<br/>General Purpose v2<br/>Blob Containers]:::azureStorage
+            CHECKPOINT_CONTAINER[Blob Container<br/>Checkpoints<br/>Pulumi State Storage]:::azureStorage
+            POLICY_CONTAINER[Blob Container<br/>Policy Packs<br/>Policy Storage]:::azureStorage
+        end
+        
+        KEY_VAULT[Azure Key Vault<br/>RSA Encryption Key<br/>Access Policies]:::azureSecure
+    end
+    
+    STORAGE_ACCOUNT --> CHECKPOINT_CONTAINER
+    STORAGE_ACCOUNT --> POLICY_CONTAINER

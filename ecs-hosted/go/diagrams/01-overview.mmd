@@ -1,0 +1,14 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph LR
+    classDef stage fill:#FF9900,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF
+    
+    INFRA[infrastructure<br/>Base Resources]:::stage
+    APP[application<br/>ECS Services]:::stage
+    DNS[dns<br/>Route53 Records]:::stage
+    
+    INFRA --> |Stack References| APP
+    APP --> |Stack References| DNS

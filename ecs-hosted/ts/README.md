@@ -361,3 +361,22 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 [kms]: https://aws.amazon.com/kms/
 [opensearch]: https://aws.amazon.com/opensearch-service/
 [esc]: https://www.pulumi.com/docs/esc/
+
+## Architecture Diagrams
+
+### Overview - Deployment Flow
+![Overview Diagram](./diagrams/01-overview.svg)
+
+### Infrastructure Layer - AWS Foundation Services
+![Infrastructure Diagram](./diagrams/02-infrastructure.svg)
+
+### Application Layer - Amazon ECS Fargate Services
+![Application Diagram](./diagrams/03-application.svg)
+
+### DNS Layer - Route 53 & Certificate Management
+![DNS Diagram](./diagrams/04-dns.svg)
+
+### Data Flow - Service Interactions
+![Data Flow Diagram](./diagrams/05-data-flow.svg)
+
+> **Note**: The architecture diagrams are maintained as standalone mermaid files in the [`diagrams/`](./diagrams/) directory. You can view them individually or use `npm run validate:standalone` to validate all diagrams.

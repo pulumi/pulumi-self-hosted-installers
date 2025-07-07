@@ -1,0 +1,32 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef k8s fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef network fill:#7FBA00,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF
+    classDef security fill:#FFB900,stroke:#f7bf2a,stroke-width:4px,color:#000000
+    
+    subgraph K8S["02-kubernetes: AKS Cluster"]
+        subgraph CLUSTER["Azure Kubernetes Service"]
+            AKS[Azure Kubernetes Service<br/>Managed Kubernetes<br/>v1.29.4]:::k8sService
+            NODE_POOL[AKS Node Pool<br/>2x Standard_DS3_v2<br/>30GB OS Disks]:::k8sService
+        end
+        
+        subgraph INGRESS["Ingress Components"]
+            NGINX[NGINX Ingress Controller<br/>Helm Chart v4.6.1<br/>Static IP Assignment]:::k8sService
+            LOAD_BALANCER[Azure Load Balancer<br/>Public/Private Option<br/>Standard SKU]:::azureNetwork
+        end
+    end
+    
+    subgraph NET_REF["From Infrastructure"]
+        VNET_REF[Azure Virtual Network<br/>AKS Subnet Reference<br/>Stack Dependencies]:::azureNetwork
+        AD_REF[Azure AD Principal<br/>Authentication Reference<br/>RBAC Configuration]:::azureSecure
+    end
+    
+    VNET_REF --> AKS
+    AD_REF --> AKS
+    AKS --> NODE_POOL
+    AKS --> NGINX
+    NGINX --> LOAD_BALANCER
