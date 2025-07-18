@@ -21,6 +21,7 @@ const network = new networking.Network(config.resourceNamePrefix, {
 
 const database = new db.Database(config.resourceNamePrefix, {
     vpcId: network.networkId,
+    networkName: network.networkName,
     dbInstanceType: config.dbInstanceType,
     dbUser: config.dbUser,
     tags: config.baseTags,
@@ -39,5 +40,6 @@ export const dbLogin = database.DatabaseLogin;
 export const dbPassword = database.DatabasePassword;
 export const dbConnectionString = database.DatabaseConnectionString;
 export const dbHost = database.DatabaseHost;
+export const dbKmsKeyId = database.DatabaseKmsKeyId;
 export const stackName1 = config.stackName;
 export const networkName = network.networkName;
