@@ -4,6 +4,7 @@ import {config} from "./config";
 import {SecretsCollection} from "./secrets";
 import {SsoCertificate} from "./sso-cert";
 import {EncryptionService} from "./encryption-service";
+import {createEnvValueFromSecret} from "./secret-utils";
 
 /**
  * Check pre-requisites.
@@ -64,8 +65,8 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
       smtpFromAddress: config.smtpFromAddress,
     },
     recaptcha: {
-      secretKey: config.recaptchaSecretKey,
-      siteKey: config.recaptchaSiteKey
+      secretKey: config.recaptchaSecretKey || "",
+      siteKey: config.recaptchaSiteKey || ""
     }
   }
 });
@@ -100,19 +101,19 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               env: [
                   {
                       name: "PULUMI_DATABASE_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
+                      valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "connectionString"),
                   },
                   {
                       name: "MYSQL_ROOT_USERNAME",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("username"),
+                      valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "username"),
                   },
                   {
                       name: "MYSQL_ROOT_PASSWORD",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("password"),
+                      valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "password"),
                   },
                   {
                       name: "PULUMI_DATABASE_PING_ENDPOINT",
-                      valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                      valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "host"),
                   },
                   {
                       name: "RUN_MIGRATIONS_EXTERNALLY",
@@ -136,7 +137,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 pulumiLocalKeySecret.encryptionServiceEnv,
                 {
                   name: "PULUMI_LICENSE_KEY",
-                  valueFrom: secrets.LicenseKeySecret.asEnvValue("key"),
+                  valueFrom: createEnvValueFromSecret(secrets.LicenseKeySecret, "key"),
                 },
                 {
                   name: "PULUMI_ENTERPRISE",
@@ -152,15 +153,15 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "PULUMI_DATABASE_ENDPOINT",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("connectionString"),
+                  valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "connectionString"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_NAME",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("username"),
+                  valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "username"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_PASSWORD",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("password"),
+                  valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "password"),
                 },
                 {
                   name: "PULUMI_DATABASE_NAME",
@@ -168,11 +169,11 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "SAML_CERTIFICATE_PUBLIC_KEY",
-                  valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("pubkey")
+                  valueFrom: createEnvValueFromSecret(ssoSecret.SamlSsoSecret, "pubkey")
                 },
                 {
                   name: "SAML_CERTIFICATE_PRIVATE_KEY",
-                  valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("privatekey")
+                  valueFrom: createEnvValueFromSecret(ssoSecret.SamlSsoSecret, "privatekey")
                 },
                 {
                   name: "AWS_REGION",
@@ -180,11 +181,11 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "AWS_ACCESS_KEY_ID",
-                  valueFrom: secrets.StorageSecret.asEnvValue("accessKeyId")
+                  valueFrom: createEnvValueFromSecret(secrets.StorageSecret, "accessKeyId")
                 },
                 {
                   name: "AWS_SECRET_ACCESS_KEY",
-                  valueFrom: secrets.StorageSecret.asEnvValue("secretAccessKey")
+                  valueFrom: createEnvValueFromSecret(secrets.StorageSecret, "secretAccessKey")
                 },
                 {
                   name: "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT",
@@ -196,23 +197,23 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "SMTP_SERVER",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("server"),
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "server"),
                 },
                 {
                   name: "SMTP_USERNAME",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("username"),
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "username"),
                 },
                 {
                   name: "SMTP_PASSWORD",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("password"),
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "password"),
                 },
                 {
                   name: "SMTP_GENERIC_SENDER",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("fromaddress")
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "fromaddress")
                 },
                 {
                   name: "RECAPTCHA_SECRET_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
+                  valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "secretKey")
                 }
               ],
             },
@@ -276,7 +277,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 },
                 {
                   name: "RECAPTCHA_SITE_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
+                  valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "siteKey")
                 }
             ]
           }]

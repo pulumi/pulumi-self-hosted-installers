@@ -28,6 +28,9 @@ export class NginxIngress extends pulumi.ComponentResource {
             values: {
                 controller: {
                     replicaCount: 1,
+                    service: {
+                        type: "NodePort"
+                    },
                     // nodeSelector: {
                     //     "beta.kubernetes.io/os": "linux"
                     // },
@@ -49,8 +52,8 @@ export class NginxIngress extends pulumi.ComponentResource {
 
         this.IngressNamespace = ingressNamespace.metadata.name;
         this.IngressServiceIp = nginxIngress
-            .getResourceProperty("v1/Service", `${name}-ingress/${name}-ingress-ingress-nginx-controller`, "status")
-            .apply(status => status.loadBalancer.ingress[0].ip);
+            .getResourceProperty("v1/Service", `${name}-ingress/${name}-ingress-ingress-nginx-controller`, "spec")
+            .apply(spec => spec.clusterIP);
     
         this.registerOutputs({
             IngressNamespace: this.IngressNamespace,
