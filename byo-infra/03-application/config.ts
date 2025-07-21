@@ -2,7 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 
 const stackConfig = new pulumi.Config();
 
-const commonName = "pulumi-selfhosted" || stackConfig.get("commonName");
+const commonName = stackConfig.get("commonName") || "pulumi-selfhosted";
 const projectName = pulumi.getProject();
 const stackName = pulumi.getStack();
 
