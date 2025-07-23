@@ -23,6 +23,21 @@ const cluster = new eks.Cluster(`${baseName}`, {
     skipDefaultNodeGroup: true,
     version: config.clusterVersion,
     createOidcProvider: false,
+    accessEntries: {
+        "portaladmin": {
+            principalArn: config.ssoRoleArn,
+            accessPolicies: {
+                "dummy": {
+                    policyArn: "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy",
+                    accessScope: {
+                        type: "cluster",
+                        namespaces: []
+                    }
+                }
+            },
+            type: "STANDARD"
+        }
+    },
     tags: tags,
     enabledClusterLogTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"],
 }, { protect: true });
