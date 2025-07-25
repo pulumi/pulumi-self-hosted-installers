@@ -1,6 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as k8s from "@pulumi/kubernetes";
-import * as kx from "@pulumi/kubernetesx";
 import * as random from "@pulumi/random";
 import { Input, Output, ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 import { secret } from "@pulumi/pulumi";
@@ -35,7 +34,7 @@ export class EncryptionService extends ComponentResource {
         }).result;
 
         // Store the string as a secret.
-        const pulumiLocalKeysSecret = new kx.Secret(`${args.commonName}-local-keys`, {
+        const pulumiLocalKeysSecret = new k8s.core.v1.Secret(`${args.commonName}-local-keys`, {
             metadata: { 
                 namespace: args.namespace, 
                 name: secretName 
