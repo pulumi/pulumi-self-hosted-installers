@@ -1,6 +1,12 @@
+permissions: write-all # Equivalent to default permissions plus id-token: write
+env:
+  ESC_ACTION_OIDC_AUTH: true
+  ESC_ACTION_OIDC_ORGANIZATION: pulumi
+  ESC_ACTION_OIDC_REQUESTED_TOKEN_TYPE: urn:pulumi:token-type:access_token:organization
+  ESC_ACTION_ENVIRONMENT: imports/github-secrets
+  ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: false
 on:
-  pull_request:
-
+  pull_request: null
 name: PR test
 
 jobs:
@@ -9,13 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Login to Docker Hub as pulumi-bot
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ steps.esc-secrets.outputs.DOCKERHUB_USERNAME }}
+          password: ${{ steps.esc-secrets.outputs.DOCKERHUB_PASSWORD }}
 
       - uses: ./.github/actions/run-self-hosted
         timeout-minutes: 2
@@ -23,7 +32,7 @@ jobs:
           # When regenerating the license, create a restricted license.
           # That is, create a license that has a max unit of just 1 unless
           # otherwise required.
-          PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
+          PULUMI_LICENSE_KEY: ${{ steps.esc-secrets.outputs.PULUMI_LICENSE_KEY }}
         with:
           compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml'
 
@@ -34,4 +43,3 @@ jobs:
           name: service-log
           path: ${{ env.SERVICE_LOG }}
           overwrite: true
-

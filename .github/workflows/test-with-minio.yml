@@ -1,11 +1,17 @@
+permissions: write-all # Equivalent to default permissions plus id-token: write
+env:
+  ESC_ACTION_OIDC_AUTH: true
+  ESC_ACTION_OIDC_ORGANIZATION: pulumi
+  ESC_ACTION_OIDC_REQUESTED_TOKEN_TYPE: urn:pulumi:token-type:access_token:organization
+  ESC_ACTION_ENVIRONMENT: imports/github-secrets
+  ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: false
 # workflow_dispatch allows for manual triggering from the GitHub Actions UI, as well
 # as the API. repository_dispatch allows us to trigger multiple workflows that
 # match on an event_type parameter when triggered via an API call.
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
-  pull_request:
-  workflow_dispatch:
-
+  pull_request: null
+  workflow_dispatch: null
   repository_dispatch:
     types: [integration_tests]
 
@@ -24,12 +30,12 @@ jobs:
       MINIO_HOST: "minio:9000"
       MINIO_BUCKET_NAME: "pulumi-checkpoints"
       MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
-      # When regenerating the license, create a restricted license.
-      # That is, create a license that has a max unit of just 1 unless
-      # otherwise required.
-      PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
+      ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: PULUMI_LICENSE_KEY
 
     steps:
+      - name: Fetch secrets from ESC
+        id: esc-secrets
+        uses: pulumi/esc-action@v1
       - name: Set env vars
         run: |
           # There doesn't seem to be a way to map environment variables into other enviroments
@@ -62,8 +68,8 @@ jobs:
       - name: Login to Docker Hub as pulumi-bot
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          username: ${{ steps.esc-secrets.outputs.DOCKERHUB_USERNAME }}
+          password: ${{ steps.esc-secrets.outputs.DOCKERHUB_PASSWORD }}
 
       - name: Run Minio
         run: |
@@ -124,7 +130,7 @@ jobs:
           # The Slack webhook URL must be specific to the pulumi-service Slack channel.
           # The name of the Slack app is "Pulumi Webhooks". You must have access to it
           # to be able to see it on https://api.slack.com.
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ steps.esc-secrets.outputs.SLACK_WEBHOOK_URL }}
         with:
           text: Minio integration test in pulumi-self-hosted-installers failed for service's latest edge build
           fields: job,workflow
