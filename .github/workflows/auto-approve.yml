@@ -1,0 +1,41 @@
+name: Auto-approve and auto-merge dependency updates
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
+    steps:
+      - name: Auto-approve dependency updates
+        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-merge:
+    runs-on: ubuntu-latest
+    needs: auto-approve
+    if: github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
+    steps:
+      - name: Wait for tests to pass
+        uses: fountainhead/action-wait-for-check@297be350cf8393728ea4d4b39435c7d7ae167c93 # v1.2.0
+        id: wait-for-tests
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: test
+          ref: ${{ github.event.pull_request.head.sha }}
+          timeoutSeconds: 1800 # 30 minutes
+
+      - name: Auto-merge if tests pass
+        if: steps.wait-for-tests.outputs.conclusion == 'success'
+        uses: pascalgn/merge-action@22e93c6abb5336a0ed86e67c83a4a99f5306db2b # v0.22.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash
