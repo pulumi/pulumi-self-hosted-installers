@@ -2,7 +2,7 @@
     "name": "k8s-gke-03-application",
     "devDependencies": {
         "@types/node": "22.13.10",
-        "typescript": "^5.8.3"
+        "typescript": "5.9.2"
     },
     "dependencies": {
         "@pulumi/kubernetes": "4.23.0",
