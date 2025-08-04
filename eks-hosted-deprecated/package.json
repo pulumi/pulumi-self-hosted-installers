@@ -9,7 +9,7 @@
     "js-yaml": "^4.0.0",
     "readline-sync": "^1.4.10",
     "typescript": "^5.0.0",
-    "yargs": "^17.0.0"
+    "yargs": "^18.0.0"
   },
   "files": [
     "index.ts"
