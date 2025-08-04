@@ -4,6 +4,7 @@ import { getConfig } from "./config";
 import { SecretsCollection } from "./secrets";
 import { SsoCertificate } from "./sso-cert";
 import { CertManagerDeployment } from "./cert-manager";
+import { createEnvValueFromSecret } from "./secret-utils";
 
 export = async () => {
   /**
@@ -91,19 +92,19 @@ export = async () => {
             env: [
               {
                 name: "PULUMI_DATABASE_ENDPOINT",
-                valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "host"),
               },
               {
                 name: "MYSQL_ROOT_USERNAME",
-                valueFrom: secrets.DBConnSecret.asEnvValue("username"),
+                valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "username"),
               },
               {
                 name: "MYSQL_ROOT_PASSWORD",
-                valueFrom: secrets.DBConnSecret.asEnvValue("password"),
+                valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "password"),
               },
               {
                 name: "PULUMI_DATABASE_PING_ENDPOINT",
-                valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "host"),
               },
               {
                 name: "RUN_MIGRATIONS_EXTERNALLY",
@@ -120,7 +121,7 @@ export = async () => {
               env: [
                 {
                   name: "PULUMI_LICENSE_KEY",
-                  valueFrom: secrets.LicenseKeySecret.asEnvValue("key"),
+                  valueFrom: createEnvValueFromSecret(secrets.LicenseKeySecret, "key"),
                 },
                 {
                   name: "PULUMI_ENTERPRISE",
@@ -136,15 +137,15 @@ export = async () => {
                 },
                 {
                   name: "PULUMI_DATABASE_ENDPOINT",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("host"),
+                  valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "host"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_NAME",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("username"),
+                  valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "username"),
                 },
                 {
                   name: "PULUMI_DATABASE_USER_PASSWORD",
-                  valueFrom: secrets.DBConnSecret.asEnvValue("password"),
+                  valueFrom: createEnvValueFromSecret(secrets.DBConnSecret, "password"),
                 },
                 {
                   name: "PULUMI_DATABASE_NAME",
@@ -152,11 +153,11 @@ export = async () => {
                 },
                 {
                   name: "SAML_CERTIFICATE_PUBLIC_KEY",
-                  valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("pubkey")
+                  valueFrom: createEnvValueFromSecret(ssoSecret.SamlSsoSecret, "pubkey")
                 },
                 {
                   name: "SAML_CERTIFICATE_PRIVATE_KEY",
-                  valueFrom: ssoSecret.SamlSsoSecret.asEnvValue("privatekey")
+                  valueFrom: createEnvValueFromSecret(ssoSecret.SamlSsoSecret, "privatekey")
                 },
                 {
                   name: "AZURE_CLIENT_ID",
@@ -204,23 +205,23 @@ export = async () => {
                 },
                 {
                   name: "SMTP_SERVER",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("server"),
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "server"),
                 },
                 {
                   name: "SMTP_USERNAME",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("username"),
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "username"),
                 },
                 {
                   name: "SMTP_PASSWORD",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("password"),
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "password"),
                 },
                 {
                   name: "SMTP_GENERIC_SENDER",
-                  valueFrom: secrets.SmtpSecret.asEnvValue("fromaddress")
+                  valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "fromaddress")
                 },
                 {
                   name: "RECAPTCHA_SECRET_KEY",
-                  valueFrom: secrets.RecaptchaSecret.asEnvValue("secretKey")
+                  valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "secretKey")
                 }
               ],
             },
@@ -285,7 +286,7 @@ export = async () => {
               },
               {
                 name: "RECAPTCHA_SITE_KEY",
-                valueFrom: secrets.RecaptchaSecret.asEnvValue("siteKey")
+                valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "siteKey")
               }
             ]
           }]
