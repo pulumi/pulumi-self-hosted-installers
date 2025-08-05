@@ -1,16 +1,15 @@
 import { PrivateKey, SelfSignedCert } from "@pulumi/tls";
-import { Secret } from "@pulumi/kubernetesx";
-import { Provider } from "@pulumi/kubernetes";
+import * as k8s from "@pulumi/kubernetes";
 import { Input, ComponentResource, ComponentResourceOptions } from "@pulumi/pulumi";
 
 export interface SsoCertificateArgs {
     apiDomain: string,
     namespace: Input<string>,
-    provider: Provider,
+    provider: k8s.Provider,
 }
 
 export class SsoCertificate extends ComponentResource {
-    public SamlSsoSecret: Secret;
+    public SamlSsoSecret: k8s.core.v1.Secret;
     constructor(name: string, args: SsoCertificateArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:ssocertificate", name, opts);
 
@@ -31,7 +30,7 @@ export class SsoCertificate extends ComponentResource {
             validityPeriodHours: (400 * 24)
         }, { parent: this })
 
-        this.SamlSsoSecret = new Secret("saml-sso",
+        this.SamlSsoSecret = new k8s.core.v1.Secret("saml-sso",
             {
                 metadata: { namespace: args.namespace },
                 stringData: {

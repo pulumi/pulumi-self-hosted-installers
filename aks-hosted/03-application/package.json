@@ -5,7 +5,6 @@
     },
     "dependencies": {
         "@pulumi/kubernetes": "^4.0.0",
-        "@pulumi/kubernetesx": "^0.1.6",
         "@pulumi/pulumi": "^3.116.1",
         "@pulumi/random": "^4.16.1",
         "@pulumi/tls": "^5.0.3"

@@ -1,11 +1,10 @@
-import { Provider } from "@pulumi/kubernetes";
-import { Secret } from "@pulumi/kubernetesx";
+import * as k8s from "@pulumi/kubernetes";
 import { Input, Output, ComponentResource, ComponentResourceOptions, interpolate } from "@pulumi/pulumi";
 
 export interface SecretsCollectionArgs {
     namespace: Input<string>,
     commonName: string,
-    provider: Provider,
+    provider: k8s.Provider,
     apiDomain: Input<string>
     secretValues: {
         licenseKey: Input<string>,
@@ -33,23 +32,23 @@ export interface SecretsCollectionArgs {
 }
 
 export class SecretsCollection extends ComponentResource {
-    LicenseKeySecret: Secret;
-    ApiCertificateSecret: Secret | undefined;
-    ConsoleCertificateSecret: Secret | undefined;
-    DBConnSecret: Secret;
-    SmtpSecret: Secret;
-    RecaptchaSecret: Secret;
+    LicenseKeySecret: k8s.core.v1.Secret;
+    ApiCertificateSecret: k8s.core.v1.Secret | undefined;
+    ConsoleCertificateSecret: k8s.core.v1.Secret | undefined;
+    DBConnSecret: k8s.core.v1.Secret;
+    SmtpSecret: k8s.core.v1.Secret;
+    RecaptchaSecret: k8s.core.v1.Secret;
     constructor(name: string, args: SecretsCollectionArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:secrets", name, opts);
 
-        this.LicenseKeySecret = new Secret(`${args.commonName}-license-key`, {
+        this.LicenseKeySecret = new k8s.core.v1.Secret(`${args.commonName}-license-key`, {
             metadata: { namespace: args.namespace },
             stringData: { key: args.secretValues.licenseKey },
         }, { provider: args.provider, parent: this });
 
         // TODO: if cert-manager is enabled do not create api/console certs
         if (args.secretValues.apiTlsCert && args.secretValues.apiTlsKey) {
-            this.ApiCertificateSecret = new Secret(`${args.commonName}-api-tls`, {
+            this.ApiCertificateSecret = new k8s.core.v1.Secret(`${args.commonName}-api-tls`, {
                 metadata: {
                     namespace: args.namespace
                 },
@@ -61,7 +60,7 @@ export class SecretsCollection extends ComponentResource {
         }
 
         if (args.secretValues.consoleTlsCert && args.secretValues.consoleTlsKey) {
-            this.ConsoleCertificateSecret = new Secret(`${args.commonName}-console-tls`, {
+            this.ConsoleCertificateSecret = new k8s.core.v1.Secret(`${args.commonName}-console-tls`, {
                 metadata: {
                     namespace: args.namespace
                 },
@@ -72,7 +71,7 @@ export class SecretsCollection extends ComponentResource {
             }, { provider: args.provider, parent: this });
         }
         
-        this.DBConnSecret = new Secret(`${args.commonName}-mysql-db-conn`, {
+        this.DBConnSecret = new k8s.core.v1.Secret(`${args.commonName}-mysql-db-conn`, {
             metadata: {
                 namespace: args.namespace,
             },
@@ -84,7 +83,7 @@ export class SecretsCollection extends ComponentResource {
         }, { provider: args.provider, parent: this });
 
 
-        this.SmtpSecret = new Secret(`${args.commonName}-smtp-secret`, {
+        this.SmtpSecret = new k8s.core.v1.Secret(`${args.commonName}-smtp-secret`, {
             metadata: {
                 namespace: args.namespace,
             },
@@ -96,7 +95,7 @@ export class SecretsCollection extends ComponentResource {
             }
         }, { provider: args.provider, parent: this });
 
-        this.RecaptchaSecret = new Secret(`${args.commonName}-recaptcha-secret`, {
+        this.RecaptchaSecret = new k8s.core.v1.Secret(`${args.commonName}-recaptcha-secret`, {
             metadata: {
                 namespace: args.namespace
             },
