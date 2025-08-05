@@ -11,6 +11,12 @@ name: PR test
 
 jobs:
   test:
+    if: |
+      github.event.pull_request.user.login != 'dependabot' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-renovate' &&
+      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-bot'
 
     runs-on: ubuntu-latest
 
