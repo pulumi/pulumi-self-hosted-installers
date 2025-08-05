@@ -27,4 +27,13 @@ export const config = {
   serviceAccountName: <Output<string>>(
     infrastructureStack.requireOutput("serviceAccountName")
   ),
+  
+  // Cert-Manager and TLS configuration
+  certManagerEmail: stackConfig.get("certManagerEmail") || "admin@example.com",
+  gcpProject: stackConfig.get("gcpProject") || pulumi.getProject(),
+  gcpServiceAccountSecretName: stackConfig.get("gcpServiceAccountSecretName"),
+  
+  // OpenSearch configuration
+  enableOpenSearchTLS: stackConfig.getBoolean("enableOpenSearchTLS") ?? true,
+  openSearchNamespace: stackConfig.get("openSearchNamespace") || "opensearch",
 };
