@@ -15,7 +15,7 @@ import {
 export interface OpenSearchArgs {
   namespace: Output<string>;
   serviceAccount: Input<string>;
-  intitialAdminPassword: Input<string>;
+  initialAdminPassword: Input<string>;
   sysctlInit?: Input<boolean>;
 }
 
@@ -141,7 +141,7 @@ export class OpenSearch extends ComponentResource {
           extraEnvs: [
             {
               name: "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
-              value: args.intitialAdminPassword,
+              value: args.initialAdminPassword,
             },
           ],
           rbac: {
