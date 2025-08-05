@@ -29,7 +29,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
             special: true,
         }, {additionalSecretOutputs: ["result"]}).result;
 
-        // Create the database and its properties. 
+        // Create the database and its properties.
         // Based on https://git.io/JvitC
 
         const tags = { "Project": "pulumi-k8s-aws-cluster", "Owner": "pulumi"};
@@ -73,6 +73,15 @@ export class RdsDatabase extends pulumi.ComponentResource {
                 { name: "log_queries_not_using_indexes", value: "1" },
                 { name: "general_log", value: "1" },
                 { name: "log_output", value: "FILE" },
+                { name: "sql_mode",
+                value: [
+                    "ONLY_FULL_GROUP_BY", // https://dev.mysql.com/doc/refman/8.0/en/group-by-handling.html
+                    "STRICT_TRANS_TABLES", // https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_strict_trans_tables
+                    "NO_ZERO_IN_DATE", // https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_no_zero_in_date
+                    "NO_ZERO_DATE", // https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_no_zero_date
+                    "ERROR_FOR_DIVISION_BY_ZERO", // https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_error_for_division_by_zero
+                    "NO_ENGINE_SUBSTITUTION", // https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_no_engine_substitution
+                ].join(",")},
             ],
             tags,
         });
