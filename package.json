@@ -13,7 +13,7 @@
     "generate:diagrams": "find . -name '*.mmd' -not -path './node_modules/*' -exec sh -c 'echo \"Generating SVG for: $1\" && mmdc --input \"$1\" --output \"${1%.mmd}.svg\" --backgroundColor white' _ {} \\;"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "10.9.1",
+    "@mermaid-js/mermaid-cli": "11.9.0",
     "markdownlint-cli": "0.38.0"
   },
   "engines": {
