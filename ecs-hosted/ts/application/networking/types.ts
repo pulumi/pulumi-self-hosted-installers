@@ -9,8 +9,9 @@ export interface LoadBalancerArgs {
     enableAccessLogs?: boolean,
     idleTimeout?: number,
     internalLb?: boolean,
-    publicSubnetIds: string[],
+    publicSubnetIds: string[] | pulumi.Output<string[]>,
+    privateSubnetIds?: string[] | pulumi.Output<string[]>,
     region: string,
-    vpcId: string,
+    vpcId: string | pulumi.Output<string>,
     whiteListCidrBlocks: string[] | undefined
 }

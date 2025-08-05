@@ -4,8 +4,12 @@ import { LogType } from "./logs/types";
 import { getIamPolicyArn } from "../common/utils";
 
 // build the ECR image tag; this could be in the current account or a separate account (AWS)
-export const buildECRImageTag = (accountId: string, region: string, imageName: string): string => {
-    return `${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName}`;
+export const buildECRImageTag = (accountId: string, region: string, imageName: string, imagePrefix?: string): string => {
+    if (imagePrefix && imagePrefix !== "") {
+        return `${accountId}.dkr.ecr.${region}.amazonaws.com/${imagePrefix}${imageName}`;
+    } else {
+        return `${accountId}.dkr.ecr.${region}.amazonaws.com/${imageName}`;
+    }
 }
 
 // the factory for our log interface

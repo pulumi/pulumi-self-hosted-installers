@@ -6,51 +6,75 @@ import { LogType } from "./logs/types";
 export async function hydrateConfig() {
     const awsConfig = new pulumi.Config("aws");
     const region = awsConfig.require("region");
+    const profile = awsConfig.get("profile");
 
     const stackConfig = new pulumi.Config();
     const projectName = pulumi.getProject();
     const stackName = pulumi.getStack();
 
+    // enabling private LB and limiting egress will enforce strict egress limits on ECS services as well as provide an additional internal LB for the API service
+    const enablePrivateLoadBalancerAndLimitEgress = stackConfig.getBoolean("enablePrivateLoadBalancerAndLimitEgress") || false;
+
+    // we require these values to be present in configuration (aka already created in AWS account)
     const acmCertificateArn = stackConfig.require("acmCertificateArn");
     const kmsServiceKeyId = stackConfig.require("kmsServiceKeyId");
     const licenseKey = stackConfig.require("licenseKey");
+    const imageTag = stackConfig.require("imageTag");
 
-    // NOTE: We will assume all networking pieces are already created properly; this may change in the future to allow for networking to be created as part of this process.
+    // allows user defined prefix to be prepended to the images. eg- upstream/pulumi/service:image:tag
+    const imagePrefix = stackConfig.get("imagePrefix");
 
-    // Everything between vpcId and openSearchDomain was once retrieved via stack reference. This has been changed to retrieve all values directly from configuration, instead.
-    // The reason for this is to allow for more flexibility as config values are non-outputty whereas stack references are outputs (Output<T>).
-    // This pattern pairs very nicely with PulumI ESC and the use of stackConfig (environments).
-    // If ESC is ommitted, once can still set the configuration values as needed prior to executing the `application` program.
+    // if not present, we assume ECR repo is present in our "current" AWS account
+    const ecrRepoAccountId = stackConfig.get("ecrRepoAccountId");
 
-    const vpcId = stackConfig.require("vpcId");
-    const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
-    const publicSubnetIds: string[] = stackConfig.requireObject("publicSubnetIds");
-    const isolatedSubnetIds: string[] | undefined = stackConfig.getObject("isolatedSubnetIds");
+    // baseStack == infrastructure stack
+    const baseStackReference = stackConfig.require("baseStackReference");
+    const stackRef = new pulumi.StackReference(baseStackReference);
 
-    const dbClusterEndpoint = stackConfig.require("dbClusterEndpoint");
-    const dbPort = stackConfig.requireNumber("dbPort");
-    const dbName = stackConfig.require("dbName");
-    const dbSecurityGroupId = stackConfig.require("dbSecurityGroupId");
-    const dbUsername = stackConfig.require("dbUsername");
-    const dbPassword = stackConfig.require("dbPassword");
+    // retrieve networking, database, and VPC output values from the infrastack
+    const vpcId = stackRef.getOutput("vpcId");
+    const publicSubnetIds = stackRef.getOutput("publicSubnetIds");
+    const privateSubnetIds = stackRef.getOutput("privateSubnetIds");
+    const isolatedSubnetIds = stackRef.getOutput("isolatedSubnetIds");
 
-    // vpc endpoint security group
-    const endpointSecurityGroupId = stackConfig.require("endpointSecurityGroupId");
+    const dbClusterEndpoint = stackRef.getOutput("dbClusterEndpoint");
+    const dbName = stackRef.getOutput("dbName");
+    const dbUsername = stackRef.getOutput("dbUsername");
+    const dbPassword = stackRef.getOutput("dbPassword");
+    const dbPort = stackRef.getOutput("dbPort");
+    const dbSecurityGroupId = stackRef.getOutput("dbSecurityGroupId");
 
-    // Pulumi Insights (Resource Search)
-    const openSearchUser = stackConfig.get("opensearchUser");
-    const openSearchPassword = stackConfig.get("opensearchPassword");
-    const openSearchEndpoint = stackConfig.get("opensearchEndpoint");
-    const openSearchDomainName = stackConfig.get("opensearchDomainName");
+    const openSearchUser = stackRef.getOutput("opensearchUser");
+    const openSearchPassword = stackRef.getOutput("opensearchPassword");
+    const openSearchDomainName = stackRef.getOutput("opensearchDomainName");
+    const openSearchEndpoint = stackRef.getOutput("opensearchEndpoint");
 
+    // this SG protects the VPCEs created in the infrastructure stack
+    const endpointSecurityGroupId = stackRef.getOutput("endpointSecurityGroupId");
+
+    // prefix list is needed for private connection to s3 (fargate control plane)
+    const prefixListId = stackRef.getOutput("s3EndpointPrefixId");
+
+    // Captcha
     const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey"); 
     const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey");
 
-    const samlCertPublicKey = stackConfig.getSecret("samlCertPublicKey");
-    const samlCertPrivateKey = stackConfig.getSecret("samlCertPrivateKey");
+    // check if saml config is enabled
+    const samlEnabled = stackConfig.getBoolean("samlEnabled") || false;
+    let samlCertPublicKey: pulumi.Output<string> | undefined;
+    let samlCertPrivateKey: pulumi.Output<string> | undefined;
+    let userProvidedSamlCerts = false;
 
-    const ecrRepoAccountId = stackConfig.get("ecrRepoAccountId");
-    const imageTag = stackConfig.require("imageTag");
+    if (samlEnabled) {
+        // allow user to provide their own SAML certs, if they choose
+        const userProvidedPublicKey = stackConfig.get("samlCertPublicKey");
+        const userProvidedPrivateKey = stackConfig.get("samlCertPrivateKey");
+        if (userProvidedPublicKey && userProvidedPrivateKey) {
+            userProvidedSamlCerts = true;
+            samlCertPublicKey = pulumi.output(userProvidedPublicKey);
+            samlCertPrivateKey = stackConfig.requireSecret("samlCertPrivateKey");
+        }
+    }
 
     const route53ZoneName = stackConfig.require("domainName");
     const route53Subdomain = stackConfig.get("subDomain") || "";
@@ -70,7 +94,7 @@ export async function hydrateConfig() {
     const apiDisableEmailSignup = stackConfig.getBoolean("apiDisableEmailSignUp") || false;
 
     // Pulumi Console
-    const consoleDesiredNumberTasks = stackConfig.getNumber("consoleDesirecNumberTasks") || 1;
+    const consoleDesiredNumberTasks = stackConfig.getNumber("consoleDesiredNumberTasks") || 1;
     const consoleTaskMemory = stackConfig.getNumber("consoleTaskMemory");
     const consoleTaskCpu = stackConfig.getNumber("consoleTaskCpu");
     const consoleContainerCpu = stackConfig.getNumber("consoleContainerCpu");
@@ -108,18 +132,24 @@ export async function hydrateConfig() {
 
     return {
         region,
+        profile,
         accountId: account.accountId,
+        projectName,
+        stackName,
+        enablePrivateLoadBalancerAndLimitEgress,
         vpcId,
         privateSubnetIds,
         publicSubnetIds,
         isolatedSubnetIds,
         endpointSecurityGroupId,
+        prefixListId,
         recaptchaSecretKey: pulumi.output(recaptchaSecretKey),
         recaptchaSiteKey,
         kmsServiceKeyId,
         ecrRepoAccountId,
         dockerHub: {
             imageTag,
+            imagePrefix,
         },
         dns: {
             route53ZoneName,
@@ -134,10 +164,10 @@ export async function hydrateConfig() {
             apiContainerCpu,
             apiContainerMemoryReservation,
             licenseKey,
-            samlCertPrivateKey,
-            samlCertPublicKey,
             apiDisableEmailLogin,
-            apiDisableEmailSignup
+            apiDisableEmailSignup,
+            apiExecuteMigrations: process.env.PULUMI_EXECUTE_MIGRATIONS ? 
+                process.env.PULUMI_EXECUTE_MIGRATIONS.toLowerCase() === 'true' : true
         },
         console: {
             consoleDesiredNumberTasks,
@@ -145,7 +175,6 @@ export async function hydrateConfig() {
             consoleTaskCpu,
             consoleContainerCpu,
             consoleContainerMemoryReservation,
-            samlSsoEnabled: samlCertPrivateKey ? true : false,
             consoleHideEmailLogin,
             consoleHideEmailSignup
         },
@@ -156,6 +185,12 @@ export async function hydrateConfig() {
             dbSecurityGroupId,
             dbUsername,
             dbPassword
+        },
+        saml: {
+            enabled: samlEnabled,
+            userProvidedCerts: userProvidedSamlCerts,
+            certPublicKey: samlCertPublicKey,
+            certPrivateKey: samlCertPrivateKey
         },
         smtp: {
             smtpServer,
