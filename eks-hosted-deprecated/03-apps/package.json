@@ -2,7 +2,7 @@
   "name": "pulumi-onprem-kubernetes",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "5.8.2"
+    "typescript": "5.9.2"
   },
   "dependencies": {
     "@pulumi/aws": "^7.0.0",
