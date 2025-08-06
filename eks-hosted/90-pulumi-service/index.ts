@@ -147,8 +147,8 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
             resources: migrationResources,
             env: [
               generateEnvVarFromSecret("PULUMI_DATABASE_ENDPOINT", secrets.DBConnSecret.metadata.name, "endpoint"),
-              generateEnvVarFromSecret("MYSQL_ROOT_USERNAME", secrets.DBConnSecret.metadata.name, "username"),
-              generateEnvVarFromSecret("MYSQL_ROOT_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
+              generateEnvVarFromSecret("PULUMI_LOCAL_DB_SUPERUSER", secrets.DBConnSecret.metadata.name, "username"),
+              generateEnvVarFromSecret("PULUMI_LOCAL_DB_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
               generateEnvVarFromSecret("PULUMI_DATABASE_PING_ENDPOINT", secrets.DBConnSecret.metadata.name, "host"),
               {
                   name: "RUN_MIGRATIONS_EXTERNALLY",

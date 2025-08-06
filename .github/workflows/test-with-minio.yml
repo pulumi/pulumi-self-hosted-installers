@@ -1,17 +1,11 @@
-permissions: write-all # Equivalent to default permissions plus id-token: write
-env:
-  ESC_ACTION_OIDC_AUTH: true
-  ESC_ACTION_OIDC_ORGANIZATION: pulumi
-  ESC_ACTION_OIDC_REQUESTED_TOKEN_TYPE: urn:pulumi:token-type:access_token:organization
-  ESC_ACTION_ENVIRONMENT: github-secrets/pulumi-pulumi-self-hosted-installers
-  ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: false
 # workflow_dispatch allows for manual triggering from the GitHub Actions UI, as well
 # as the API. repository_dispatch allows us to trigger multiple workflows that
 # match on an event_type parameter when triggered via an API call.
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 on:
-  pull_request: null
-  workflow_dispatch: null
+  pull_request:
+  workflow_dispatch:
+
   repository_dispatch:
     types: [integration_tests]
 
@@ -19,12 +13,6 @@ name: Test Minio as object storage
 
 jobs:
   minio-test:
-    if: |
-      github.event.pull_request.user.login != 'dependabot' &&
-      github.event.pull_request.user.login != 'dependabot[bot]' &&
-      github.event.pull_request.user.login != 'pulumi-renovate' &&
-      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
-      github.event.pull_request.user.login != 'pulumi-bot'
 
     runs-on: ubuntu-latest
     env:
@@ -36,12 +24,12 @@ jobs:
       MINIO_HOST: "minio:9000"
       MINIO_BUCKET_NAME: "pulumi-checkpoints"
       MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
-      ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: PULUMI_LICENSE_KEY
+      # When regenerating the license, create a restricted license.
+      # That is, create a license that has a max unit of just 1 unless
+      # otherwise required.
+      PULUMI_LICENSE_KEY: ${{ secrets.PULUMI_LICENSE_KEY }}
 
     steps:
-      - name: Fetch secrets from ESC
-        id: esc-secrets
-        uses: pulumi/esc-action@cf5b30703ffd5ad60cc3a880c09b3a9592b9372d # v1
       - name: Set env vars
         run: |
           # There doesn't seem to be a way to map environment variables into other enviroments
@@ -74,8 +62,8 @@ jobs:
       - name: Login to Docker Hub as pulumi-bot
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
         with:
-          username: ${{ steps.esc-secrets.outputs.DOCKERHUB_USERNAME }}
-          password: ${{ steps.esc-secrets.outputs.DOCKERHUB_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Run Minio
         run: |

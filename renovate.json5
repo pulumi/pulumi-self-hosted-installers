@@ -2,11 +2,6 @@
   // Extend from Pulumi's default renovate config
   extends: ["github>pulumi/renovate-config//default.json5"],
   
-  // Auto-merge configuration
-  automerge: true,
-  automergeType: "pr",
-  automergeStrategy: "squash",
-  
   // Ignore specific paths
   ignorePaths: [
     "quickstart-docker-compose/all-in-one/*.yml",
@@ -15,22 +10,11 @@
   // Package-specific rules
   packageRules: [
     {
-      // Auto-merge patch and minor updates for all packages
-      matchUpdateTypes: ["patch", "minor"],
-      automerge: true,
-    },
-    {
-      // Auto-merge devDependencies
-      matchDepTypes: ["devDependencies"],
-      automerge: true,
-    },
-    {
       // Allow only minor and patch updates for MySQL
       matchDatasources: ["docker"],
       matchPackageNames: ["mysql"],
       matchUpdateTypes: ["minor", "patch"],
       enabled: true,
-      automerge: true,
     },
     {
       // Disable updates for OpenSearch
