@@ -2,7 +2,7 @@ module github.com/pulumi/pulumi-self-hosted-installers
 
 go 1.23.0
 
-toolchain go1.24.3
+toolchain go1.24.5
 
 require (
 	github.com/pulumi/pulumi/sdk/v3 v3.171.0

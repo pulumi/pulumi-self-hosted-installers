@@ -1,0 +1,67 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    if: |
+      github.event.pull_request.user.login != 'dependabot' &&
+      github.event.pull_request.user.login != 'pulumi-renovate' &&
+      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-bot'
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        id: claude-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          direct_prompt: |
+            Please review this pull request for the Pulumi Self-Hosted Installers repository. Focus on:
+            
+            **Pulumi Infrastructure-as-Code Best Practices:**
+            - Proper resource naming conventions and tagging
+            - Stack references and output handling between deployment stages
+            - Configuration management (Pulumi.*.yaml files)
+            - Provider version consistency and updates
+            
+            **Platform-Specific Considerations:**
+            - AWS: EKS/ECS configurations, IAM policies, VPC networking, RDS/Aurora settings
+            - Azure: AKS setup, Azure AD integration, resource group organization
+            - GCP: GKE Autopilot, Cloud SQL, service account permissions
+            - Multi-stage deployment dependencies (01-infrastructure → 02-kubernetes → 03-application)
+            
+            **Security & Production Readiness:**
+            - Secret management and encryption at rest
+            - Network security (private endpoints, ingress/egress rules)
+            - Certificate management and TLS configuration
+            - RBAC and service account permissions
+            - Bring-your-own (BYO) infrastructure compatibility
+            
+            **Code Quality:**
+            - TypeScript/Go idioms and error handling
+            - Resource cleanup and lifecycle management
+            - Documentation updates (README.md, architecture diagrams)
+            - Test coverage for integration tests
+            - Mermaid diagram accuracy and enterprise styling standards
+            
+            **Deployment Patterns:**
+            - Validate numbered stage dependencies are maintained
+            - Check for breaking changes in component interfaces
+            - Ensure backwards compatibility with existing deployments
+            
+            Be constructive and focus on production deployment reliability.
