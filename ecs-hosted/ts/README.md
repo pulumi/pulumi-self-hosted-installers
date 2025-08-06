@@ -8,15 +8,16 @@ This Pulumi program deploys the Pulumi API and UI in AWS using ECS Fargate
 
 ## Revision History
 
-Version ID | Date | Note
----|---|---
+Version ID | Date       | Note
+---|------------|---
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
-2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
-3 | 01/20/2023 | MySQL 8 support
-4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other 
-configuration values, all prefixed OpenSearch are availble. 
-5 | 07/30/2024 | Use of Stack References removed in favor of Stack Configuration. 
-6 | 10/15/2024 | Add ESC deployment to the installer.
+2 | 04/15/2022 | TypeScript application now supports Pulumi Service operating in a private, no public internet access environment. This configuration, which is disabled by default, can be enabled by setting the `enablePrivateLoadBalancerAndLimitEgress` configuration value in both the `application` and `dns` stack configurations.
+3 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
+4 | 05/10/2022 | Optional configuration parameter `imagePrefix` added for the Application project.
+5 | 01/20/2023 | MySQL 8 support.
+6 | 07/17/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are available.
+7 | 10/20/2024 | Add ESC deployment to the installer.
+8 | 05/23/2025 | Stack References architecture restored. SAML SSO configuration support added. Private load balancer and air-gapped deployment features implemented.
 
 ## User Guides
 
@@ -162,25 +163,9 @@ pulumi stack init # follow prompt
 ### Required Configuration
 
 ```bash
-region - AWS Region
-vpcId - Valid, pre-existing AWS VPC 
-publicSubnetIds - At least two subnet ID
-privateSubnetIds - At least two private subnet ID
-isolatedSubnetIds - At least two isolated subnet ID
-dbClusterEndpoint - RDS Cluster Enpoint
-dbPort - MySQL Port
-dbName - Database Name
-dbSecurityGroupId - Database Security Group ID
-dbUsername - Database Username for Pulumi Cloud
-dbPassword - Database Password for Pulumi Cloud
-endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints
-openSearchUser - AWS OpenSearch User for Pulumi Cloud
-openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
-openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
-openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
+baseStackReference - Stack reference to the infrastructure stack (e.g., "organization/project/stack")
 imageTag - Specific Pulumi docker container image tag to be used for deployment. Note: Existing ECR repo w/ Pulumi images (api, ui, migrations) is required.
-route53ZoneName - Route 53 Hosted Zone Name of zone to be used for DNS records.
-route53Subdomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com.
+domainName - Route 53 Hosted Zone Name of zone to be used for DNS records.
 acmCertificateArn - ACM Certificate ARN that covers the Route 53 Hosted Domain.
 kmsServiceKeyId - KMS Key Id of KMS Key that will be used to secure secrets. Note: AWS user performing update will require access to modify key's IAM policy.
 licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obtain).
@@ -189,19 +174,27 @@ licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obta
 ### Optional Configuration
 
 ```bash
+enablePrivateLoadBalancerAndLimitEgress - Enable private load balancer and restrict egress for air-gapped deployments. Default is false.
+imagePrefix - Prefix to be prepended to container images (e.g., "upstream/pulumi/service:tag"). Default is empty.
+ecrRepoAccountId - AWS account ID containing ECR repositories. Default is current account.
+subdomainName - Subdomain to be used for DNS records (e.g., "sub" for sub.domain.com). Default is empty.
+whiteListCidrBlocks - CIDR blocks allowed to access the load balancer. Default is ["0.0.0.0/0"].
+
+# SAML SSO Configuration
+samlEnabled - Enable SAML SSO authentication. Default is false.
+samlCertPublicKey - SAML certificate public key (optional, auto-generated if not provided).
+samlCertPrivateKey - SAML certificate private key (optional, auto-generated if not provided).
+
+# API Service Configuration
 apiDesiredNumberTasks - Desired number of ECS tasks for the API. Default is 1.
 apiTaskMemory - ECS Task level Memory. Default is 1024mb.
 apiTaskCpu - ECS Task level CPU. Default is 512mb.
 apiContainerCpu - CPU alloted to the Pulumi API Container. Defaults to Task CPU amount.
 apiContainerMemoryReservation - Memory reserved for the Pulumi API Container. Defaults to Task memory amount.
-apiDisabledEmailLogin - See DISABLE_EMAIL_LOGIN api env variable.
-apiDisabledEmailSignup - See DISABLE_EMAIL_SIGNUP api env variable.
+apiDisableEmailLogin - See DISABLE_EMAIL_LOGIN api env variable.
+apiDisableEmailSignup - See DISABLE_EMAIL_SIGNUP api env variable.
 
-openSearchUser - AWS OpenSearch User for Pulumi Cloud
-openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
-openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
-openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
-
+# Console Service Configuration
 consoleDesiredNumberTasks - Desired number of ECS tasks for the UI. Default is 1.
 consoleTaskMemory - ECS Task level Memory. Default is 512mb.
 consoleTaskCpu - ECS Task level CPU. Default is 256mb.
@@ -210,11 +203,17 @@ consoleContainerMemoryReservation - Memory reserved for the Pulumi UI Container.
 consoleHideEmailLogin - See HIDE_EMAIL_LOGIN UI env variable.
 consoleHideEmailSignup - See HIDE_EMAIL_SIGNUP UI env variable.
 
+# SMTP Configuration
 smtpServer - Fully qualified address of SMTP server.
 smtpUsername - SMTP username.
 smtpPassword - SMTP password.
 smtpGenericSender - Email to be used for sending emails from Pulumi API.
 
+# ReCAPTCHA Configuration
+recaptchaSiteKey - ReCAPTCHA site key for form validation.
+recaptchaSecretKey - ReCAPTCHA secret key for form validation.
+
+# Logging Configuration  
 logType - Type of logs to be used. Default is no logging.
 logArgs - Arguments provided to log configuration. See Logging section below.
 ```
@@ -224,28 +223,21 @@ logArgs - Arguments provided to log configuration. See Logging section below.
 
 ```bash
 pulumi config set aws:region us-west-2
-pulumi config set imageTag 20220105-189-signed
+pulumi config set baseStackReference organization/infrastructure-project/production
 pulumi config set imageTag 20220105-189-signed
 pulumi config set acmCertificateArn arn:aws:acm:us-west-2:052848974346:certificate/ee6d246c-dd3a-4667-b58a-4568a0f72dd6
 pulumi config set kmsServiceKeyId f7f56e09-f568-447c-8540-cef8ba122a79
 pulumi config set licenseKey {value} --secret
-pulumi config set logType awslogs
-pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
-pulumi config set privateSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
-pulumi config set publicSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
-pulumi config set dbClusterEndpoint https://somedb.rds.endpoint.com
-pulumi config set dbPort - 3306
-pulumi config set dbName - Pulumi
-pulumi config set dbSecurityGroupId - SG_12345
-pulumi config set dbUsername - User
-pulumi config set dbPassword - Pass
-pulumi config set endpointSecurityGroupId - SG_1234
-pulumi config set route53Subdomain my-sub-domain
-pulumi config set route53ZoneName hosted-zone.com
+pulumi config set domainName hosted-zone.com
+pulumi config set subdomainName my-sub-domain
+pulumi config set enablePrivateLoadBalancerAndLimitEgress false
+pulumi config set imagePrefix upstream/
+pulumi config set samlEnabled false
 pulumi config set smtpGenericSender email@email.com
 pulumi config set smtpPassword {some-password} --secret
 pulumi config set smtpServer email-smtp.us-west-2.amazonaws.com:587
-pulumi config set region us-west-2
+pulumi config set logType awslogs
+pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
 ```
 
 ### Deploy
@@ -266,29 +258,23 @@ pulumi stack init # follow prompt
 ### Required Configuration
 
 ```bash
-region - AWS region
-route53ZoneName - Route 53 Zone Name 
-route53Subdomain - Subdomain
-apiLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
-apiLoadBalancerZoneId - Application Load balancer Zone Id - API Load Balancer
-consoleLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
-consoleLoadBalancerZoneId - Application Load balancer Id - API Load Balancer
+appStackReference - Stack reference to the application stack (e.g., "organization/project/stack")
 ```
 
 ### Optional Configuration
 
-none
+```bash
+enablePrivateLoadBalancerAndLimitEgress - Enable private load balancer and restrict egress for air-gapped deployments. Default is false.
+```
 
 **Note: below configuration values are examples. Provide your own.**
 
 ### Set Configuration Values
 
 ```bash
-pulumi config set aws-region us-west-2
-pulumi config set apiLoadBalancerDnsName some.aws.lb.com
-pulumi config set apiLoadBalancerZoneId zoneIdHere
-pulumi config set consoleLoadBalancerDnsName some.aws.lb.com
-pulumi config set consoleLoadBalancerZoneId zoneIdHere
+pulumi config set aws:region us-west-2
+pulumi config set appStackReference organization/application-project/production
+pulumi config set enablePrivateLoadBalancerAndLimitEgress false
 ```
 
 ### Deploy
@@ -376,7 +362,10 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 ### DNS Layer - Route 53 & Certificate Management
 ![DNS Diagram](./diagrams/04-dns.svg)
 
-### Data Flow - Service Interactions
-![Data Flow Diagram](./diagrams/05-data-flow.svg)
+### Private Network Configuration - Air-gapped Deployment
+![Private Network Diagram](./diagrams/05-private-network.svg)
+
+### Data Flow - Service Interactions  
+![Data Flow Diagram](./diagrams/06-data-flow.svg)
 
 > **Note**: The architecture diagrams are maintained as standalone mermaid files in the [`diagrams/`](./diagrams/) directory. You can view them individually or use `npm run validate:standalone` to validate all diagrams.
