@@ -1,17 +1,12 @@
-name: Claude Code Review
+name: Claude EKS Review
 
 on:
   pull_request:
+    paths: ['eks-hosted/**']
     types: [opened, synchronize]
-    paths-ignore:
-      - 'eks-hosted/**'
-      - 'ecs-hosted/**'
-      - 'aks-hosted/**'
-      - 'gke-hosted/**'
-      - 'components-microstacks/**'
 
 jobs:
-  claude-review:
+  claude-eks-review:
     if: |
       github.event.pull_request.user.login != 'dependabot[bot]' &&
       github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
@@ -26,7 +21,7 @@ jobs:
     
     # Add concurrency limiting
     concurrency:
-      group: claude-general-review-${{ github.event.pull_request.number }}
+      group: claude-eks-review-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     
     steps:
@@ -34,9 +29,12 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+          sparse-checkout: |
+            .github
+            eks-hosted
 
-      - name: Run Claude Code Review
-        id: claude-review
+      - name: Run Claude EKS Code Review
+        id: claude-eks-review
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -45,8 +43,8 @@ jobs:
             Please review this pull request for the Pulumi Self-Hosted Installers repository (max 5 words per step). Focus on:
             
             **SCOPE LIMITATION:**
-            Focus on changes outside of platform-specific directories (eks-hosted, ecs-hosted, aks-hosted, gke-hosted, components-microstacks).
-            This includes general repository files, documentation, CI/CD, and shared utilities.
+            Focus ONLY on changes in eks-hosted/** directory.
+            This is the 8-stage AWS EKS microstack deployment architecture.
             
             **Pulumi Infrastructure-as-Code Best Practices:**
             - Proper resource naming conventions and tagging
@@ -54,11 +52,18 @@ jobs:
             - Configuration management (Pulumi.*.yaml files)
             - Provider version consistency and updates
             
-            **Platform-Specific Considerations:**
-            - AWS: EKS/ECS configurations, IAM policies, VPC networking, RDS/Aurora settings
-            - Azure: AKS setup, Azure AD integration, resource group organization
-            - GCP: GKE Autopilot, Cloud SQL, service account permissions
-            - Multi-stage deployment dependencies (01-infrastructure → 02-kubernetes → 03-application)
+            **EKS-Specific Considerations:**
+            - AWS EKS configurations, node groups, and cluster settings
+            - IAM policies and service accounts (01-iam stage)
+            - VPC networking and security groups (02-networking stage)
+            - EKS cluster setup and worker nodes (05-eks-cluster stage)
+            - Ingress controllers and cluster services (10-cluster-svcs stage)
+            - State management and policies (15-state-policies-mgmt stage)
+            - RDS/Aurora database configuration (20-database stage)
+            - OpenSearch insights setup (25-insights stage)
+            - ESC configuration (30-esc stage)
+            - Pulumi service deployment (90-pulumi-service stage)
+            - Multi-stage deployment dependencies and numbered ordering
             
             **Security & Production Readiness:**
             - Secret management and encryption at rest
@@ -68,15 +73,17 @@ jobs:
             - Bring-your-own (BYO) infrastructure compatibility
             
             **Code Quality:**
-            - TypeScript/Go idioms and error handling
+            - TypeScript idioms and error handling
             - Resource cleanup and lifecycle management
             - Documentation updates (README.md, architecture diagrams)
             - Test coverage for integration tests
             - Mermaid diagram accuracy and enterprise styling standards
             
-            **Deployment Patterns:**
-            - Validate numbered stage dependencies are maintained
+            **EKS Deployment Patterns:**
+            - Validate numbered stage dependencies are maintained (01→02→05→10→15→20→25→30→90)
             - Check for breaking changes in component interfaces
-            - Ensure backwards compatibility with existing deployments
+            - Ensure backwards compatibility with existing EKS deployments
+            - ALB ingress controller configuration
+            - EKS-specific networking and security patterns
             
-            Be constructive and focus on production deployment reliability.
+            Be constructive and focus on production EKS deployment reliability.

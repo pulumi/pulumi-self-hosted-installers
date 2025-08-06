@@ -1,0 +1,96 @@
+name: Claude ECS Review
+
+on:
+  pull_request:
+    paths: ['ecs-hosted/**']
+    types: [opened, synchronize]
+
+jobs:
+  claude-ecs-review:
+    if: |
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-bot'
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    
+    # Add concurrency limiting
+    concurrency:
+      group: claude-ecs-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+            ecs-hosted
+
+      - name: Run Claude ECS Code Review
+        id: claude-ecs-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: 5
+          direct_prompt: |
+            Please review this pull request for the Pulumi Self-Hosted Installers repository (max 5 words per step). Focus on:
+            
+            **SCOPE LIMITATION:**
+            Focus ONLY on changes in ecs-hosted/** directory.
+            This includes both TypeScript (ts/) and Go (go/) implementations of ECS Fargate deployment.
+            
+            **Pulumi Infrastructure-as-Code Best Practices:**
+            - Proper resource naming conventions and tagging
+            - Stack references and output handling between deployment stages
+            - Configuration management (Pulumi.*.yaml files)
+            - Provider version consistency and updates
+            
+            **ECS-Specific Considerations:**
+            - AWS ECS Fargate configurations and task definitions
+            - Container service definitions (apiService, consoleService, migrationsService)
+            - ALB/NLB load balancer configurations for public and private deployments
+            - VPC networking and security groups for container networking
+            - Aurora MySQL database configuration and connection handling
+            - ECS service discovery and container communication
+            - Private load balancer support for air-gapped deployments (Go version)
+            - VPC endpoints for private ECS networking
+            - Database migration task handling
+            - Log aggregation with CloudWatch integration
+            - DNS configuration and Route53 setup
+            - Multi-stage deployment: infrastructure → application → DNS
+            
+            **TypeScript vs Go Implementation Differences:**
+            - Compare consistency between ts/ and go/ implementations
+            - Validate similar functionality across both versions
+            - Check for feature parity in networking and security configurations
+            - Ensure both versions handle private networking correctly
+            
+            **Security & Production Readiness:**
+            - Secret management and encryption at rest
+            - Network security (private endpoints, ingress/egress rules)
+            - Certificate management and TLS configuration
+            - IAM roles and task execution permissions
+            - Container security and least privilege access
+            
+            **Code Quality:**
+            - TypeScript/Go idioms and error handling
+            - Resource cleanup and lifecycle management
+            - Documentation updates (README.md, architecture diagrams)
+            - Test coverage for integration tests
+            - Mermaid diagram accuracy and enterprise styling standards
+            
+            **ECS Deployment Patterns:**
+            - Validate deployment stage dependencies are maintained
+            - Check for breaking changes in service interfaces
+            - Ensure backwards compatibility with existing ECS deployments
+            - Container orchestration and scaling patterns
+            - Health check and service mesh considerations
+            
+            Be constructive and focus on production ECS deployment reliability.
