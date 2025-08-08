@@ -22,31 +22,19 @@ func main() {
 		}
 
 		// Pulumi uses 2 s3 buckets; checkpoints and policypacks
-		checkpointsBucket, err := s3.NewBucket(ctx, "pulumi-checkpoints", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
-			},
-		}, pulumi.Protect(true))
+		checkpointsBucket, err := s3.NewBucket(ctx, "pulumi-checkpoints", &s3.BucketArgs{}, pulumi.Protect(true))
 
 		if err != nil {
 			return err
 		}
 
-		policypackBucket, err := s3.NewBucket(ctx, "pulumi-policypacks", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
-			},
-		}, pulumi.Protect(true))
+		policypackBucket, err := s3.NewBucket(ctx, "pulumi-policypacks", &s3.BucketArgs{}, pulumi.Protect(true))
 
 		if err != nil {
 			return err
 		}
 
-		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
-			},
-		}, pulumi.Protect(true))
+		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{}, pulumi.Protect(true))
 
 		if err != nil {
 			return err

@@ -170,7 +170,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		instanceId := fmt.Sprintf("instance-%d", i)
 		_, err := rds.NewClusterInstance(ctx, ToCommonName(name, instanceId), &rds.ClusterInstanceArgs{
 			ClusterIdentifier:    cluster.ID(),
-			Engine:               pulumi.String(engine),
+			Engine:               rds.EngineType(engine),
 			EngineVersion:        pulumi.String(engineVersion),
 			InstanceClass:        args.instanceType,
 			DbParameterGroupName: parameterGroup.Name,

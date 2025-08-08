@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "dependencies": {
         "@pulumi/policy": "^1.11.0",
-        "@pulumi/pulumi": "^3.116.0",
+        "@pulumi/pulumi": "3.187.0",
         "@pulumi/random": "^4.16.1"
     },
     "devDependencies": {

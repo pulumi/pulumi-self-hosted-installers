@@ -4,7 +4,7 @@ const stackConfig = new pulumi.Config();
 const projectName = pulumi.getProject();
 const stackName = pulumi.getStack();
 
-const commonName = "pulumiselfhosted" || stackConfig.get("commonName");
+const commonName = stackConfig.get("commonName") || "pulumiselfhosted";
 const resourceNamePrefix = `${commonName}-${stackName}`;
 const disableAutoNaming = stackConfig.getBoolean("disableAutoNaming");
 
