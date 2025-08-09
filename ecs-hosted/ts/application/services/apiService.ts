@@ -206,7 +206,7 @@ export class ApiService extends pulumi.ComponentResource {
 
                 const def = JSON.stringify([{
                     name: apiContainerName,
-                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.apiImage),
+                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.apiImage, this.baseArgs.dockerHub?.imagePrefix),
                     cpu: containerCpu,
                     memoryReservation: containerMemoryReservation,
                     ulimits: [{
