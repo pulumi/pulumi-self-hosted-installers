@@ -27,6 +27,7 @@ type ConfigValues struct {
 	OpenSearchInstanceCount        int
 	OpenSearchDomainName           string
 	OpenSearchDedicatedMasterCount int
+	ProtectResources               bool
 }
 
 func NewConfig(ctx *pulumi.Context) (*ConfigValues, error) {
@@ -89,6 +90,13 @@ func NewConfig(ctx *pulumi.Context) (*ConfigValues, error) {
 		configValues.OpenSearchDomainName = "pulumi"
 	}
 	configValues.OpenSearchDedicatedMasterCount = appConfig.GetInt("openSearchDedicatedMasterCount")
+	
+	// Default to true for production, but allow tests to disable protection
+	if protectResources, err := appConfig.TryBool("protectResources"); err != nil {
+		configValues.ProtectResources = true // Default to protected when not set
+	} else {
+		configValues.ProtectResources = protectResources
+	}
 
 	return &configValues, nil
 }

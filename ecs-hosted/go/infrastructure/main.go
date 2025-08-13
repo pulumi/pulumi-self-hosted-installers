@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -37,6 +36,7 @@ func main() {
 			numberDbReplicas:  config.NumberDbReplicas,
 			instanceType:      pulumi.String(config.DbInstanceType),
 			region:            config.Region,
+			protectResources:  config.ProtectResources,
 		})
 
 		if err != nil {
@@ -59,7 +59,7 @@ func main() {
 			return err
 		}
 
-		s3ServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.s3", config.Region))
+		s3ServiceName := GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.s3", config.Region))
 		s3Endpoint, err := ec2.NewVpcEndpoint(ctx, getCommonName(name, "s3-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:       pulumi.String(config.VpcId),
 			ServiceName: pulumi.String(s3ServiceName),
@@ -73,7 +73,7 @@ func main() {
 			PrefixListId: s3Endpoint.PrefixListId,
 		}, nil)
 
-		dkrServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.ecr.dkr", config.Region))
+		dkrServiceName := GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.ecr.dkr", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "ecr-dkr-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(dkrServiceName),
@@ -87,7 +87,7 @@ func main() {
 			return err
 		}
 
-		ecrServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.ecr.api", config.Region))
+		ecrServiceName := GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.ecr.api", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "ecr-api-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(ecrServiceName),
@@ -101,7 +101,7 @@ func main() {
 			return err
 		}
 
-		smServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.secretsmanager", config.Region))
+		smServiceName := GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.secretsmanager", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "secrets-manager-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(smServiceName),
@@ -115,7 +115,7 @@ func main() {
 			return err
 		}
 
-		cwServiceName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.logs", config.Region))
+		cwServiceName := GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.logs", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "cloudwatch-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(cwServiceName),
@@ -129,7 +129,7 @@ func main() {
 			return err
 		}
 
-		elbServicName := common.GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.elasticloadbalancing", config.Region))
+		elbServicName := GetEnpointAddress(config.Region, fmt.Sprintf("com.amazonaws.%s.elasticloadbalancing", config.Region))
 		_, err = ec2.NewVpcEndpoint(ctx, getCommonName(name, "elb-endpoint"), &ec2.VpcEndpointArgs{
 			VpcId:             pulumi.String(config.VpcId),
 			ServiceName:       pulumi.String(elbServicName),
@@ -172,10 +172,17 @@ func main() {
 		ctx.Export("dbSecurityGroupId", database.dbSecurityGroupId)
 		ctx.Export("endpointSecurityGroupId", endpointSecurityGroup.ID())
 		ctx.Export("s3EndpointPrefixId", privateS3PrefixList.Id())
-		ctx.Export("opensearchDomainName", OpenSearchDomain.DomainName)
-		ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
-		ctx.Export("opensearchUser", OpenSearchDomain.User)
-		ctx.Export("opensearchPassword", OpenSearchDomain.Password)
+		if OpenSearchDomain != nil {
+			ctx.Export("opensearchDomainName", OpenSearchDomain.DomainName)
+			ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
+			ctx.Export("opensearchUser", OpenSearchDomain.User)
+			ctx.Export("opensearchPassword", OpenSearchDomain.Password)
+		} else {
+			ctx.Export("opensearchDomainName", pulumi.String(""))
+			ctx.Export("opensearchEndpoint", pulumi.String(""))
+			ctx.Export("opensearchUser", pulumi.String(""))
+			ctx.Export("opensearchPassword", pulumi.String(""))
+		}
 
 		return nil
 	})

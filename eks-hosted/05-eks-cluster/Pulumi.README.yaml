@@ -22,5 +22,5 @@ config:
   pulumiNodeGroupMaxSize: 5
 
   # Settings for instance metadata support (IMDSv2) for the EKS cluster nodegroups. If not set, a defaults (see config.ts) will be used.
-  httpTokens: 
-  httpPutResponseHopLimit:
+  httpTokens: required
+  httpPutResponseHopLimit: 2

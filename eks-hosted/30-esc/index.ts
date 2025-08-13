@@ -10,7 +10,8 @@ const baseName = config.baseName
 // Create S3 Bucket for the ESC storage - if not using an existing bucket.
 let escBucketName: pulumi.Output<string> | string
 if (!config.escBucketName) {
-    const escBucket = new aws.s3.Bucket(`${baseName}-esc`, {}, { protect: true});
+    const protectOptions = config.protectResources ? { protect: true } : {};
+    const escBucket = new aws.s3.Bucket(`${baseName}-esc`, {}, protectOptions);
     escBucketName = escBucket.id;
 } else {
     escBucketName = config.escBucketName;

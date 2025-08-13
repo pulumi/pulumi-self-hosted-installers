@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"application/config"
+	"application/log"
+	"application/network"
+	"application/utils"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/kms"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/lb"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/s3"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/utils"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -374,9 +373,9 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		policypackBucket := applyArgs[1].(string)
 		metadataBucket := applyArgs[2].(string)
 
-		checkpointBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", checkpointBucket))
-		policypackBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", policypackBucket))
-		metadataBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", metadataBucket))
+		checkpointBucketArn := GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", checkpointBucket))
+		policypackBucketArn := GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", policypackBucket))
+		metadataBucketArn := GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", metadataBucket))
 
 		policyDoc, err := json.Marshal(map[string]any{
 			"Version": "2012-10-17",
