@@ -40,7 +40,8 @@ const consoleReplicas = config.consoleReplicas;
 export const appsNamespaceName = config.appsNamespaceName;
 config.openSearchNamespaceName.apply(openSearchNamespaceName => {
     if (appsNamespaceName != openSearchNamespaceName) {
-        const appsNamespace = new k8s.core.v1.Namespace(appsNamespaceName, { metadata: { name: appsNamespaceName } }, { provider: k8sprovider, protect: true });
+        const protectOptions = config.protectResources ? { provider: k8sprovider, protect: true } : { provider: k8sprovider };
+        const appsNamespace = new k8s.core.v1.Namespace(appsNamespaceName, { metadata: { name: appsNamespaceName } }, protectOptions);
     }
 })
 

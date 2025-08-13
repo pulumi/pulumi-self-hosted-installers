@@ -16,9 +16,10 @@ export = async () => {
 
     // Create S3 Buckets for the service checkpoints and policy packs.
     // Pulumi API (service) needs to be able to read/write to these buckets via IAM policy
-    const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, { protect: true });
-    const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true });
-    const metadataBucket= new aws.s3.Bucket(`pulumi-service-metadata`, {}, { protect: true });
+    const protectOptions = config.protectResources ? { protect: true } : {};
+    const checkpointsBucket = new aws.s3.Bucket(`pulumi-checkpoints`, {}, protectOptions);
+    const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, protectOptions);
+    const metadataBucket= new aws.s3.Bucket(`pulumi-service-metadata`, {}, protectOptions);
 
     // Create infra related to handling traffic
     // ALB, HTTP & HTTPS listeners, empty target group, and ALB access logs if configuration says so
@@ -28,7 +29,8 @@ export = async () => {
         publicSubnetIds: config.publicSubnetIds,
         region: config.region,
         vpcId: config.vpcId,
-        whiteListCidrBlocks: config.dns.whiteListCidrBlocks
+        whiteListCidrBlocks: config.dns.whiteListCidrBlocks,
+        protectResources: config.protectResources
     });
 
     let apiUrl = `api.${config.dns.route53Subdomain}.${config.dns.route53ZoneName}`;

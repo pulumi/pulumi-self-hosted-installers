@@ -23,7 +23,8 @@ const cluster = new eks.Cluster(`${baseName}`, {
     skipDefaultNodeGroup: true,
     version: config.clusterVersion,
     createOidcProvider: false,
-    accessEntries: {
+    // Conditionally add access entries only if ssoRoleArn is provided
+    accessEntries: config.ssoRoleArn ? {
         "portaladmin": {
             principalArn: config.ssoRoleArn,
             accessPolicies: {
@@ -37,10 +38,10 @@ const cluster = new eks.Cluster(`${baseName}`, {
             },
             type: "STANDARD"
         }
-    },
+    } : undefined,
     tags: tags,
     enabledClusterLogTypes: ["api", "audit", "authenticator", "controllerManager", "scheduler"],
-}, { protect: true });
+}, config.protectResources ? { protect: true } : {});
 
 // Export the cluster details.
 export const kubeconfig = pulumi.secret(cluster.kubeconfig.apply(JSON.stringify));
