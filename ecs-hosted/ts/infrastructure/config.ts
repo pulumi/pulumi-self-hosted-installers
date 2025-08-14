@@ -25,6 +25,9 @@ export async function hydrateConfig() {
     const openSearchDomainName = stackConfig.get("openSearchDomainName") || "pulumi";
     const openSearchDedicatedMasterCount = stackConfig.getNumber("openSearchDedicatedMasterCount") || 0;
     const enableVpcEndpoints = stackConfig.getBoolean("enableVpcEndpoints") || true;
+    
+    // Default to true for production, but allow tests to disable protection
+    const protectResources = stackConfig.getBoolean("protectResources") ?? true;
 
     const callerId = await aws.getCallerIdentity();
 
@@ -45,6 +48,7 @@ export async function hydrateConfig() {
         openSearchDomainName,
         openSearchDedicatedMasterCount,
         enableVpcEndpoints,
+        protectResources,
         baseTags: {
             project: projectName,
             stack: stackName,

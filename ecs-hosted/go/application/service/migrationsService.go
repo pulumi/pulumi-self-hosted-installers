@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"log"
 
+	"application/config"
+	"application/utils"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/cloudwatch"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ecs"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/iam"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/utils"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/common"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -34,7 +33,7 @@ func NewMigrationsService(ctx *pulumi.Context, name string, args *MigrationsCont
 		return nil, err
 	}
 
-	policyArn := common.GetIamPolicyArn(args.Region, string(iam.ManagedPolicyAmazonECSTaskExecutionRolePolicy))
+	policyArn := GetIamPolicyArn(args.Region, string(iam.ManagedPolicyAmazonECSTaskExecutionRolePolicy))
 
 	_, err = iam.NewRolePolicyAttachment(ctx, fmt.Sprintf("%s-task-role-pol", name), &iam.RolePolicyAttachmentArgs{
 		Role:      role,

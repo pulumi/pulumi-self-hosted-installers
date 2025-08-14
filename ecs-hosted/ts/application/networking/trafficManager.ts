@@ -13,9 +13,11 @@ export class TrafficManager extends pulumi.ComponentResource {
 
     public readonly api: PulumiLoadBalancer;
     public readonly console: PulumiLoadBalancer;
+    private readonly args: LoadBalancerArgs;
 
     constructor(name: string, args: LoadBalancerArgs, opts?: pulumi.ComponentResourceOptions) {
         super(namespace, name, args, opts);
+        this.args = args;
 
         const baseOptions = pulumi.mergeOptions(opts, { parent: this });
 
@@ -43,8 +45,8 @@ export class TrafficManager extends pulumi.ComponentResource {
     }
 
     createAccessLogBucket(region: string,name: string, prefix: string, accountId: string, options: pulumi.ComponentResourceOptions): s3.Bucket {
-
-        const accessLogsBucket = new s3.Bucket(`${name}-access-logs`, {}, pulumi.mergeOptions(options, { protect: true }));
+        const protectOptions = this.args.protectResources ? { protect: true } : {};
+        const accessLogsBucket = new s3.Bucket(`${name}-access-logs`, {}, pulumi.mergeOptions(options, protectOptions));
         const serviceAccount = getServiceAccount();
 
         const policy = pulumi
