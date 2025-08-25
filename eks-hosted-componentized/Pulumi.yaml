@@ -1,5 +1,5 @@
-name: elisabeth-test
-description: testing IDP
+name: ${PROJECT}
+description: ${DESCRIPTION}
 runtime: yaml
 template:
   config:
