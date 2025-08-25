@@ -1,0 +1,329 @@
+name: elisabeth-test
+description: testing IDP
+runtime: yaml
+template:
+  config:
+    # Required Parameters
+    baseName:
+      type: string
+      description: "REQUIRED: Base name used for all resource naming"
+    eksClusterName:
+      type: string
+      description: "REQUIRED: Name of the EKS cluster"
+    opensearchPassword:
+      type: string
+      secret: true
+      description: "REQUIRED: Admin password for OpenSearch cluster"
+    licenseKey:
+      type: string
+      secret: true
+      description: "REQUIRED: Pulumi license key for self-hosted deployment"
+    hostedZoneDomainName:
+      type: string
+      description: "REQUIRED: Domain name for the Route53 hosted zone (e.g., 'example.com')"
+    hostedZoneDomainSubdomain:
+      type: string
+      description: "REQUIRED: Subdomain prefix for services (e.g., 'pulumi' for pulumi.example.com)"
+    imageTag:
+      type: string
+      description: "REQUIRED: Docker image tag for Pulumi services"
+    networkCidrBlock:
+      type: string
+      description: "CIDR block for the VPC (required by networking component)"
+    aws:region:
+      type: string
+      description: "The AWS Region to deploy to"
+
+    # Core Infrastructure Parameters
+    # Networking Configuration
+    vpcId:
+      type: string
+      default: null
+      description: "ID of existing VPC to use instead of creating new one"
+    publicSubnetIds:
+      type: object
+      default: null
+      description: "Array of existing public subnet IDs"
+    privateSubnetIds:
+      type: object
+      default: null
+      description: "Array of existing private subnet IDs"
+
+    # IAM Configuration
+    eksServiceRoleName:
+      type: string
+      default: null
+      description: "Name of existing EKS service role"
+    eksInstanceRoleName:
+      type: string
+      default: null
+      description: "Name of existing EKS instance role"
+    databaseMonitoringRoleArn:
+      type: string
+      default: null
+      description: "ARN of existing RDS monitoring role"
+
+    # EKS Cluster Configuration
+    clusterVersion:
+      type: string
+      default: null
+      description: "Kubernetes version (component default: '1.30.3')"
+    standardNodeGroupInstanceType:
+      type: string
+      default: null
+      description: "Instance type for standard node group (component default: 't3.xlarge')"
+    standardNodeGroupDesiredCapacity:
+      type: number
+      default: null
+      description: "Desired capacity for standard node group (component default: 2)"
+    standardNodeGroupMinSize:
+      type: number
+      default: null
+      description: "Minimum size for standard node group (component default: 2)"
+    standardNodeGroupMaxSize:
+      type: number
+      default: null
+      description: "Maximum size for standard node group (component default: 5)"
+    pulumiNodeGroupInstanceType:
+      type: string
+      default: null
+      description: "Instance type for Pulumi-specific node group (component default: 't3.xlarge')"
+    pulumiNodeGroupDesiredCapacity:
+      type: number
+      default: null
+      description: "Desired capacity for Pulumi node group (component default: 3)"
+    pulumiNodeGroupMinSize:
+      type: number
+      default: null
+      description: "Minimum size for Pulumi node group (component default: 3)"
+    pulumiNodeGroupMaxSize:
+      type: number
+      default: null
+      description: "Maximum size for Pulumi node group (component default: 5)"
+    httpTokens:
+      type: string
+      default: null
+      description: "IMDS tokens setting (component default: 'required')"
+    httpPutResponseHopLimit:
+      type: number
+      default: null
+      description: "IMDS hop limit (component default: 2)"
+
+    # S3 Storage Configuration
+    checkpointsS3BucketName:
+      type: string
+      default: null
+      description: "Existing S3 bucket for state checkpoints"
+    policyPacksS3BucketName:
+      type: string
+      default: null
+      description: "Existing S3 bucket for policy packs"
+    eventsS3BucketName:
+      type: string
+      default: null
+      description: "Existing S3 bucket for audit events"
+    escBucketName:
+      type: string
+      default: null
+      description: "Existing S3 bucket for ESC storage"
+
+    # Database Configuration
+    dbReplicas:
+      type: number
+      default: null
+      description: "Number of database replicas (component default: 2)"
+    dbInstanceType:
+      type: string
+      default: null
+      description: "RDS instance type (component default: 'db.r5.large')"
+    dbHostEndpoint:
+      type: string
+      default: null
+      description: "Existing database host endpoint"
+    dbPort:
+      type: string
+      default: null
+      description: "Existing database port"
+    dbUsername:
+      type: string
+      default: null
+      description: "Existing database username"
+    dbPassword:
+      type: string
+      secret: true
+      default: null
+      description: "Existing database password"
+
+    # Encryption Configuration
+    awsKMSKeyArn:
+      type: string
+      default: null
+      description: "AWS KMS key ARN for encryption"
+    encryptionKey:
+      type: string
+      default: null
+      description: "Hard-coded encryption key (if not using KMS)"
+
+    # Optional Configuration Parameters
+    # Service Scaling Configuration
+    apiReplicas:
+      type: number
+      default: null
+      description: "Number of API service replicas (component default: 2)"
+    consoleReplicas:
+      type: number
+      default: null
+      description: "Number of Console service replicas (component default: 2)"
+
+    # SMTP Configuration
+    smtpServer:
+      type: string
+      default: null
+      description: "SMTP server for email notifications (component default: '')"
+    smtpUsername:
+      type: string
+      default: null
+      description: "SMTP username (component default: '')"
+    smtpPassword:
+      type: string
+      default: null
+      description: "SMTP password (component default: '')"
+    smtpGenericSender:
+      type: string
+      default: null
+      description: "Generic sender email address (component default: '')"
+
+    # reCAPTCHA Configuration
+    recaptchaSiteKey:
+      type: string
+      default: null
+      description: "reCAPTCHA site key (component default: '')"
+    recaptchaSecretKey:
+      type: string
+      default: null
+      description: "reCAPTCHA secret key (component default: '')"
+
+    # Authentication Configuration
+    samlSsoEnabled:
+      type: string
+      default: null
+      description: "Enable SAML SSO ('true'/'false', component default: 'false')"
+    consoleHideEmailSignup:
+      type: string
+      default: null
+      description: "Hide email signup in Console ('true'/'false', component default: 'false')"
+    consoleHideEmailLogin:
+      type: string
+      default: null
+      description: "Hide email login in Console ('true'/'false', component default: 'false')"
+    apiDisableEmailSignup:
+      type: string
+      default: null
+      description: "Disable email signup in API ('true'/'false', component default: 'false')"
+    apiDisableEmailLogin:
+      type: string
+      default: null
+      description: "Disable email login in API ('true'/'false', component default: 'false')"
+
+    # GitHub OAuth Configuration
+    github_oauth_endpoint:
+      type: string
+      default: null
+      description: "GitHub OAuth endpoint (component default: '')"
+    github_oauth_id:
+      type: string
+      default: null
+      description: "GitHub OAuth client ID (component default: '')"
+    github_oauth_secret:
+      type: string
+      default: null
+      description: "GitHub OAuth client secret (component default: '')"
+resources:
+  iam-resources:
+    type: eks-installer:IAMResources
+  network-resources:
+    type: eks-installer:NetworkResources
+  cluster-resources:
+    type: eks-installer:EKSClusterResources
+    properties:
+      eksInstanceRole: ${iam-resources.eksInstanceRole}
+      eksServiceRole: ${iam-resources.eksServiceRole}
+      clusterName: ${network-resources.clusterName}
+      vpcId: ${network-resources.vpcId}
+      publicSubnetIds: ${network-resources.publicSubnetIds}
+      privateSubnetIds: ${network-resources.privateSubnetIds}
+  cluster-services-resources:
+    type: eks-installer:ClusterSVCSResources
+    properties:
+      vpcId: ${network-resources.vpcId}
+      clusterName: ${cluster-resources.clusterName}
+      kubeconfig: ${cluster-resources.kubeconfig}
+      nodeSecurityGroupId: ${cluster-resources.nodeSecurityGroupId}
+  state-policies-resources:
+    type: eks-installer:StatePoliciesMGMTResources
+  database-resources:
+    type: eks-installer:DatabaseResources
+    properties:
+      databaseMonitoringRoleArn: ${iam-resources.databaseMonitoringRoleArn}
+      privateSubnetIds: ${network-resources.privateSubnetIds}
+      nodeSecurityGroupId: ${cluster-resources.nodeSecurityGroupId}
+  insights-resources:
+    type: eks-installer:InsightsResources
+    properties:
+      eksServiceRoleName: ${iam-resources.eksServiceRoleName}
+      kubeconfig: ${cluster-resources.kubeconfig}
+  esc-resources:
+    type: eks-installer:ESCResources
+  pulumi-service-resources:
+    type: eks-installer:PulumiServiceResources
+    properties:
+      kubeconfig: ${cluster-resources.kubeconfig}
+      clusterName: ${cluster-resources.clusterName}
+      nodeGroupInstanceType: ${cluster-resources.nodeGroupInstanceType}
+      albSecurityGroupId: ${cluster-services-resources.albSecurityGroupId}
+      checkpointsS3BucketName: ${state-policies-resources.checkpointsS3BucketName}
+      policyPacksS3BucketName: ${state-policies-resources.policyPacksS3BucketName}
+      eventsS3BucketName: ${state-policies-resources.eventsS3BucketName}
+      dbConn: ${database-resources.dbConn}
+      dbPassword: ${database-resources.dbPassword}
+      escBucketName: ${esc-resources.escBucketName}
+      eksInstanceRoleName: ${iam-resources.eksInstanceRoleName}
+      openSearchEndpoint: ${insights-resources.openSearchEndpoint}
+      openSearchUser: ${insights-resources.openSearchUser}
+      openSearchPassword: ${insights-resources.openSearchPassword}
+      openSearchNamespaceName: ${insights-resources.openSearchNamespaceName}
+outputs:
+  # Critical access URLs
+  serviceUrl: ${pulumi-service-resources.serviceUrl}
+  consoleUrl: ${pulumi-service-resources.consoleURL}
+
+  # Kubernetes access
+  kubeconfig: ${cluster-resources.kubeconfig}
+  clusterName: ${cluster-resources.clusterName}
+
+  # Network information
+  vpcId: ${network-resources.vpcId}
+  publicSubnetIds: ${network-resources.publicSubnetIds}
+  privateSubnetIds: ${network-resources.privateSubnetIds}
+
+  # Database connection
+  dbHost: ${database-resources.dbConn.host}
+  dbPort: ${database-resources.dbConn.port}
+  dbUsername: ${database-resources.dbConn.username}
+
+  # S3 storage buckets
+  checkpointsS3BucketName: ${state-policies-resources.checkpointsS3BucketName}
+  policyPacksS3BucketName: ${state-policies-resources.policyPacksS3BucketName}
+  eventsS3BucketName: ${state-policies-resources.eventsS3BucketName}
+  escBucketName: ${esc-resources.escBucketName}
+
+  # Load balancer information
+  serviceLoadBalancerDnsName: ${pulumi-service-resources.serviceLoadbalancerDnsName}
+  consoleLoadBalancerDnsName: ${pulumi-service-resources.consoleLoadbalancerDnsName}
+
+  # Security groups
+  nodeSecurityGroupId: ${cluster-resources.nodeSecurityGroupId}
+  albSecurityGroupId: ${cluster-services-resources.albSecurityGroupId}
+
+packages:
+  eks-installer: ./components@0.0.0
