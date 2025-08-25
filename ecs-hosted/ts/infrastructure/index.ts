@@ -22,7 +22,8 @@ export = async () => {
         isolatedSubnetIds: config.isolatedSubnetIds,
         numberDbReplicas: config.numberDbReplicas,
         instanceType: config.dbInstanceType,
-        region: config.region
+        region: config.region,
+        protectResources: config.protectResources
     }, {
         providers
     });

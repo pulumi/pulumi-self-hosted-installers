@@ -1,0 +1,3 @@
+name: selfhosted-ecs-go-networking
+runtime: go
+description: VPC networking for Pulumi Self-Hosted ECS Go deployment

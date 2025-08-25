@@ -35,7 +35,7 @@ export class ActiveDirectoryApplication extends ComponentResource {
     }, { parent: principalServer });
 
     this.GroupId = adminGroup.id;
-    this.ApplicationId = applicationServer.applicationId;
+    this.ApplicationId = applicationServer.clientId;
     this.ApplicationSecret = spPasswordServer.value;
     this.ApplicationObjectId = applicationServer.objectId;
     this.PrincipalServerObjectId = principalServer.objectId;
