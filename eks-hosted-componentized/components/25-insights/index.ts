@@ -19,7 +19,7 @@ export interface InsightsArgs {
 }
 
 export class InsightsResources extends pulumi.ComponentResource {
-  public readonly openSearchEndpoint: string;
+  public readonly openSearchEndpoint: pulumi.Output<string>;
   public readonly openSearchUser: string;
   public readonly openSearchPassword: pulumi.Output<string>;
   public readonly openSearchNamespaceName: pulumi.Output<string>;
@@ -65,7 +65,6 @@ export class InsightsResources extends pulumi.ComponentResource {
       { provider: k8sProvider, parent: this }
     );
 
-    // TODO: Implement OpenSearch component or use alternative approach
     // const openSearch = new OpenSearch(`${baseName}-search`, {
     //   namespace: openSearchNamespace.metadata.name,
     //   serviceAccount: args.eksServiceRoleName,
@@ -74,7 +73,7 @@ export class InsightsResources extends pulumi.ComponentResource {
 
     // The endpoint is currently hardcoded as shown.
     // Once opensearch cluster can be deployed in it's own namespace, the endpoint will need to be updated to: pulumi.interpolate`https://opensearch-cluster-master.${openSearchNamespace.metadata.name}:9200`
-    this.openSearchEndpoint = `https://opensearch-cluster-master:9200`;
+    this.openSearchEndpoint = pulumi.interpolate`https://opensearch-cluster-master.${openSearchNamespace.metadata.name}:9200`;
     this.openSearchUser = "admin";
     this.openSearchPassword = opensearchPassword;
     this.openSearchNamespaceName = openSearchNamespace.metadata.name;
