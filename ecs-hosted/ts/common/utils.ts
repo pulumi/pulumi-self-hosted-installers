@@ -57,5 +57,5 @@ export const updateEnvironment = async (org: string, project: string, stack: str
         }
     });
 
-    await client.updateEnvironmentYaml(org, envName, doc.toString());
+    await client.updateEnvironmentYaml(org, envName, envName, doc.toString());
 };

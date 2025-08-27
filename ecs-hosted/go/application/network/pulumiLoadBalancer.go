@@ -184,4 +184,5 @@ type LoadBalancerArgs struct {
 	VpcId                      pulumi.StringOutput
 	VpcCidrBlock               pulumi.StringOutput
 	WhiteListCidrBlocks        []string
+	ProtectResources           bool
 }
