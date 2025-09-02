@@ -199,6 +199,10 @@ export class ConsoleService extends pulumi.ComponentResource {
                 value: recaptchaSiteKey
             },
             {
+                name: "AG_GRID_LICENSE_KEY",
+                value: this.baseArgs.agGridLicenseKey
+            },
+            {
                 // https://github.com/pulumi/pulumi-service/pull/7953
                 name: "PULUMI_HIDE_EMAIL_LOGIN",
                 value: hideEmailLogin ? String(hideEmailLogin) : ""

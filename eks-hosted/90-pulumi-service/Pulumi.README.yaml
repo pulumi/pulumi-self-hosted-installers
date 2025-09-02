@@ -11,6 +11,10 @@ config:
   # Configure as a secret using `pulumi config set licenseKey --secret`
   licenseKey: licenseKey
 
+  # AgGrid license key for the console.
+  # Configure as a secret using `pulumi config set agGridLicenseKey --secret`
+  agGridLicenseKey: agGridLicenseKey
+
   # Image tag to use to retrieve the API and Console (and Migration) service images.
   imageTag: latest
   

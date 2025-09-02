@@ -51,6 +51,7 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
       secretAccessKey: config.storageServiceAccountSecretAccessKey
     },
     licenseKey: config.licenseKey,
+    agGridLicenseKey: config.agGridLicenseKey,
     smtpDetails: {
       smtpServer: config.smtpServer,
       smtpUsername: config.smtpUsername,
@@ -238,6 +239,7 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   value: pulumi.interpolate`http://${apiService.metadata.name}.${config.appNamespaceName}:80`
                 },
                 generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
+                generateEnvVarFromSecret("AG_GRID_LICENSE_KEY", secrets.AgGridLicenseKeySecret.metadata.name, "key"),
             ]
           }]
         }

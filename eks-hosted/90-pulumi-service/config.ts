@@ -18,6 +18,7 @@ const escStackRef = new pulumi.StackReference(`${orgName}/selfhosted-30-esc/${st
 
 // Pulumi license key.
 const licenseKey = pulumiConfig.requireSecret("licenseKey");
+const agGridLicenseKey = pulumiConfig.getSecret("agGridLicenseKey");
 
 // Check for encryption key or KMS key ARN.
 const awsKMSKeyArn = pulumiConfig.get("awsKMSKeyArn");
@@ -57,6 +58,7 @@ export const config = {
     appsNamespaceName: "pulumi-service",
     imageTag: pulumiConfig.require("imageTag"),
     licenseKey: licenseKey,
+    agGridLicenseKey: agGridLicenseKey,
     apiReplicas: pulumiConfig.getNumber("apiReplicas") ?? 2,
     consoleReplicas: pulumiConfig.getNumber("consoleReplicas") ?? 2,
     

@@ -95,6 +95,7 @@ Optional settings (will use default values if not set)
 1. `pulumi config set apiDomain {domain for api}` - e.g. api.pulumi.example.com (must start with "api")
 1. `pulumi config set consoleDomain {domain for console}` - e.g. app.pulumi.example.com (must start with "app")
 1. `pulumi config set licenseKey {licenseKey} --secret` - the license key is available from your Pulumi contact.
+1. `pulumi config set agGridLicenseKey {agGridLicenseKey} --secret` - the license key is available from your Pulumi contact.
 1. `pulumi config set imageTag {imageTag}` - use "latest" or find the latest tag to pin to here: https://hub.docker.com/r/pulumi/service
 1. `cat {path to api key file} | pulumi config set apiTlsKey --secret --` (on a mac or linux machine)
 1. `cat {path to api cert file} | pulumi config set apiTlsCert --secret --` (on a mac or linux machine)

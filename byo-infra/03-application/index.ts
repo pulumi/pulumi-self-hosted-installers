@@ -58,6 +58,7 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
       secretAccessKey: config.storageServiceAccountSecretAccessKey
     },
     licenseKey: config.licenseKey,
+    agGridLicenseKey: config.agGridLicenseKey,
     smtpDetails: {
       smtpServer: config.smtpServer,
       smtpUsername: config.smtpUsername,
@@ -278,6 +279,10 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 {
                   name: "RECAPTCHA_SITE_KEY",
                   valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "siteKey")
+                },
+                {
+                  name: "AG_GRID_LICENSE_KEY",
+                  valueFrom: createEnvValueFromSecret(secrets.AgGridLicenseKeySecret, "key")
                 }
             ]
           }]

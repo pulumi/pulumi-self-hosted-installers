@@ -68,6 +68,7 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
         password: config.dbConn.apply(db => db.password)
       },
       licenseKey: config.licenseKey,
+      agGridLicenseKey: config.agGridLicenseKey,
       smtpDetails: {
         smtpServer: config.smtpServer,
         smtpUsername: config.smtpUsername,
@@ -283,6 +284,7 @@ const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleNam
                 value: config.consoleHideEmailSignup,
               },
               generateEnvVarFromSecret("RECAPTCHA_SITE_KEY", secrets.RecaptchaSecret.metadata.name, "siteKey"),
+              generateEnvVarFromSecret("AG_GRID_LICENSE_KEY", secrets.AgGridLicenseKeySecret.metadata.name, "key"),
               generateEnvVarFromSecret("GITHUB_OAUTH_ENDPOINT", secrets.GithubSecret.metadata.name, "oauthEndpoint"),
               generateEnvVarFromSecret("GITHUB_OAUTH_ID", secrets.GithubSecret.metadata.name, "oauthId"),
               generateEnvVarFromSecret("GITHUB_OAUTH_SECRET", secrets.GithubSecret.metadata.name, "oauthSecret"),

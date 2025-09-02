@@ -40,6 +40,7 @@ The following are requirements of this deployment option:
         - :information_source: Document the state location and passphrase for your stack in your internal documentation system or update this README to contain it.
 1. Service and registry configuration
     1. `pulumi config set licenseKey --secret {licenseKey}`
+    1. `pulumi config set agGridLicenseKey --secret {agGridLicenseKey}`
     1. (optional) - if you're pulling images from registry other than docker hub:
         - `pulumi config set imageRegistryAddress {registry address}`
         - `pulumi config set imageRegistryUsername {registry username}`
