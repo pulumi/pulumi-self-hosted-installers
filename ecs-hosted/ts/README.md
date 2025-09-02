@@ -229,6 +229,7 @@ pulumi config set imageTag 20220105-189-signed
 pulumi config set acmCertificateArn arn:aws:acm:us-west-2:052848974346:certificate/ee6d246c-dd3a-4667-b58a-4568a0f72dd6
 pulumi config set kmsServiceKeyId f7f56e09-f568-447c-8540-cef8ba122a79
 pulumi config set licenseKey {value} --secret
+pulumi config set agGridLicenseKey {agGridLicenseKey} --secret
 pulumi config set logType awslogs
 pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
 pulumi config set privateSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'

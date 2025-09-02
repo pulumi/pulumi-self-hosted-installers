@@ -112,6 +112,7 @@ The following settings are optional.
 * `pulumi config set apiDomain {domain for api}`
 * `pulumi config set consoleDomain {domain for console}`
 * `pulumi config set licenseKey {licenseKey} --secret`
+* `pulumi config set agGridLicenseKey {agGridLicenseKey} --secret`
 * `pulumi config set imageTag {imageTag}`
 * `pulumi config set samlEnabled {true | false}` - If not configuring SAML SSO initially, skip or set to false.
 
