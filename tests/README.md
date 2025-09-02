@@ -38,10 +38,10 @@ go test -v -run TestAwsEcsTsExamples ./...
 go test -v -run TestAwsEcsGoExamples ./...
 
 # Azure AKS (requires Azure credentials)
-go test -v -tags azure -run TestAzureAksTsExamples ./...
+go test -v -run TestAzureAksTsExamples ./...
 
 # Google GKE (requires GCP credentials)
-go test -v -tags gke -run TestGkeTsExamples ./...
+go test -v -run TestGkeTsExamples ./...
 ```
 
 ### Service Validation Tests
@@ -221,11 +221,3 @@ go mod vendor
 - **Resource Cleanup**: Zero resource leakage
 - **Parallel Execution**: Efficient test runtime
 
-### Current Status
-- ✅ **21/21 stages implemented** (100% coverage)
-- ✅ **5/5 platforms supported** (AWS EKS/ECS, Azure AKS, GCP GKE)
-- ✅ **Service validation framework** implemented
-- ✅ **Nightly CI pipeline** configured
-- ✅ **Resource cleanup** verified
-
-This test suite fully addresses GitHub Issue #44 requirements for comprehensive nightly testing of all Pulumi Self-Hosted installers.
