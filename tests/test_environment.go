@@ -40,6 +40,10 @@ func NewTestEnvironment(t *testing.T, platform string) *TestEnvironment {
 
 	// Set up file backend URL for complete isolation
 	backendURL := fmt.Sprintf("file://%s", tempDir)
+	// Set backend URL for this test
+	if err := os.Setenv("PULUMI_BACKEND_URL", backendURL); err != nil {
+		t.Fatalf("Failed to set PULUMI_BACKEND_URL: %v", err)
+	}
 
 	// Create resource tags for tracking and cleanup
 	resourceTags := map[string]string{
