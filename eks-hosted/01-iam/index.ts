@@ -12,6 +12,7 @@ export let eksServiceRole: aws.iam.Role | pulumi.Output<aws.iam.Role>;
 export let eksInstanceRoleName: string | pulumi.Output<string>; 
 export let eksInstanceRole: aws.iam.Role | pulumi.Output<aws.iam.Role>;
 export let databaseMonitoringRoleArn: string | pulumi.Output<string>;
+export let ssoRoleArn: string | undefined;
 
 
 // If the user provided the roles, use them instead of creating new ones.
@@ -112,6 +113,9 @@ if (config.eksServiceRoleName && config.eksInstanceRoleName && config.databaseMo
     });
     databaseMonitoringRoleArn = databaseMonitoringRole.arn;
 }
+
+// Set the SSO role ARN from configuration (optional)
+ssoRoleArn = config.ssoRoleArn;
 
 
 
