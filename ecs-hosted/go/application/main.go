@@ -171,6 +171,7 @@ func main() {
 			ImagePrefix:                config.ImagePrefix,
 			LogDriver:                  consoleLogs,
 			RecaptchaSiteKey:           config.RecaptchaSiteKey,
+			AgGridLicenseKey:           config.AgGridLicenseKey,
 			RootDomain:                 domain,
 			SamlSsoEnabled:             config.SamlArgs.Enabled,
 			TaskMemory:                 config.ConsoleTaskMemory,

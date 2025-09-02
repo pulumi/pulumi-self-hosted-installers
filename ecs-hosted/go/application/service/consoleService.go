@@ -198,6 +198,7 @@ func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName
 		CreateEnvVar("PULUMI_HOMEPAGE_DOMAIN", args.ConsoleUrl),
 		CreateEnvVar("PULUMI_ROOT_DOMAIN", args.RootDomain),
 		CreateEnvVar("RECAPTCHA_SITE_KEY", args.RecaptchaSiteKey),
+		CreateEnvVar("AG_GRID_LICENSE_KEY", args.AgGridLicenseKey),
 	}
 
 	// this URL should correspond to a route53 A record which aliases the internal private NLB
@@ -238,6 +239,7 @@ type ConsoleContainerServiceArgs struct {
 	ImagePrefix                string
 	LogDriver                  log.LogDriver
 	RecaptchaSiteKey           string
+	AgGridLicenseKey           string
 	RootDomain                 string
 	SamlSsoEnabled             bool
 	TaskMemory                 int

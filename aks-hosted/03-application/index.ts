@@ -54,6 +54,7 @@ export = async () => {
         serverName: config.database.serverName
       },
       licenseKey: config.licenseKey,
+      agGridLicenseKey: config.agGridLicenseKey,
       smtpDetails: {
         smtpServer: config.smtpServer,
         smtpUsername: config.smtpUsername,
@@ -287,6 +288,10 @@ export = async () => {
               {
                 name: "RECAPTCHA_SITE_KEY",
                 valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "siteKey")
+              },
+              {
+                name: "AG_GRID_LICENSE_KEY",
+                valueFrom: createEnvValueFromSecret(secrets.AgGridLicenseKeySecret, "key")
               }
             ]
           }]

@@ -10,6 +10,7 @@ export interface SecretsCollectionArgs {
     apiDomain: Input<string>
     secretValues: {
         licenseKey: Input<string>,
+        agGridLicenseKey: Input<string>,
         database: {
             host: Input<string>,
             port: Input<string>,
@@ -46,6 +47,7 @@ export interface SecretsCollectionArgs {
 
 export class SecretsCollection extends ComponentResource {
     LicenseKeySecret: k8s.core.v1.Secret;
+    AgGridLicenseKeySecret: k8s.core.v1.Secret;
     ApiCertificateSecret: k8s.core.v1.Secret;
     ConsoleCertificateSecret: k8s.core.v1.Secret;
     DBConnSecret: k8s.core.v1.Secret;
@@ -61,6 +63,11 @@ export class SecretsCollection extends ComponentResource {
         this.LicenseKeySecret = new k8s.core.v1.Secret(`${args.commonName}-license-key`, {
             metadata: { namespace: args.namespace },
             stringData: { key: args.secretValues.licenseKey },
+        }, { provider: args.provider, parent: this });
+
+        this.AgGridLicenseKeySecret = new k8s.core.v1.Secret(`${args.commonName}-ag-grid-license-key`, {
+            metadata: { namespace: args.namespace },
+            stringData: { key: args.secretValues.agGridLicenseKey },
         }, { provider: args.provider, parent: this });
 
         this.DBConnSecret = new k8s.core.v1.Secret(`${args.commonName}-mysql-db-conn`, {
@@ -142,6 +149,7 @@ export class SecretsCollection extends ComponentResource {
 
         this.registerOutputs({
             LicenseKeySecret: this.LicenseKeySecret,
+            AgGridLicenseKeySecret: this.AgGridLicenseKeySecret,
             DBConnSecret: this.DBConnSecret,
             StorageSecret: this.StorageSecret,
             SmtpSecret: this.SmtpSecret,

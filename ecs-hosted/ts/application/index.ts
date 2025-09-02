@@ -112,6 +112,7 @@ export = async () => {
         numberDesiredTasks: config.console.consoleDesiredNumberTasks,
         privateSubnetIds: config.privateSubnetIds,
         recaptchaSiteKey: config.recaptchaSiteKey,
+        agGridLicenseKey: config.console.agGridLicenseKey,
         region: config.region,
         samlSsoEnabled: config.console.samlSsoEnabled,
         secretsManagerPrefix: secretsPrefix,

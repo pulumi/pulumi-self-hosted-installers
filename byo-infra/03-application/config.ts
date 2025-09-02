@@ -23,6 +23,7 @@ export const config = {
 
     kubeconfig: clusterStack.requireOutput("kubeconfig"),
     licenseKey: stackConfig.requireSecret("licenseKey"),
+    agGridLicenseKey: stackConfig.getSecret("agGridLicenseKey"),
     database: {
         connectionString: infrastructureStack.requireOutput("dbConnectionString"),
         host: infrastructureStack.requireOutput("dbHost"),

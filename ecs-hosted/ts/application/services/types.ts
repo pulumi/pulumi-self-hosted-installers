@@ -113,6 +113,7 @@ export interface ConsoleServiceArgs extends ServiceBaseArgs {
     logArgs?: any,
     numberDesiredTasks?: number,
     recaptchaSiteKey: string,
+    agGridLicenseKey?: pulumi.Output<string>,
     region: string,
     samlSsoEnabled: boolean,
     taskMemory?: number,

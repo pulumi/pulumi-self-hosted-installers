@@ -53,6 +53,7 @@ export const getConfig = async () => {
         resourceNamePrefix,
         kubeconfig: clusterStack.requireOutput("kubeconfig"),
         licenseKey: stackConfig.requireSecret("licenseKey"),
+        agGridLicenseKey: stackConfig.getSecret("agGridLicenseKey"),
         database: {
             endpoint: infrastructureStack.requireOutput("dbEndpoint"),
             login: infrastructureStack.requireOutput("dbLogin"),

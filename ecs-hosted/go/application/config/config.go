@@ -37,6 +37,7 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	resource.AcmCertificateArn = appConfig.Require("acmCertificateArn")
 	resource.KmsServiceKeyId = appConfig.Require("kmsServiceKeyId")
 	resource.LicenseKey = appConfig.Require("licenseKey")
+	resource.AgGridLicenseKey = appConfig.Get("agGridLicenseKey")
 	resource.ImageTag = appConfig.Require("imageTag")
 
 	// allows user defined prefix to be prepended to the images. eg- upstream/pulumi/service:image:tag
@@ -145,6 +146,7 @@ type ConfigArgs struct {
 	AcmCertificateArn     string
 	KmsServiceKeyId       string
 	LicenseKey            string
+	AgGridLicenseKey      string
 	VpcId                 pulumi.StringOutput
 	PublicSubnetIds       pulumi.StringArrayOutput
 	PrivateSubnetIds      pulumi.StringArrayOutput

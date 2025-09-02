@@ -14,6 +14,7 @@ export async function hydrateConfig() {
     const acmCertificateArn = stackConfig.require("acmCertificateArn");
     const kmsServiceKeyId = stackConfig.require("kmsServiceKeyId");
     const licenseKey = stackConfig.require("licenseKey");
+    const agGridLicenseKey = stackConfig.getSecret("agGridLicenseKey");
 
     // NOTE: We will assume all networking pieces are already created properly; this may change in the future to allow for networking to be created as part of this process.
 
@@ -147,7 +148,8 @@ export async function hydrateConfig() {
             consoleContainerMemoryReservation,
             samlSsoEnabled: samlCertPrivateKey ? true : false,
             consoleHideEmailLogin,
-            consoleHideEmailSignup
+            consoleHideEmailSignup,
+            agGridLicenseKey
         },
         database: {
             dbClusterEndpoint,
