@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"application/log"
+	"application/network"
+	"application/utils"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/lb"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/utils"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 

@@ -3,7 +3,7 @@ import { Config, StackReference, getStack, getProject, StackReferenceOutputDetai
 export const getConfig = async () => {
     const stackConfig = new Config();
 
-    const commonName = "pulumi-selfhosted" || stackConfig.get("commonName");
+    const commonName = stackConfig.get("commonName") ?? "pulumi-selfhosted";
     const projectName = getProject();
     const stackName = getStack();
 

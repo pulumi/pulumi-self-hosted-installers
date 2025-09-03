@@ -4,8 +4,8 @@ import (
 	"os"
 	"strconv"
 
+	"application/log"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
@@ -128,6 +128,13 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 
 	resource.LogType = log.LogType(appConfig.GetFloat64("logType"))
 	resource.LogArgs = appConfig.Get("logArgs")
+	
+	// Default to true for production, but allow tests to disable protection
+	if protectResources, err := appConfig.TryBool("protectResources"); err != nil {
+		resource.ProtectResources = true // Default to protected when not set
+	} else {
+		resource.ProtectResources = protectResources
+	}
 
 	return &resource, nil
 }
@@ -198,6 +205,8 @@ type ConfigArgs struct {
 
 	LogType log.LogType
 	LogArgs string
+	
+	ProtectResources bool
 }
 
 // func hydrateInsightsValues(appConfig *config.Config, resource *ConfigArgs) {

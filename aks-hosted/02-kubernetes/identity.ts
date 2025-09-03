@@ -1,5 +1,6 @@
 import { ComponentResource, ComponentResourceOptions, Output, Input, interpolate } from "@pulumi/pulumi";
-import { authorization, managedidentity, network } from "@pulumi/azure-native";
+import { authorization, managedidentity } from "@pulumi/azure-native";
+import * as privatedns from "@pulumi/azure-native/privatedns";
 
 export interface IdentityArgs {
     azureDnsZone: Output<string>;
@@ -21,8 +22,8 @@ export class Identity extends ComponentResource {
         const resourceGroupName = assertValue(args.nodeResourceGroupName, "nodeResourceGroup");
         const issuerUrl = assertValue(args.clusterOidcIssuerUrl, "oidcIssuerUrl");
 
-        const dnsZone = network.getZoneOutput({
-            zoneName: args.azureDnsZone,
+        const dnsZone = privatedns.getPrivateZoneOutput({
+            privateZoneName: args.azureDnsZone,
             resourceGroupName: args.azureDnsZoneResourceGroup
         });
 

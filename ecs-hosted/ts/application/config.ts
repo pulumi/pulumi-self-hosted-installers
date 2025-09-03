@@ -44,8 +44,8 @@ export async function hydrateConfig() {
     const openSearchEndpoint = stackConfig.get("opensearchEndpoint");
     const openSearchDomainName = stackConfig.get("opensearchDomainName");
 
-    const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey"); 
-    const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey");
+    const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey") || ""; 
+    const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey") || "";
 
     const samlCertPublicKey = stackConfig.getSecret("samlCertPublicKey");
     const samlCertPrivateKey = stackConfig.getSecret("samlCertPrivateKey");
@@ -98,6 +98,9 @@ export async function hydrateConfig() {
             name: `${projectName}-${stackName}`
         }
     }
+
+    // Default to true for production, but allow tests to disable protection
+    const protectResources = stackConfig.getBoolean("protectResources") ?? true;
 
     // retrieve the present AWS Account ID for use by other components
     const account = await getCallerIdentity();
@@ -178,6 +181,7 @@ export async function hydrateConfig() {
         logs: {
             logArgs,
             logType
-        }
+        },
+        protectResources
     };
 }

@@ -1,0 +1,64 @@
+name: Azure AKS Tests
+
+on:
+  pull_request:
+    paths:
+      - 'aks-hosted/**'
+      - 'tests/*azure*'
+      - 'tests/utils.go'
+      - 'tests/service_validation*'
+    types: [opened, synchronize, labeled]
+  workflow_dispatch:
+    inputs:
+      skip_validation:
+        description: 'Skip service validation (true/false)'
+        required: false
+        default: 'false'
+
+env:
+  GO_VERSION: '1.23'
+  NODE_VERSION: '20'
+
+jobs:
+  test-azure-aks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: nightly-tests
+    if: contains(github.event.pull_request.labels.*.name, 'test:azure-aks')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+
+      - name: Run Azure AKS tests
+        run: make test-azure-aks
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-aks-test-results
+          path: tests/test-results/
