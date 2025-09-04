@@ -1,0 +1,99 @@
+name: Claude AKS Review
+
+on:
+  pull_request:
+    paths: ['aks-hosted/**']
+    types: [opened, synchronize]
+
+jobs:
+  claude-aks-review:
+    if: |
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-bot'
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    
+    # Add concurrency limiting
+    concurrency:
+      group: claude-aks-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+            aks-hosted
+
+      - name: Run Claude AKS Code Review
+        id: claude-aks-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: 5
+          direct_prompt: |
+            Please review this pull request for the Pulumi Self-Hosted Installers repository (max 5 words per step). Focus on:
+            
+            **SCOPE LIMITATION:**
+            Focus ONLY on changes in aks-hosted/** directory.
+            This is the 3-stage Azure Kubernetes Service (AKS) deployment architecture.
+            
+            **Pulumi Infrastructure-as-Code Best Practices:**
+            - Proper resource naming conventions and tagging
+            - Stack references and output handling between deployment stages
+            - Configuration management (Pulumi.*.yaml files)
+            - Provider version consistency and updates
+            
+            **AKS-Specific Considerations:**
+            - Azure Kubernetes Service (AKS) cluster configuration
+            - Azure AD integration and workload identity
+            - Azure Database for MySQL configuration and networking
+            - Azure Storage account setup and blob storage
+            - Virtual network (VNet) and subnet configuration
+            - Key Vault integration for secret management
+            - Azure Active Directory service principal and identity management
+            - NGINX ingress controller deployment and configuration
+            - cert-manager setup for automated certificate management
+            - Azure-specific networking and security groups
+            - Multi-stage deployment: 01-infrastructure → 02-kubernetes → 03-application
+            - OpenSearch deployment and configuration for search services
+            
+            **Azure Integration Patterns:**
+            - Azure resource group organization and naming
+            - Azure AD authentication and RBAC integration
+            - Azure networking and private endpoints
+            - Azure Monitor and logging integration
+            - Workload identity federation setup
+            - Azure Key Vault secret management
+            
+            **Security & Production Readiness:**
+            - Secret management and encryption at rest
+            - Network security (private endpoints, ingress/egress rules)
+            - Certificate management and TLS configuration
+            - RBAC and service account permissions
+            - Azure AD integration and authentication flows
+            - Workload identity and managed identity configuration
+            
+            **Code Quality:**
+            - TypeScript idioms and error handling
+            - Resource cleanup and lifecycle management
+            - Documentation updates (README.md, architecture diagrams)
+            - Test coverage for integration tests
+            - Mermaid diagram accuracy and enterprise styling standards
+            
+            **AKS Deployment Patterns:**
+            - Validate 3-stage deployment dependencies (01→02→03)
+            - Check for breaking changes in component interfaces
+            - Ensure backwards compatibility with existing AKS deployments
+            - Azure-specific Kubernetes patterns and configurations
+            - Ingress and certificate automation workflows
+            
+            Be constructive and focus on production AKS deployment reliability.

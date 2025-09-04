@@ -1,0 +1,94 @@
+name: Claude Components Review
+
+on:
+  pull_request:
+    paths: ['components-microstacks/**']
+    types: [opened, synchronize]
+
+jobs:
+  claude-components-review:
+    if: |
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-bot'
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    
+    # Add concurrency limiting
+    concurrency:
+      group: claude-components-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+            components-microstacks
+
+      - name: Run Claude Components Code Review
+        id: claude-components-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: 5
+          direct_prompt: |
+            Please review this pull request for the Pulumi Self-Hosted Installers repository (max 5 words per step). Focus on:
+            
+            **SCOPE LIMITATION:**
+            Focus ONLY on changes in components-microstacks/** directory.
+            This contains reusable Kubernetes components used across all platform deployments.
+            
+            **Pulumi Infrastructure-as-Code Best Practices:**
+            - Proper resource naming conventions and tagging
+            - Component interface design and reusability
+            - Configuration management and input validation
+            - Provider version consistency and updates
+            
+            **Components-Specific Considerations:**
+            - **api.ts**: Pulumi API service deployment, container configuration, service discovery
+            - **console.ts**: Pulumi Console UI deployment, frontend service configuration
+            - **cert-manager.ts**: Certificate management automation, ACME configuration, TLS setup
+            - **openSearch.ts**: Search service deployment, indexing configuration, cluster management
+            - Component interface consistency across different cloud platforms
+            - Kubernetes resource definitions and manifest generation
+            - Service mesh and networking configurations
+            - Resource dependencies and initialization order
+            
+            **Cross-Platform Compatibility:**
+            - Ensure components work across EKS, ECS, AKS, and GKE platforms
+            - Validate Kubernetes API version compatibility
+            - Check for platform-specific customizations and configuration options
+            - Ensure consistent behavior across different cloud providers
+            - Validate ingress controller and load balancer configurations
+            
+            **Security & Production Readiness:**
+            - Secret management and encryption at rest
+            - Network security (service mesh, ingress/egress rules)
+            - Certificate management and TLS configuration
+            - RBAC and service account permissions
+            - Container security and image scanning considerations
+            - Pod security policies and admission controllers
+            
+            **Code Quality:**
+            - TypeScript idioms and error handling
+            - Component lifecycle management and cleanup
+            - Documentation updates and interface specifications
+            - Test coverage for component functionality
+            - Reusable component design patterns
+            
+            **Component Design Patterns:**
+            - Validate component interfaces are backwards compatible
+            - Check for breaking changes that affect platform deployments
+            - Ensure proper abstraction and encapsulation
+            - Validate configuration parameter consistency
+            - Component versioning and dependency management
+            
+            Be constructive and focus on component reusability and production reliability across all platforms.

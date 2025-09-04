@@ -1,0 +1,97 @@
+name: Claude GKE Review
+
+on:
+  pull_request:
+    paths: ['gke-hosted/**']
+    types: [opened, synchronize]
+
+jobs:
+  claude-gke-review:
+    if: |
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-renovate[bot]' &&
+      github.event.pull_request.user.login != 'pulumi-bot'
+    
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    
+    # Add concurrency limiting
+    concurrency:
+      group: claude-gke-review-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            .github
+            gke-hosted
+
+      - name: Run Claude GKE Code Review
+        id: claude-gke-review
+        uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          timeout_minutes: 5
+          direct_prompt: |
+            Please review this pull request for the Pulumi Self-Hosted Installers repository (max 5 words per step). Focus on:
+            
+            **SCOPE LIMITATION:**
+            Focus ONLY on changes in gke-hosted/** directory.
+            This is the 3-stage Google Kubernetes Engine (GKE) deployment architecture.
+            
+            **Pulumi Infrastructure-as-Code Best Practices:**
+            - Proper resource naming conventions and tagging
+            - Stack references and output handling between deployment stages
+            - Configuration management (Pulumi.*.yaml files)
+            - Provider version consistency and updates
+            
+            **GKE-Specific Considerations:**
+            - Google Kubernetes Engine (GKE) Autopilot cluster configuration
+            - Cloud SQL MySQL database setup and networking
+            - Google Cloud Storage (GCS) bucket configuration with S3-compatible access
+            - VPC networking and private Google Access configuration
+            - Service account creation and IAM permissions
+            - Local key encryption and security configurations
+            - NGINX ingress controller deployment and configuration
+            - Private VPC peering and network connectivity
+            - Multi-stage deployment: 01-infrastructure → 02-kubernetes → 03-application
+            - OpenSearch deployment for search services
+            
+            **Google Cloud Integration Patterns:**
+            - Google Cloud IAM roles and service accounts
+            - VPC networking and private service networking
+            - Cloud SQL private IP and authorized networks
+            - GCS bucket policies and access control
+            - GKE workload identity and node pool configuration
+            - Private cluster networking and authorized networks
+            
+            **Security & Production Readiness:**
+            - Secret management and encryption at rest with local keys
+            - Network security (private endpoints, ingress/egress rules)
+            - Certificate management and TLS configuration
+            - RBAC and service account permissions
+            - GKE security best practices and workload identity
+            - Private cluster configuration and network isolation
+            
+            **Code Quality:**
+            - TypeScript idioms and error handling
+            - Resource cleanup and lifecycle management
+            - Documentation updates (README.md, architecture diagrams)
+            - Test coverage for integration tests
+            - Mermaid diagram accuracy and enterprise styling standards
+            
+            **GKE Deployment Patterns:**
+            - Validate 3-stage deployment dependencies (01→02→03)
+            - Check for breaking changes in component interfaces
+            - Ensure backwards compatibility with existing GKE deployments
+            - GKE Autopilot-specific configurations and limitations
+            - Google Cloud networking and security patterns
+            
+            Be constructive and focus on production GKE deployment reliability.
