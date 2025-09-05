@@ -15,7 +15,7 @@ jobs:
     if: github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
     steps:
       - name: Auto-approve dependency updates
-        uses: hmarr/auto-approve-action@f0939ea97e9205ef24d872e76833fa908a770363 # v4.0.0
+        uses: hmarr/auto-approve-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -25,7 +25,7 @@ jobs:
     if: github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
     steps:
       - name: Wait for tests to pass
-        uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be # v1.2.0
+        uses: fountainhead/action-wait-for-check@v1.2.0
         id: wait-for-tests
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
 
       - name: Auto-merge if tests pass
         if: steps.wait-for-tests.outputs.conclusion == 'success'
-        uses: pascalgn/merge-action@22e93c6abb5336a0ed86e67c83a4a99f5306db2b # v0.22.2
+        uses: pascalgn/automerge-action@v0.16.4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           merge_method: squash

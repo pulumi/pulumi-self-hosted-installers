@@ -10,23 +10,25 @@ export let eventsS3BucketName;
 
 ///////////////
 // Use provided S3 bucket or create S3 Buckets as applicable.
+const protectOptions = config.protectResources ? { protect: true } : {};
+
 if (config.checkpointsS3BucketName) {
   checkpointsS3BucketName = config.checkpointsS3BucketName;
 } else {
-  const checkpointsBucket = new aws.s3.Bucket(`${baseName}-checkpoints`, {}, { protect: true})
+  const checkpointsBucket = new aws.s3.Bucket(`${baseName}-checkpoints`, {}, protectOptions)
   checkpointsS3BucketName = checkpointsBucket.bucket;
 } 
 
 if (config.policyPacksS3BucketName) {
   policyPacksS3BucketName = config.policyPacksS3BucketName;
 } else {  
-  const policyPacksBucket = new aws.s3.Bucket(`${baseName}-policypacks`, {}, { protect: true});
+  const policyPacksBucket = new aws.s3.Bucket(`${baseName}-policypacks`, {}, protectOptions);
   policyPacksS3BucketName = policyPacksBucket.bucket;
 }
 
 if (config.eventsS3BucketName) {
   eventsS3BucketName = config.eventsS3BucketName;
 } else {
-  const eventsBucket = new aws.s3.Bucket(`${baseName}-events`, {}, { protect: true});
+  const eventsBucket = new aws.s3.Bucket(`${baseName}-events`, {}, protectOptions);
   eventsS3BucketName = eventsBucket.bucket;
 }
