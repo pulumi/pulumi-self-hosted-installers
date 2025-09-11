@@ -3,7 +3,7 @@ import { Config, StackReference, getStack, getProject, StackReferenceOutputDetai
 export const getConfig = async () => {
     const stackConfig = new Config();
 
-    const commonName = "pulumi-selfhosted" || stackConfig.get("commonName");
+    const commonName = stackConfig.get("commonName") || "pulumi-selfhosted" ;
     const projectName = getProject();
     const stackName = getStack();
 
@@ -53,7 +53,7 @@ export const getConfig = async () => {
         resourceNamePrefix,
         kubeconfig: clusterStack.requireOutput("kubeconfig"),
         licenseKey: stackConfig.requireSecret("licenseKey"),
-        agGridLicenseKey: stackConfig.getSecret("agGridLicenseKey"),
+        agGridLicenseKey: stackConfig.getSecret("agGridLicenseKey") || "",
         database: {
             endpoint: infrastructureStack.requireOutput("dbEndpoint"),
             login: infrastructureStack.requireOutput("dbLogin"),
@@ -69,6 +69,8 @@ export const getConfig = async () => {
         policyBlobName: infrastructureStack.requireOutput("policyBlobName"),
         checkpointBlobId: infrastructureStack.requireOutput("checkpointBlobId"),
         checkpointBlobName: infrastructureStack.requireOutput("checkpointBlobName"),
+        escBlobId: infrastructureStack.requireOutput("escBlobId"),
+        escBlobName: infrastructureStack.requireOutput("escBlobName"),
         storageAccountId: infrastructureStack.requireOutput("storageAccountId"),
         apiDomain: stackConfig.require("apiDomain"),
         consoleDomain: stackConfig.require("consoleDomain"),
@@ -85,8 +87,8 @@ export const getConfig = async () => {
         smtpUsername: stackConfig.get("smtpUsername") || "",
         smtpPassword: stackConfig.getSecret("smtpPassword") || "",
         smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
-        recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey"), 
-        recaptchaSiteKey: stackConfig.get("recaptchaSiteKey"),
+        recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey") || "", 
+        recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") || "",
         samlEnabled: stackConfig.get("samlEnabled") || "false",
         ingressAllowList: stackConfig.get("ingressAllowList") || "",
         searchStorageClassName: stackConfig.get("searchStorageClassName") || "default",

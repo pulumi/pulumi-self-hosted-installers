@@ -5,3 +5,4 @@ Pulumi.*.yaml
 package-lock.json
 *.pem
 **/kubeconfig
+make-certs.sh

@@ -17,6 +17,8 @@ export class Storage extends ComponentResource {
     public readonly policyBlobId: Output<string>;
     public readonly checkpointBlobName: Output<string>;
     public readonly policyBlobName: Output<string>;
+    public readonly escBlobId: Output<string>;
+    public readonly escBlobName: Output<string>;
     constructor(name: string, args: StorageArgs) {
         super("x:infrastructure:storage", name);
 
@@ -40,6 +42,11 @@ export class Storage extends ComponentResource {
             accountName: storageAccount.name,
         }, { parent: storageAccount, protect: true });
 
+        const escBlob = new storage.BlobContainer(`pulumiesc`, {
+            resourceGroupName: args.resourceGroupName,
+            accountName: storageAccount.name,
+        }, { parent: storageAccount, protect: true });
+
         const storageAccountKeys = storage.listStorageAccountKeysOutput({
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
@@ -49,9 +56,11 @@ export class Storage extends ComponentResource {
         this.storageAccountKey2 = secret(storageAccountKeys.keys[1].value);
         this.checkpointBlobId = checkpointBlob.id;
         this.policyBlobId = policyBlob.id;
+        this.escBlobId = escBlob.id;
         this.storageAccountId = storageAccount.id
         this.checkpointBlobName = checkpointBlob.name;
         this.policyBlobName = policyBlob.name;
+        this.escBlobName = escBlob.name;
         this.storageAccountName = storageAccount.name;
 
         this.registerOutputs({
@@ -60,8 +69,10 @@ export class Storage extends ComponentResource {
             storageAccountKey2: this.storageAccountKey2,
             checkpointBlobId: this.checkpointBlobId,
             policyBlobId: this.policyBlobId,
+            escBlobId: this.escBlobId,
             checkpointBlobName: this.checkpointBlobName,
-            policyBlogName: this.policyBlobName,
+            policyBlobName: this.policyBlobName,
+            escBlobName: this.escBlobName,
             storageAccountName: this.storageAccountName
         });
     }
