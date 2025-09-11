@@ -34,8 +34,9 @@ export class ActiveDirectoryApplication extends ComponentResource {
       endDate: "2099-01-01T00:00:00Z",
     }, { parent: principalServer });
 
-    this.GroupId = adminGroup.id;
-    this.ApplicationId = applicationServer.applicationId;
+    // adminGroup.id is of the format /groups/{id}/... we need just the id portion
+    this.GroupId = adminGroup.id.apply(id => id.split("/").pop()!);
+    this.ApplicationId = applicationServer.clientId;
     this.ApplicationSecret = spPasswordServer.value;
     this.ApplicationObjectId = applicationServer.objectId;
     this.PrincipalServerObjectId = principalServer.objectId;

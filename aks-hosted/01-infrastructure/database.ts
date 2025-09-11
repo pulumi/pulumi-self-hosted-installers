@@ -1,4 +1,4 @@
-import { dbformysql, network } from "@pulumi/azure-native";
+import { dbformysql, privatedns } from "@pulumi/azure-native";
 import * as random from "@pulumi/random";
 import { Input, Output, ComponentResource, ComponentResourceOptions, interpolate } from "@pulumi/pulumi";
 
@@ -23,7 +23,7 @@ export class Database extends ComponentResource {
 
         // to allow us to limit DB access to our VNET only, we'll use PrivateDNS
         // we require a unique server zone name to tie a PrivateDNS Zone to our DB
-        const privateZone = new network.PrivateZone(`${name}-private-zone`, {
+        const privateZone = new privatedns.PrivateZone(`${name}-private-zone`, {
             resourceGroupName: args.resourceGroupName,
             privateZoneName: "pulumi.mysql.database.azure.com",
             location: "global",
@@ -31,7 +31,7 @@ export class Database extends ComponentResource {
 
         // link our vnet and private DNS zone
         // MySQL server will automatically handle DNS needs for DB server
-        const vnetLink = new network.VirtualNetworkLink(`${name}-private-link`, {
+        const vnetLink = new privatedns.VirtualNetworkLink(`${name}-private-link`, {
             resourceGroupName: args.resourceGroupName,
             privateZoneName: privateZone.name,
             registrationEnabled: false,
@@ -98,6 +98,14 @@ export class Database extends ComponentResource {
             source: "user-override",
             configurationName: "log_bin_trust_function_creators",
             value: "ON",
+        }, { parent: server });
+
+        new dbformysql.Configuration(`${name}-disable-auto-primary-key`, {
+            resourceGroupName: args.resourceGroupName,
+            serverName: server.name,
+            source: "user-override",
+            configurationName: "sql_generate_invisible_primary_key",
+            value: "OFF",
         }, { parent: server });
 
         const db = new dbformysql.Database(`${name}-mysql`, {
