@@ -5,7 +5,7 @@ go 1.23.11
 toolchain go1.24.5
 
 require (
-	github.com/pulumi/pulumi/sdk/v3 v3.192.0
+	github.com/pulumi/pulumi/sdk/v3 v3.196.0
 	github.com/stretchr/testify v1.11.1
 )
 
