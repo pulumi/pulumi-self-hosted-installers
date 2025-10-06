@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v4
 
       - name: Login to Docker Hub as pulumi-bot
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
         with:
           username: ${{ steps.esc-secrets.outputs.DOCKERHUB_USERNAME }}
           password: ${{ steps.esc-secrets.outputs.DOCKERHUB_PASSWORD }}
