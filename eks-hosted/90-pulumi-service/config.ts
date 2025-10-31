@@ -2,6 +2,9 @@ import * as pulumi from "@pulumi/pulumi";
 
 const pulumiConfig = new pulumi.Config();
 
+// Default to true for production, but allow tests to disable protection
+const protectResources = pulumiConfig.getBoolean("protectResources") ?? true;
+
 // Used to create the needed stack references
 // The assumption is that all stacks are in the same organization and use the same stack name (e.g. dev or prod, etc)
 const orgName = pulumi.getOrganization();
@@ -97,5 +100,8 @@ export const config = {
     githubOauthEndpoint: pulumiConfig.get("github_oauth_endpoint") ?? "",
     githubOauthId: pulumiConfig.get("github_oauth_id") ?? "",
     githubOauthSecret: pulumiConfig.get("github_oauth_secret") ?? "",
+
+    // Protection settings
+    protectResources: protectResources,
 
 };
