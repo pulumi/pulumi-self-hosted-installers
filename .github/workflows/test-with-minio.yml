@@ -56,11 +56,11 @@ jobs:
 
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
         with:
-          go-version: 1.22
+          go-version: 1.24
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Checkout pulumi/pulumi-self-hosted-installers
         uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v4
@@ -73,33 +73,110 @@ jobs:
 
       - name: Run Minio
         run: |
-          mkdir -p "${RUNNER_TEMP}/minio-persistence"
+          set -x  # Enable command tracing
+
+          echo "===== Creating Docker volume for MinIO ====="
+          docker volume create minio-data
+
+          echo "===== Starting MinIO container ====="
           docker run -d --name minio \
               --publish 9000:9000 \
-              --volume ${RUNNER_TEMP}/minio-persistence:/data \
+              --volume minio-data:/data \
               --env MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
               --env MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
-          bitnami/minio:latest
+              cgr.dev/chainguard/minio:latest \
+              server /data
 
-          # Wait until Minio starts up fully.
-          sleep 20s
+          DOCKER_EXIT=$?
+          echo "Docker run exit code: $DOCKER_EXIT"
 
-          docker logs minio
+          sleep 5
+
+          echo "===== Container Status ====="
+          docker ps -a
+
+          echo "===== Container Inspection ====="
+          docker inspect minio | jq '.[0] | {State, Config: {Env, Cmd}, NetworkSettings: {Ports}}'
+
+          echo "===== Full MinIO Logs ====="
+          docker logs minio 2>&1
+
+          echo "===== Network Information ====="
+          netstat -tlnp | grep 9000 || echo "No process listening on port 9000"
+
+          echo "===== Port Test with nc ====="
+          nc -zv 127.0.0.1 9000 2>&1 || echo "nc failed to connect"
+
+          echo "===== Port Test with telnet ====="
+          timeout 2 telnet 127.0.0.1 9000 2>&1 || echo "telnet failed"
+
+          echo "===== Testing Raw HTTP Connection ====="
+          (echo -e "GET / HTTP/1.0\r\n\r\n"; sleep 1) | nc 127.0.0.1 9000 2>&1 || echo "Raw HTTP test failed"
+
+          echo "===== Waiting for MinIO with Health Check ====="
+          READY=false
+          for i in {1..30}; do
+            echo "Attempt $i/30: Checking MinIO health..."
+
+            # Try health endpoint
+            if curl -v http://127.0.0.1:9000/minio/health/live 2>&1; then
+              echo "✓ MinIO health check passed!"
+              READY=true
+              break
+            fi
+
+            # Also try root endpoint
+            echo "Trying root endpoint..."
+            curl -v http://127.0.0.1:9000/ 2>&1 || true
+
+            sleep 2
+          done
+
+          if [ "$READY" = false ]; then
+            echo "ERROR: MinIO never became ready after 60 seconds"
+            echo "===== Final Container Status ====="
+            docker ps -a
+            echo "===== Final MinIO Logs ====="
+            docker logs minio 2>&1
+            exit 1
+          fi
 
           echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
 
       - name: Create Minio buckets
         run: |
-          # https://docs.min.io/docs/minio-client-quickstart-guide.html
+          set -x  # Enable command tracing
+
+          echo "===== Downloading mc client ====="
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
+          ./mc --version
 
+          echo "===== Pre-flight checks ====="
+          echo "Testing connection to MinIO..."
+          curl -v http://127.0.0.1:9000/ 2>&1 || echo "Curl to root failed"
+
+          echo "===== Creating mc alias ====="
           # Create a new alias called minio for our Minio container.
-          ./mc alias set minio "http://${MINIO_HOST}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+          # Use 127.0.0.1:9000 (IPv4) since MinIO is published to the host's port 9000
+          ./mc alias set minio "http://127.0.0.1:9000" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}" --api S3v4 2>&1 || {
+            echo "ERROR: Failed to create mc alias"
+            echo "===== MinIO container status ====="
+            docker ps -a | grep minio
+            echo "===== MinIO logs ====="
+            docker logs minio 2>&1
+            exit 1
+          }
 
-          # Create the bucket using the minio alias.
-          ./mc mb "minio/${MINIO_BUCKET_NAME}"
-          ./mc mb "minio/${MINIO_PP_BUCKET_NAME}"
+          echo "===== Verifying alias ====="
+          ./mc alias list
+
+          echo "===== Creating buckets ====="
+          ./mc mb "minio/${MINIO_BUCKET_NAME}" 2>&1
+          ./mc mb "minio/${MINIO_PP_BUCKET_NAME}" 2>&1
+
+          echo "===== Listing buckets ====="
+          ./mc ls minio/
 
       - name: Configure Minio network
         run: |
