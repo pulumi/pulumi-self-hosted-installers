@@ -35,7 +35,8 @@ jobs:
 
       - name: Auto-merge if tests pass
         if: steps.wait-for-tests.outputs.conclusion == 'success'
-        uses: pascalgn/merge-action@22e93c6abb5336a0ed86e67c83a4a99f5306db2b # v0.22.2
+        uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          merge_method: squash
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
+          pull-request-number: ${{ github.event.pull_request.number }}
