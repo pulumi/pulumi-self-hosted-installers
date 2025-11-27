@@ -10,6 +10,7 @@
         "cert-manager.ts",
         "console.ts",
         "index.ts",
-        "openSearch.ts"
+        "openSearch.ts",
+        "openSearchCertificates.ts"
     ]
 }
