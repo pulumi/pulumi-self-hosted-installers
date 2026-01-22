@@ -6,6 +6,9 @@
   automerge: true,
   automergeType: "pr",
   automergeStrategy: "squash",
+  rebaseWhen: "behind-base-branch",  // Auto-rebase when behind main
+  platformAutomerge: true,            // Use GitHub's native auto-merge
+  prConcurrentLimit: 10,              // Limit concurrent PRs to reduce noise  
   
   // Ignore specific paths
   ignorePaths: [
