@@ -63,7 +63,7 @@ jobs:
           node-version: '22'
 
       - name: Checkout pulumi/pulumi-self-hosted-installers
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Login to Docker Hub as pulumi-bot
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
