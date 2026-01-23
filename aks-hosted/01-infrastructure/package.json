@@ -1,7 +1,7 @@
 {
     "name": "k8s-azure-01-infrastructure",
     "devDependencies": {
-        "@types/node": "22.19.7"
+        "@types/node": "24.10.9"
     },
     "dependencies": {
         "@pulumi/azure-native": "^3.0.0",
