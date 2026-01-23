@@ -2,7 +2,7 @@ module github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/dns
 
 go 1.24.7
 
-toolchain go1.24.11
+toolchain go1.25.6
 
 require (
 	github.com/pulumi/pulumi-aws/sdk/v7 v7.16.0
