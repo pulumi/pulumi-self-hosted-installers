@@ -1,7 +1,7 @@
 {
     "name": "k8s-azure-02-kubernetes-cluster",
     "devDependencies": {
-        "@types/node": "22.17.0"
+        "@types/node": "22.19.7"
     },
     "dependencies": {
         "@pulumi/azure-native": "^3.0.0",
