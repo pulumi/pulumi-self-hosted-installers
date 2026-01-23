@@ -37,7 +37,7 @@ jobs:
           compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml'
 
       - name: Upload service log as artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: ${{ always() }}
         with:
           name: service-log
