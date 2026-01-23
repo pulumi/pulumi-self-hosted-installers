@@ -1,0 +1,338 @@
+name: Nightly Installer Tests
+
+on:
+  schedule:
+    # Run at 2 AM UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+    inputs:
+      platforms:
+        description: 'Platforms to test (comma-separated: aws-eks,aws-ecs-ts,aws-ecs-go,azure-aks,gke)'
+        required: false
+        default: 'aws-eks,aws-ecs-ts,aws-ecs-go,azure-aks,gke'
+      skip_validation:
+        description: 'Skip service validation (true/false)'
+        required: false
+        default: 'false'
+
+env:
+  GO_VERSION: '1.23'
+  NODE_VERSION: '20'
+
+jobs:
+  # Job to determine which platforms to test
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      platforms: ${{ steps.platforms.outputs.platforms }}
+      matrix: ${{ steps.platforms.outputs.matrix }}
+    steps:
+      - name: Determine platforms to test
+        id: platforms
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PLATFORMS="${{ github.event.inputs.platforms }}"
+          else
+            PLATFORMS="aws-eks,aws-ecs-ts,aws-ecs-go,azure-aks,gke"
+          fi
+          
+          echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+          
+          # Convert to JSON matrix
+          MATRIX=$(echo "$PLATFORMS" | jq -R -s -c 'split(",") | map(select(. != "")) | {platform: .}')
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          
+          echo "Will test platforms: $PLATFORMS"
+
+  # AWS EKS Tests
+  test-aws-eks:
+    needs: setup
+    if: contains(needs.setup.outputs.platforms, 'aws-eks')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120 # 2 hours max
+    environment: nightly-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+
+      - name: Run AWS EKS tests
+        run: make test-aws-eks
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: aws-eks-test-results
+          path: tests/test-results/
+
+  # AWS ECS TypeScript Tests  
+  test-aws-ecs-ts:
+    needs: setup
+    if: contains(needs.setup.outputs.platforms, 'aws-ecs-ts')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: nightly-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+
+      - name: Run AWS ECS TypeScript tests
+        run: make test-aws-ecs-ts
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: aws-ecs-ts-test-results
+          path: tests/test-results/
+
+  # AWS ECS Go Tests
+  test-aws-ecs-go:
+    needs: setup
+    if: contains(needs.setup.outputs.platforms, 'aws-ecs-go')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: nightly-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+
+      - name: Run AWS ECS Go tests
+        run: make test-aws-ecs-go
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: aws-ecs-go-test-results
+          path: tests/test-results/
+
+  # Azure AKS Tests
+  test-azure-aks:
+    needs: setup
+    if: contains(needs.setup.outputs.platforms, 'azure-aks')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: nightly-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+
+      - name: Run Azure AKS tests
+        run: make test-azure-aks
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-aks-test-results
+          path: tests/test-results/
+
+  # Google GKE Tests
+  test-gke:
+    needs: setup
+    if: contains(needs.setup.outputs.platforms, 'gke')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: nightly-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Install Pulumi CLI
+        uses: pulumi/actions@v4
+
+      - name: Run GKE tests
+        run: make test-gke
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: gke-test-results
+          path: tests/test-results/
+
+  # Collect and report results
+  report-results:
+    needs: [setup, test-aws-eks, test-aws-ecs-ts, test-aws-ecs-go, test-azure-aks, test-gke]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v3
+        with:
+          path: test-results/
+
+      - name: Generate test report
+        run: |
+          echo "# Nightly Test Results - $(date)" > test-report.md
+          echo "" >> test-report.md
+          
+          # Check job results
+          declare -A job_results
+          job_results[aws-eks]="${{ needs.test-aws-eks.result }}"
+          job_results[aws-ecs-ts]="${{ needs.test-aws-ecs-ts.result }}"
+          job_results[aws-ecs-go]="${{ needs.test-aws-ecs-go.result }}"
+          job_results[azure-aks]="${{ needs.test-azure-aks.result }}"
+          job_results[gke]="${{ needs.test-gke.result }}"
+          
+          echo "## Test Results Summary" >> test-report.md
+          echo "" >> test-report.md
+          
+          success_count=0
+          total_count=0
+          
+          for platform in "${!job_results[@]}"; do
+            result="${job_results[$platform]}"
+            total_count=$((total_count + 1))
+            
+            if [[ "$result" == "success" ]]; then
+              echo "✅ **$platform**: PASSED" >> test-report.md
+              success_count=$((success_count + 1))
+            elif [[ "$result" == "failure" ]]; then
+              echo "❌ **$platform**: FAILED" >> test-report.md
+            elif [[ "$result" == "skipped" ]]; then
+              echo "⏭️ **$platform**: SKIPPED" >> test-report.md
+            else
+              echo "⚠️ **$platform**: $result" >> test-report.md
+            fi
+          done
+          
+          echo "" >> test-report.md
+          echo "**Overall Success Rate**: $success_count/$total_count platforms passed" >> test-report.md
+          
+          # Show test report
+          cat test-report.md
+
+      - name: Comment on commit (if failure)
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('test-report.md', 'utf8');
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `🚨 **Nightly Test Failure**\n\n${report}`
+            });
+
+      - name: Send Slack notification (if configured)
+        if: always() && env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Nightly installer tests completed
+            Results: ${{ needs.test-aws-eks.result }}, ${{ needs.test-aws-ecs-ts.result }}, ${{ needs.test-aws-ecs-go.result }}, ${{ needs.test-azure-aks.result }}, ${{ needs.test-gke.result }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

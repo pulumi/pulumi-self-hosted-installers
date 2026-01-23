@@ -3,12 +3,12 @@ package main
 import (
 	"strings"
 
+	"application/config"
+	"application/log"
+	"application/network"
+	"application/service"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v7/go/aws/s3"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/config"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/log"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/network"
-	"github.com/pulumi/pulumi-self-hosted-installers/ecs-hosted/infrastructure/application/service"
 	"github.com/pulumi/pulumi-tls/sdk/v5/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
@@ -22,31 +22,37 @@ func main() {
 		}
 
 		// Pulumi uses 2 s3 buckets; checkpoints and policypacks
+		checkpointsBucketOpts := []pulumi.ResourceOption{}
+		if config.ProtectResources {
+			checkpointsBucketOpts = append(checkpointsBucketOpts, pulumi.Protect(true))
+		}
 		checkpointsBucket, err := s3.NewBucket(ctx, "pulumi-checkpoints", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
-			},
-		}, pulumi.Protect(true))
+			// Versioning: enabled by default in newer AWS provider
+		}, checkpointsBucketOpts...)
 
 		if err != nil {
 			return err
 		}
 
+		policypackBucketOpts := []pulumi.ResourceOption{}
+		if config.ProtectResources {
+			policypackBucketOpts = append(policypackBucketOpts, pulumi.Protect(true))
+		}
 		policypackBucket, err := s3.NewBucket(ctx, "pulumi-policypacks", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
-			},
-		}, pulumi.Protect(true))
+			// Versioning: enabled by default in newer AWS provider
+		}, policypackBucketOpts...)
 
 		if err != nil {
 			return err
 		}
 
+		metadataBucketOpts := []pulumi.ResourceOption{}
+		if config.ProtectResources {
+			metadataBucketOpts = append(metadataBucketOpts, pulumi.Protect(true))
+		}
 		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
-			},
-		}, pulumi.Protect(true))
+			// Versioning: enabled by default in newer AWS provider
+		}, metadataBucketOpts...)
 
 		if err != nil {
 			return err
@@ -69,6 +75,7 @@ func main() {
 			VpcId:                      config.VpcId,
 			VpcCidrBlock:               v.CidrBlock(),
 			WhiteListCidrBlocks:        config.WhiteListCidrBlocks,
+			ProtectResources:           config.ProtectResources,
 		})
 
 		secretsPrefix := strings.Join([]string{config.ProjectName, config.StackName}, "/")

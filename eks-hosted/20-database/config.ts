@@ -2,6 +2,9 @@ import * as pulumi from "@pulumi/pulumi";
 
 let pulumiConfig = new pulumi.Config();
 
+// Default to true for production, but allow tests to disable protection
+const protectResources = pulumiConfig.getBoolean("protectResources") ?? true;
+
 // Used to create the needed stack references
 // The assumption is that all stacks are in the same organization and use the same stack name (e.g. dev or prod, etc)
 const orgName = pulumi.getOrganization();
@@ -35,5 +38,8 @@ export const config = {
     dbPort: pulumiConfig.get("dbPort"),
     dbUsername: pulumiConfig.get("dbUsername"),
     dbPassword: pulumiConfig.getSecret("dbPassword"),
+    
+    // Protection settings
+    protectResources: protectResources,
 };
 

@@ -8,6 +8,7 @@ export type RdsDatabaseOptions = {
     replicas: number;
     instanceType: pulumi.Input<string>;
     databaseMonitoringRoleArn: pulumi.Input<string>;
+    protectResources?: boolean;
 };
 
 export class RdsDatabase extends pulumi.ComponentResource {
@@ -47,6 +48,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
         const engine = "aurora-mysql";
         const engineVersion = "8.0.mysql_aurora.3.07.1";
 
+        const protectOptions = args.protectResources ? { protect: true } : {};
         let engineMode: aws.rds.EngineMode | undefined;
         this.db = new aws.rds.Cluster(`${name}-cluster`, {
             backupRetentionPeriod: 7,  // days
@@ -62,7 +64,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
             vpcSecurityGroupIds: pulumi.output(args.securityGroupId).apply(id => [id]),        // Must be able to communicate with EKS nodes.
             finalSnapshotIdentifier: finalSnapshotIdentifier.hex,
             tags,
-        }, { protect: true, });
+        }, protectOptions);
 
         let databaseInstanceOptions = new aws.rds.ParameterGroup("database-instance-options", {
             family: "aurora-mysql8.0",
@@ -109,7 +111,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
                     monitoringRoleArn: args.databaseMonitoringRoleArn,
                     tags,
                 },
-                { protect: true },
+                protectOptions,
 
             );
         }

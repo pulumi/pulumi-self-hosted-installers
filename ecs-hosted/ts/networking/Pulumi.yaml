@@ -1,0 +1,3 @@
+name: selfhosted-ecs-ts-networking
+runtime: nodejs
+description: VPC networking for Pulumi Self-Hosted ECS TypeScript deployment

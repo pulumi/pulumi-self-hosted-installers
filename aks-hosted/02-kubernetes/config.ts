@@ -8,7 +8,7 @@ const infrastructureStack = new StackReference(stackName1);
 const projectName = getProject();
 const stackName = getStack();
 
-const commonName = stackConfig.get("commonName") ||"pulumi-selfhosted"; 
+const commonName = stackConfig.get("commonName") ?? "pulumi-selfhosted";
 const resourceNamePrefix = `${commonName}-${stackName}`;
 
 // if enabled, this boolean controls whether or not cert-manager will be deployed and managed identity created for workloads to assume

@@ -62,8 +62,8 @@ export = async () => {
         smtpFromAddress: config.smtpFromAddress,
       },
       recaptcha: {
-        secretKey: config.recaptchaSecretKey,
-        siteKey: config.recaptchaSiteKey
+        secretKey: config.recaptchaSecretKey || "",
+        siteKey: config.recaptchaSiteKey || ""
       }
     }
   });
