@@ -1,7 +1,7 @@
 {
   "name": "eks-installer-database",
   "devDependencies": {
-    "typescript": "5.9.2"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "@pulumi/aws": "7.16.0",
