@@ -1,7 +1,7 @@
 {
     "name": "k8s-gke-03-application",
     "devDependencies": {
-        "@types/node": "22.19.7",
+        "@types/node": "24.10.9",
         "typescript": "5.9.3"
     },
     "dependencies": {
