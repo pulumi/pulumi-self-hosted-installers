@@ -7,11 +7,9 @@ const stackName = pulumi.getStack();
 // Build the config object used by the code
 const baseName = pulumiConfig.require("baseName");
 
-// NOTE: Ultimately, the opesearch cluster will go in a namespace named something like `pulumi-insights`.
-// But for now, it is going into the same namespace that is used for the pulumi service to work around a challenge related to TLS certs.
-// Once the certs code is in place, the namespace will be changed to `pulumi-insights` and the cluster deployed there.
-// Since the opensearch cluster is not stateful/can be reindexed on demand, making this change later will not be a problem.
-const opensearchNameSpace = "pulumi-service"
+// OpenSearch now supports TLS certificates for cross-namespace communication
+// Deploy in its own namespace for better security isolation
+const opensearchNameSpace = pulumiConfig.get("opensearchNamespace") || "pulumi-insights"
 
 const opensearchAdminPassword = pulumiConfig.requireSecret("opensearchPassword");
 
@@ -23,10 +21,18 @@ const eksServiceRoleName = iamStackRef.requireOutput("eksServiceRoleName");
 const clusterStackRef = new pulumi.StackReference(`${orgName}/selfhosted-05-ekscluster/${stackName}`);
 const kubeconfig = clusterStackRef.requireOutput("kubeconfig");
 
+// Cluster services stack reference for cert-manager
+const clusterSvcsStackRef = new pulumi.StackReference(`${orgName}/selfhosted-10-clustersvcs/${stackName}`);
+
 export const config = {
     baseName: baseName,
     namespace: pulumi.output(opensearchNameSpace),
     kubeconfig: kubeconfig,
     serviceAccount: eksServiceRoleName,
-    intitialAdminPassword: opensearchAdminPassword,
+    initialAdminPassword: opensearchAdminPassword,
+    
+    // TLS and cert-manager configuration
+    enableOpenSearchTLS: pulumiConfig.getBoolean("enableOpenSearchTLS") ?? true,
+    certManagerIssuerName: clusterSvcsStackRef.requireOutput("route53IssuerName"),
+    pulumiServiceNamespace: pulumiConfig.get("pulumiServiceNamespace") || "pulumi-service",
 };

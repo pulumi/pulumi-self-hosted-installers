@@ -6,6 +6,7 @@ import { config } from "./config";
 import { KubernetesCluster } from "./cluster";
 import { NginxIngress } from "./helmNginxIngress";
 import { OpenSearch } from "./search";
+import { CertManager, GCPDNSClusterIssuer, OpenSearchCertificates } from "../../components-microstacks";
 
 const region = gcp.config.region!;
 const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
@@ -15,7 +16,7 @@ const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
   tags: config.baseTags,
 });
 
-const commonName = "pulumi-selfhosted";
+const commonName = config.commonName;
 
 export const kubeconfig = pulumi.secret(cluster.Kubeconfig);
 
@@ -35,6 +36,21 @@ const ingress = new NginxIngress(
   { dependsOn: cluster },
 );
 
+// Install cert-manager for TLS certificate management
+const certManager = new CertManager("cert-manager", {
+    provider,
+    certManagerNamespace: "cert-manager",
+    issuerEmail: config.certManagerEmail,
+}, { dependsOn: cluster });
+
+// Create GCP DNS ClusterIssuer for automatic certificate provisioning
+const gcpDNSIssuer = new GCPDNSClusterIssuer("gcp-dns-issuer", {
+    provider,
+    issuerEmail: config.certManagerEmail,
+    project: config.gcpProject,
+    serviceAccountSecretName: config.gcpServiceAccountSecretName,
+}, { dependsOn: [certManager] });
+
 const initialAdminPassword = new random.RandomPassword(
   "initialSearchAdminPassword",
   {
@@ -52,15 +68,19 @@ const appsNamespace = new k8s.core.v1.Namespace(
   { provider },
 );
 
-/* We're going to put the opensearch containers in the same namespace as the pulumi service 
-*  to work around issues with TLS
-*/
-
-// const openSearchNs = new k8s.core.v1.Namespace(
-//   "opensearchns",
-//   {},
-//   { provider },
-// );
+// Create separate namespace for OpenSearch with TLS support
+const openSearchNs = new k8s.core.v1.Namespace(
+  "opensearch-ns",
+  {
+    metadata: {
+      name: config.openSearchNamespace,
+      labels: {
+        name: config.openSearchNamespace
+      }
+    }
+  },
+  { provider },
+);
 
 
 
@@ -69,17 +89,30 @@ const appsNamespace = new k8s.core.v1.Namespace(
  * Therefore, we're creating a namespace and applying a difference security policy so that we can do this.
  * See: https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-security
  */
+// Create TLS certificates for OpenSearch cross-namespace communication
+const openSearchCertificates = new OpenSearchCertificates("opensearch-certs", {
+  provider,
+  namespace: openSearchNs.metadata.name,
+  issuerName: gcpDNSIssuer.issuerName,
+  certificateSecretName: "opensearch-certificates",
+  adminCertificateSecretName: "opensearch-admin-certificates",
+}, { dependsOn: [openSearchNs, gcpDNSIssuer] });
+
 const search = new OpenSearch(
   "pulumi-selfhosted",
   {
-    namespace: appsNamespace.metadata.name,
+    namespace: openSearchNs.metadata.name,
     serviceAccount: config.serviceAccountName,
-    intitialAdminPassword: initialAdminPassword.result,
+    initialAdminPassword: initialAdminPassword.result,
     sysctlInit: false,
+    enableTLS: config.enableOpenSearchTLS,
+    certificateSecretName: openSearchCertificates.certificateSecretName,
+    crossNamespaceAccess: true,
+    allowedNamespaces: [appsNamespace.metadata.name],
   },
   {
     provider,
-    dependsOn: [cluster],
+    dependsOn: [cluster, openSearchCertificates],
   },
 );
 
@@ -89,4 +122,9 @@ export const stackName2 = config.stackName;
 export const openSearchPassword = initialAdminPassword.result;
 export const appNamespace = appsNamespace.metadata.name;
 export const openSearchUsername = "admin";
-export const openSearchEndpoint = pulumi.interpolate`https://opensearch-cluster-master:9200`;
+export const openSearchEndpoint = config.enableOpenSearchTLS ?
+  search.secureEndpoint :
+  search.endpoint;
+export const openSearchNamespace = openSearchNs.metadata.name;
+export const certManagerNamespace = certManager.namespace;
+export const gcpDNSIssuerName = gcpDNSIssuer.issuerName;
