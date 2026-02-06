@@ -52,5 +52,14 @@
       matchUpdateTypes: ["major"],
       enabled: false,
     },
+    {
+      // Disable major updates for pgavlin/fx — it's an indirect dependency
+      // pulled in by pulumi/pulumi SDK and pulumi/esc, which still import the
+      // v0/v1 module path. pgavlin/fx/v2 is a separate Go module already in
+      // go.mod; upgrade of v0/v1 is blocked until upstream migrates.
+      matchPackageNames: ["github.com/pgavlin/fx"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
   ],
 }
