@@ -16,7 +16,7 @@ services:
     image: "pulumi/service:latest@sha256:070af53945b61af7898569ee59defed9ebbdc661782958b32ee326987bbbc62a"
     env_file: service_vars.env
     environment:
-      PULUMI_LICENSE_KEY:
+      PULUMI_LICENSE_KEY: ${PULUMI_LICENSE_KEY}
       PULUMI_ENTERPRISE: "true"
       PULUMI_DATABASE_NAME: "pulumi"
       # Used for SAML SSO. Endpoint must be reachable by clients either
