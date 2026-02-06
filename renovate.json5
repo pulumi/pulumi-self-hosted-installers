@@ -39,9 +39,17 @@
       // Disable updates for OpenSearch
       matchDatasources: ["docker"],
       matchPackageNames: [
-        "opensearch/opensearch", 
+        "opensearch/opensearch",
         "opensearchproject/opensearch",
       ],
+      enabled: false,
+    },
+    {
+      // Disable major updates for jsonschema — it's an indirect dependency
+      // pulled in by pulumi/pulumi SDK and pulumi/esc, which still use v5.
+      // v6 has breaking API changes; upgrade is blocked until upstream migrates.
+      matchPackageNames: ["github.com/santhosh-tekuri/jsonschema/v5"],
+      matchUpdateTypes: ["major"],
       enabled: false,
     },
   ],
