@@ -4,6 +4,6 @@
         "@types/node": "24.10.9"
     },
     "dependencies": {
-        "@pulumi/pulumi": "3.219.0"
+        "@pulumi/pulumi": "3.220.0"
     }
 }
