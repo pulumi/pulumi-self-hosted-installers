@@ -22,4 +22,10 @@ export const config = {
 
     // VPC 
     vpcId: networkingStackRef.requireOutput("vpcId"),
+    
+    // Cert-Manager configuration
+    certManagerEmail: pulumiConfig.get("certManagerEmail") || "admin@example.com",
+    awsRegion: pulumiConfig.get("awsRegion") || "us-east-1",
+    hostedZoneId: pulumiConfig.get("hostedZoneId"),
+    certManagerIAMRoleArn: pulumiConfig.get("certManagerIAMRoleArn"),
 };

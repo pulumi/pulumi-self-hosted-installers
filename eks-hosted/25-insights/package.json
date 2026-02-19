@@ -1,5 +1,5 @@
 {
-  "name": "eks-installer-state-policies-mgmt",
+  "name": "eks-installer-insights",
   "devDependencies": {
     "typescript": "5.9.3"
   },
