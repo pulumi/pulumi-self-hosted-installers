@@ -8,10 +8,10 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.41.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
-	github.com/pulumi/pulumi-aws/sdk/v7 v7.16.0
-	github.com/pulumi/pulumi-random/sdk/v4 v4.19.0
-	github.com/pulumi/pulumi-tls/sdk/v5 v5.2.3
-	github.com/pulumi/pulumi/sdk/v3 v3.213.0
+	github.com/pulumi/pulumi-aws/sdk/v7 v7.20.0
+	github.com/pulumi/pulumi-random/sdk/v4 v4.19.1
+	github.com/pulumi/pulumi-tls/sdk/v5 v5.3.0
+	github.com/pulumi/pulumi/sdk/v3 v3.220.0
 	github.com/pulumiverse/pulumi-time/sdk v0.0.17
 )
 
