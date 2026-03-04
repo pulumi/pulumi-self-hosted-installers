@@ -90,8 +90,8 @@ To deploy entire stack, run the following in your terminal:
 * `pulumi config set azure-native:location {azure region}`
 * `pulumi config set azureDnsZoneName {DNS_ZONE_NAME}`
 * `pulumi config set azureDnsZoneResourceGroupName {DNS_ZONE_RESOURCE_GROUP_NAME}`
-* `pulumi config set stackName1 {stackName1}`
-  
+* `pulumi config set stackName1 organization/k8s-azure-01-infrastructure/{stackName1}`
+
 The following settings are optional.
 
 * `pulumi config set disableAzureDnsCertManagement true`
@@ -107,14 +107,14 @@ The following settings are optional.
 
 * `npm install`
 * `pulumi stack init {stackName3}` - see note above about NO NUMBERS in stack name
-* `pulumi config set stackName1 {stackName1}`
-* `pulumi config set stackName2 {stackName2}`
+* `pulumi config set stackName1 organization/k8s-azure-01-infrastructure/{stackName1}`
+* `pulumi config set stackName2 organization/k8s-azure-02-kubernetes-cluster/{stackName2}`
 * `pulumi config set apiDomain {domain for api}`
 * `pulumi config set consoleDomain {domain for console}`
 * `pulumi config set licenseKey {licenseKey} --secret`
 * `pulumi config set agGridLicenseKey {agGridLicenseKey} --secret`
-* `pulumi config set imageTag {imageTag}`
-* `pulumi config set samlEnabled {true | false}` - If not configuring SAML SSO initially, skip or set to false.
+* `pulumi config set imageTag {imageTag}` - Image tags are available on Docker Hub: [pulumi/service](https://hub.docker.com/r/pulumi/service/tags)
+* `pulumi config set samlEnabled true` - Enables the SSO login button on the console. See [Initial Organization and SAML Setup](#initial-organization-and-saml-setup) before enabling. If not configuring SAML SSO initially, skip or set to false.
 
 The following settings are optional.  
 Note if not set, "forgot password" and email invites will not work but sign ups and general functionality will still work.
@@ -152,6 +152,18 @@ pulumi stack output ingressIp
 
 Create DNS A record entries for `{domain for api}` and `{domain for console}` that point to the IP returned from the
     above command.
+
+### Initial Organization and SAML Setup
+
+> **Security Notice:** If setting up with SAML SSO, the first user to sign up on a freshly deployed instance automatically becomes the saml admin. If your instance is accessible from the public internet, complete this step immediately after deployment to prevent an unauthorized party from claiming the admin role before you do. Use `ingressAllowList` to restrict access during initial setup if possible. Note that setting `samlEnabled: true` in step 03 only enables the SSO button on the sign-in page — it does not prevent email/password sign-up for the initial admin account.
+
+Before SAML SSO can be used, an initial admin user must be created via email/password sign-up:
+
+1. Navigate to `{domain for console}` in your browser.
+2. Click **Sign Up** and create an account using your **primary email address**. Be sure to use the same email address used in your identity provider; do not use an alias.
+3. This first user is automatically granted organization admin rights and becomes the SAML administrator.
+4. Once logged in, configure your SAML SSO connection in the organization settings. Refer to the [Pulumi SAML SSO documentation](https://www.pulumi.com/docs/administration/self-hosting/saml-sso/) for identity-provider-specific setup guides.
+5. After the SAML connection is configured, all users (including the admin) can log in via SSO using their primary email address.
 
 ### Pulumi Login
 
