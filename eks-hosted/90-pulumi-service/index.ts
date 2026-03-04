@@ -89,6 +89,11 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
         oauthId: config.githubOauthId,
         oauthSecret: config.githubOauthSecret
       },
+      azureDevOps: {
+        oauthId: config.azureDevOpsOAuthId,
+        oauthSecret: config.azureDevOpsOAuthSecret,
+        oauthTenant: config.azureDevOpsOAuthTenant,
+      },
       samlSso: {
         certCommonName: serviceEndpoint
       }
@@ -288,6 +293,9 @@ const consoleDeployment = new k8s.apps.v1.Deployment(`${commonName}-${consoleNam
               generateEnvVarFromSecret("GITHUB_OAUTH_ENDPOINT", secrets.GithubSecret.metadata.name, "oauthEndpoint"),
               generateEnvVarFromSecret("GITHUB_OAUTH_ID", secrets.GithubSecret.metadata.name, "oauthId"),
               generateEnvVarFromSecret("GITHUB_OAUTH_SECRET", secrets.GithubSecret.metadata.name, "oauthSecret"),
+              generateEnvVarFromSecret("AZURE_DEVOPS_OAUTH_ID", secrets.AzureDevOpsSecret.metadata.name, "oauthId"),
+              generateEnvVarFromSecret("AZURE_DEVOPS_OAUTH_SECRET", secrets.AzureDevOpsSecret.metadata.name, "oauthSecret"),
+              generateEnvVarFromSecret("AZURE_DEVOPS_OAUTH_TENANT", secrets.AzureDevOpsSecret.metadata.name, "oauthTenant"),
           ]
         }]
       }

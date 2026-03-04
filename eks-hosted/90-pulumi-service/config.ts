@@ -98,4 +98,9 @@ export const config = {
     githubOauthId: pulumiConfig.get("github_oauth_id") ?? "",
     githubOauthSecret: pulumiConfig.get("github_oauth_secret") ?? "",
 
+    // Azure DevOps related settings
+    azureDevOpsOAuthId: pulumiConfig.get("azureDevOpsOAuthID") ?? "",
+    azureDevOpsOAuthSecret: pulumiConfig.get("azureDevOpsOAuthSecret") ?? "",
+    azureDevOpsOAuthTenant: pulumiConfig.get("azureDevOpsOAuthTenant") ?? "",
+
 };

@@ -178,6 +178,9 @@ services:
       GITLAB_OAUTH_SECRET:
       BITBUCKET_OAUTH_ID:
       BITBUCKET_OAUTH_SECRET:
+      AZURE_DEVOPS_OAUTH_ID:
+      AZURE_DEVOPS_OAUTH_SECRET:
+      AZURE_DEVOPS_OAUTH_TENANT:
       # Email identity config for self-service password reset.
       # The secret (RECAPTCHA_SECRET_KEY) key counterpart for this
       # must be set in the `api` service above.

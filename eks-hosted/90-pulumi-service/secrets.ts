@@ -32,10 +32,15 @@ export interface SecretsCollectionArgs {
             password: Input<string>,
             domain: Input<string>,
         },
-        github: {  
+        github: {
             oauthEndpoint: Input<string>,
             oauthId: Input<string>,
             oauthSecret: Input<string>,
+        },
+        azureDevOps: {
+            oauthId: Input<string>,
+            oauthSecret: Input<string>,
+            oauthTenant: Input<string>,
         },
         samlSso: {
             certCommonName: Input<string>,
@@ -56,6 +61,7 @@ export class SecretsCollection extends ComponentResource {
     RecaptchaSecret: k8s.core.v1.Secret;
     OpenSearchSecret: k8s.core.v1.Secret;
     GithubSecret: k8s.core.v1.Secret;
+    AzureDevOpsSecret: k8s.core.v1.Secret;
     SamlSsoSecret: k8s.core.v1.Secret;
     constructor(name: string, args: SecretsCollectionArgs, opts?: ComponentResourceOptions) {
         super("x:kubernetes:secrets", name, opts);
@@ -126,8 +132,18 @@ export class SecretsCollection extends ComponentResource {
             },
         }, {provider: args.provider, parent: this});
 
+        this.AzureDevOpsSecret = new k8s.core.v1.Secret(`${args.commonName}-azure-devops-secrets`, {
+            metadata: {
+                namespace: args.namespace,
+            },
+            stringData: {
+                oauthId: args.secretValues.azureDevOps.oauthId,
+                oauthSecret: args.secretValues.azureDevOps.oauthSecret,
+                oauthTenant: args.secretValues.azureDevOps.oauthTenant,
+            },
+        }, {provider: args.provider, parent: this});
 
-        // SSO related secrets 
+        // SSO related secrets
         const ssoPrivateKey = new tls.PrivateKey("ssoPrivateKey", { algorithm: "RSA", rsaBits: 2048 })
         const ssoCert = new tls.SelfSignedCert("ssoCert", {
             allowedUses: ["cert_signing"],
@@ -156,6 +172,7 @@ export class SecretsCollection extends ComponentResource {
             RecaptchaSecret: this.RecaptchaSecret,
             OpenSearchSecret: this.OpenSearchSecret,
             GithubSecret: this.GithubSecret,
+            AzureDevOpsSecret: this.AzureDevOpsSecret,
             SamlSsoSecret: this.SamlSsoSecret,
         });
     }
