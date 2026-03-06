@@ -45,7 +45,7 @@ export class RdsDatabase extends pulumi.ComponentResource {
         });
 
         const engine = "aurora-mysql";
-        const engineVersion = "8.0.mysql_aurora.3.07.1";
+        const engineVersion = "8.0.mysql_aurora.3.12.0";
 
         let engineMode: aws.rds.EngineMode | undefined;
         this.db = new aws.rds.Cluster(`${name}-cluster`, {
