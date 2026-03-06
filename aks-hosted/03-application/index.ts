@@ -193,6 +193,14 @@ export = async () => {
                   value: interpolate`azblob://${config.escBlobName}`
                 },
                 {
+                  name: "PULUMI_ENGINE_EVENTS_SCHEMA_V2",
+                  value: config.engineEventsSchemaV2,
+                },
+                {
+                  name: "PULUMI_ENGINE_EVENTS_LEGACY_WRITE",
+                  value: config.engineEventsLegacyWrite,
+                },
+                {
                   name: "AZURE_STORAGE_ACCOUNT",
                   value: config.storageAccountName
                 },

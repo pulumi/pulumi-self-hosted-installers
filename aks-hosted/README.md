@@ -15,6 +15,12 @@ As you make changes or customize it, please commit these to your repo as well. T
  as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc)
  so that future updates will be straightforward for you and your colleagues.
 
+## Installer Revision History
+Version ID | Date | Note
+---|---|---|--
+1.0 | --- | Initial version of the new eks installer.
+2.0 | March, 2026 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+
 ## Prerequisites
 
 * Domain name and access to create two endpoints:
