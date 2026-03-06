@@ -98,4 +98,8 @@ export const config = {
     githubOauthId: pulumiConfig.get("github_oauth_id") ?? "",
     githubOauthSecret: pulumiConfig.get("github_oauth_secret") ?? "",
 
+    // Engine Events Schema Settings
+    engineEventsSchemaV2: pulumiConfig.get("engineEventsSchemaV2") ?? 'true',
+    engineEventsLegacyWrite: pulumiConfig.get("engineEventsLegacyWrite") ?? 'false',
+
 };
