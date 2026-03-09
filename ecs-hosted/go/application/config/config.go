@@ -67,6 +67,7 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 		SecurityGroupId: stackRef.GetStringOutput(pulumi.String("dbSecurityGroupId")),
 	}
 
+	resource.HasOpenSearch = appConfig.GetBool("enableOpenSearch")
 	resource.OpenSearchUser = stackRef.GetStringOutput(pulumi.String("opensearchUser"))
 	resource.OpenSearchPassword = stackRef.GetStringOutput(pulumi.String("opensearchPassword"))
 	resource.OpenSearchDomainName = stackRef.GetStringOutput(pulumi.String("opensearchDomainName"))
@@ -100,8 +101,8 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 
 	// values will be used to construct URLs for API and UI (console) services
 	// we only require the route53 zone, the subdomain is optional
-	resource.Route53ZoneName = appConfig.Require("domainName")
-	resource.Route53Subdomain = appConfig.Get("subdomainName")
+	resource.Route53ZoneName = appConfig.Require("route53ZoneName")
+	resource.Route53Subdomain = appConfig.Get("route53Subdomain")
 
 	// allow a provided white list of cidrs to be applied on the public load balancer
 	// we assume 0.0.0.0/0 if none is provided
@@ -176,6 +177,8 @@ type ConfigArgs struct {
 	ApiDisableEmailLogin          bool
 	ApiDisableEmailSign           bool
 	ApiExecuteMigrations          bool
+	ApiEngineEventsSchemaV2       bool
+	ApiEngineEventsLegacyWrite    bool
 
 	// Console Related Values
 	ConsoleDesiredNumberTasks         int
@@ -187,6 +190,7 @@ type ConfigArgs struct {
 	ConsoleHideEmailSignup            bool
 
 	// Insights Related Values
+	HasOpenSearch        bool
 	OpenSearchUser       pulumi.StringOutput
 	OpenSearchPassword   pulumi.StringOutput
 	OpenSearchDomainName pulumi.StringOutput
@@ -259,6 +263,15 @@ func hydrateApiValues(appConfig *config.Config, resource *ConfigArgs) {
 	} else {
 		resource.ApiExecuteMigrations, _ = strconv.ParseBool(executeMigrations)
 	}
+
+	schemaV2Raw := appConfig.Get("apiEngineEventsSchemaV2")
+	if schemaV2Raw == "" {
+		resource.ApiEngineEventsSchemaV2 = true
+	} else {
+		resource.ApiEngineEventsSchemaV2, _ = strconv.ParseBool(schemaV2Raw)
+	}
+
+	resource.ApiEngineEventsLegacyWrite = appConfig.GetBool("apiEngineEventsLegacyWrite")
 }
 
 func hydrateConsoleValues(appConfig *config.Config, resource *ConfigArgs) {

@@ -22,32 +22,44 @@ func main() {
 		}
 
 		// Pulumi uses 2 s3 buckets; checkpoints and policypacks
-		checkpointsBucket, err := s3.NewBucket(ctx, "pulumi-checkpoints", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
+		checkpointsBucket, err := s3.NewBucket(ctx, "pulumi-checkpoints", &s3.BucketArgs{}, pulumi.Protect(true))
+		if err != nil {
+			return err
+		}
+		_, err = s3.NewBucketVersioningV2(ctx, "pulumi-checkpoints-versioning", &s3.BucketVersioningV2Args{
+			Bucket: checkpointsBucket.ID(),
+			VersioningConfiguration: &s3.BucketVersioningV2VersioningConfigurationArgs{
+				Status: pulumi.String("Enabled"),
 			},
-		}, pulumi.Protect(true))
-
+		})
 		if err != nil {
 			return err
 		}
 
-		policypackBucket, err := s3.NewBucket(ctx, "pulumi-policypacks", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
+		policypackBucket, err := s3.NewBucket(ctx, "pulumi-policypacks", &s3.BucketArgs{}, pulumi.Protect(true))
+		if err != nil {
+			return err
+		}
+		_, err = s3.NewBucketVersioningV2(ctx, "pulumi-policypacks-versioning", &s3.BucketVersioningV2Args{
+			Bucket: policypackBucket.ID(),
+			VersioningConfiguration: &s3.BucketVersioningV2VersioningConfigurationArgs{
+				Status: pulumi.String("Enabled"),
 			},
-		}, pulumi.Protect(true))
-
+		})
 		if err != nil {
 			return err
 		}
 
-		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{
-			Versioning: &s3.BucketVersioningArgs{
-				Enabled: pulumi.Bool(true),
+		metadataBucket, err := s3.NewBucket(ctx, "pulumi-service-metadata", &s3.BucketArgs{}, pulumi.Protect(true))
+		if err != nil {
+			return err
+		}
+		_, err = s3.NewBucketVersioningV2(ctx, "pulumi-service-metadata-versioning", &s3.BucketVersioningV2Args{
+			Bucket: metadataBucket.ID(),
+			VersioningConfiguration: &s3.BucketVersioningV2VersioningConfigurationArgs{
+				Status: pulumi.String("Enabled"),
 			},
-		}, pulumi.Protect(true))
-
+		})
 		if err != nil {
 			return err
 		}
@@ -145,10 +157,13 @@ func main() {
 			TaskCpu:                    config.ApiTaskCpu,
 			TrafficManager:             trafficManager,
 			WhiteListCidrBlocks:        config.WhiteListCidrBlocks,
+			HasOpenSearch:              config.HasOpenSearch,
 			OpenSearchUser:             config.OpenSearchUser,
 			OpenSearchPassword:         config.OpenSearchPassword,
 			OpenSearchDomainName:       config.OpenSearchDomainName,
 			OpenSearchEndpoint:         config.OpenSearchEndpoint,
+			EngineEventsSchemaV2:       config.ApiEngineEventsSchemaV2,
+			EngineEventsLegacyWrite:    config.ApiEngineEventsLegacyWrite,
 		})
 
 		if err != nil {

@@ -87,10 +87,10 @@ export class ApiService extends pulumi.ComponentResource {
             },
         ];
 
-        if (args.opensearch) {
+        if (args.opensearch?.password) {
             secretArgs.push({
                 name: "PULUMI_SEARCH_PASSWORD",
-                value: pulumi.secret(args.opensearch!.password!)
+                value: pulumi.secret(args.opensearch.password)
             });
         }
 
@@ -294,9 +294,9 @@ export class ApiService extends pulumi.ComponentResource {
         
         // Opensearch access policy
         const domain = this.baseArgs.opensearch?.domain;
-        let openSearchPolicyDoc = pulumi.output("");
+        const taskRolePolicyDocs = [s3AccessPolicyDoc, kmsKeyPolicyDoc];
         if (domain) {
-            openSearchPolicyDoc = pulumi.output(JSON.stringify(
+            taskRolePolicyDocs.push(pulumi.output(JSON.stringify(
                 {
                     Version: "2012-10-17",
                     Statement: [
@@ -307,13 +307,13 @@ export class ApiService extends pulumi.ComponentResource {
                       }
                     ]
                 }
-            ))
+            )));
         }
 
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
-            taskRolePolicyDocs: [s3AccessPolicyDoc, kmsKeyPolicyDoc, openSearchPolicyDoc],
+            taskRolePolicyDocs,
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
             memory: taskMemory,
@@ -334,7 +334,9 @@ export class ApiService extends pulumi.ComponentResource {
             smtp,
             licenseKey,
             disableEmailSignup,
-            disableEmailLogin
+            disableEmailLogin,
+            engineEventsSchemaV2,
+            engineEventsLegacyWrite
         } = this.baseArgs;
 
         // NOTE: the below use of property ?? "" is essential. As of 7/25/24 pulumi-aws will continuously show a diff if a property is undefined
@@ -420,6 +422,14 @@ export class ApiService extends pulumi.ComponentResource {
             {
                 name: "PULUMI_SEARCH_DOMAIN",
                 value: args.openSearchEndpoint ?? "",
+            },
+            {
+                name: "PULUMI_ENGINE_EVENTS_SCHEMA_V2",
+                value: String(engineEventsSchemaV2),
+            },
+            {
+                name: "PULUMI_ENGINE_EVENTS_LEGACY_WRITE",
+                value: String(engineEventsLegacyWrite),
             }
         ];
     }

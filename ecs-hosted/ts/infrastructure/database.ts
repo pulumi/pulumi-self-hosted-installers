@@ -8,7 +8,7 @@ import { getIamPolicyArn } from "../common/utils";
 
 const namespace = "pulumi:auroraDatabase";
 const engine = "aurora-mysql";
-const engineVersion = "8.0.mysql_aurora.3.07.0";
+const engineVersion = "8.0.mysql_aurora.3.12.0";
 const dbOptionsFamily = "aurora-mysql8.0";
 
 export interface DatabaseArgs {
@@ -78,6 +78,7 @@ export class Database extends pulumi.ComponentResource {
                 { name: "log_queries_not_using_indexes", value: "1" },
                 { name: "general_log", value: "1" },
                 { name: "log_output", value: "FILE" },
+                { name: "sql_mode", value: "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION" },
             ],
         }, options);
 

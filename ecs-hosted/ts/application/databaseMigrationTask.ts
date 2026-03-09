@@ -1,13 +1,18 @@
-import * as aws from "aws-sdk";
+import {
+    ECSClient,
+    ListTasksCommand,
+    RunTaskCommand,
+    DescribeTasksCommand,
+    waitUntilTasksRunning,
+    waitUntilTasksStopped,
+} from "@aws-sdk/client-ecs";
 import * as pulumi from "@pulumi/pulumi";
 
 export class DatabaseMigrationTask {
-    
-    private readonly client: aws.ECS;
+
+    private readonly client: ECSClient;
     constructor(region: string) {
-        this.client = new aws.ECS({
-            region: region
-        });
+        this.client = new ECSClient({ region });
     }
 
     // entry point to start the ECS Fargate migrations task
@@ -31,11 +36,11 @@ export class DatabaseMigrationTask {
 
         pulumi.log.info(`Checking for executing ECS tasks for family ${taskFamily}`);
 
-        const result = await this.client.listTasks({
+        const result = await this.client.send(new ListTasksCommand({
             cluster: clusterId,
             family: taskFamily,
-            desiredStatus: "RUNNING"
-        }).promise();
+            desiredStatus: "RUNNING",
+        }));
 
         if (!result.taskArns || result.taskArns.length === 0) {
             pulumi.log.info("No executing tasks found in the running state");
@@ -55,7 +60,7 @@ export class DatabaseMigrationTask {
 
         pulumi.log.info(`Attempting to start ${taskName} for DB migration`);
 
-        const result = await this.client.runTask({
+        const result = await this.client.send(new RunTaskCommand({
             cluster: clusterId,
             count: 1,
             group: taskName,
@@ -65,10 +70,10 @@ export class DatabaseMigrationTask {
                 awsvpcConfiguration: {
                     assignPublicIp: "DISABLED",
                     securityGroups: [securityGroupId],
-                    subnets: [subnetId]
+                    subnets: [subnetId],
                 },
-            }
-        }).promise();
+            },
+        }));
 
         if (!result.tasks || !result.tasks[0].taskArn) {
             const error = "Unable to successfully start DB Migration task";
@@ -84,23 +89,17 @@ export class DatabaseMigrationTask {
 
         pulumi.log.info(`Waiting for task ${taskArn} to start`);
 
-        await this.client.waitFor("tasksRunning", {
-            cluster: clusterId,
-            tasks: [taskArn],
-            $waiter: {
-                delay: 10 //seconds
-            }
-        }).promise();
+        await waitUntilTasksRunning(
+            { client: this.client, maxWaitTime: 300, minDelay: 10 },
+            { cluster: clusterId, tasks: [taskArn] }
+        );
 
         pulumi.log.info(`Task ${taskArn} successfully started. Now waiting for task completion`);
 
-        await this.client.waitFor("tasksStopped", {
-            cluster: clusterId,
-            tasks: [taskArn],
-            $waiter: {
-                delay: 30 //seconds
-            }
-        }).promise();
+        await waitUntilTasksStopped(
+            { client: this.client, maxWaitTime: 3600, minDelay: 30 },
+            { cluster: clusterId, tasks: [taskArn] }
+        );
 
         pulumi.log.info("Db Migration Task successfully completed");
     }
@@ -108,10 +107,10 @@ export class DatabaseMigrationTask {
     // make sure we successfully completed
     async assertDbMigrationSuccessful(clusterId: string, taskArn: string) {
 
-        const ecsTasks = await this.client.describeTasks({
+        const ecsTasks = await this.client.send(new DescribeTasksCommand({
             cluster: clusterId,
-            tasks: [taskArn]
-        }).promise();
+            tasks: [taskArn],
+        }));
 
         if (!ecsTasks.tasks || !ecsTasks.tasks[0].containers) {
             const error = `Unable to located task ${taskArn}`;

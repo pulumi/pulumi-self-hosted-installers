@@ -56,15 +56,20 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 			Name:  "PULUMI_DATABASE_USER_PASSWORD",
 			Value: args.DatabaseArgs.Password,
 		},
-		{
+	}
+
+	if args.RecaptchaSecretKey != "" {
+		secretValues = append(secretValues, Secret{
 			Name:  "RECAPTCHA_SECRET_KEY",
 			Value: pulumi.String(args.RecaptchaSecretKey).ToStringOutput(),
-		},
-		{
-			// TODO: what if this value isn't present? we need to control this a bit better
+		})
+	}
+
+	if args.HasOpenSearch {
+		secretValues = append(secretValues, Secret{
 			Name:  "PULUMI_SEARCH_PASSWORD",
 			Value: args.OpenSearchPassword,
-		},
+		})
 	}
 
 	if args.SmtpArgs != nil {
@@ -464,6 +469,8 @@ func newApiEnvironmentVariables(environmentArgs ApiContainerEnvironment) []map[s
 		CreateEnvVar("AWS_REGION", args.Region),
 		CreateEnvVar("PULUMI_SEARCH_USER", environmentArgs.OpenSearchUser),
 		CreateEnvVar("PULUMI_SEARCH_DOMAIN", environmentArgs.OpenSearchEndpoint),
+		CreateEnvVar("PULUMI_ENGINE_EVENTS_SCHEMA_V2", fmt.Sprintf("%v", args.EngineEventsSchemaV2)),
+		CreateEnvVar("PULUMI_ENGINE_EVENTS_LEGACY_WRITE", fmt.Sprintf("%v", args.EngineEventsLegacyWrite)),
 	}
 
 	if args.DisableEmailLogin {
@@ -512,6 +519,8 @@ type ApiContainerServiceArgs struct {
 	DesiredNumberTasks         int
 	DisableEmailSignup         bool
 	DisableEmailLogin          bool
+	EngineEventsSchemaV2       bool
+	EngineEventsLegacyWrite    bool
 	DatabaseArgs               *config.DatabaseArgs
 	SmtpArgs                   *config.SmtpArgs
 	ConsoleUrl                 string
@@ -522,6 +531,7 @@ type ApiContainerServiceArgs struct {
 	PolicyPacksBucket          *s3.Bucket
 	MetadataBucket             *s3.Bucket
 	ExecuteMigrations          bool
+	HasOpenSearch              bool
 	OpenSearchUser             pulumi.StringOutput
 	OpenSearchPassword         pulumi.StringOutput
 	OpenSearchDomainName       pulumi.StringOutput

@@ -116,15 +116,17 @@ export class ConsoleService extends pulumi.ComponentResource {
         // Fully qualified ECR tag will be built for `image` property below
         const containerDefinitions = pulumi
             .all([
-                this.baseArgs.accountId, 
-                logDriver?.outputs, 
-                this.baseArgs.trafficManager.console.loadBalancer.dnsName, 
-                this.baseArgs.ecrRepoAccountId])
+                this.baseArgs.accountId,
+                logDriver?.outputs,
+                this.baseArgs.trafficManager.console.loadBalancer.dnsName,
+                this.baseArgs.ecrRepoAccountId,
+                this.baseArgs.agGridLicenseKey])
             .apply(([
-                accountId, 
-                logOutputs, 
-                loadBalancerUrl, 
-                ecrRepoAccountId]) => {
+                accountId,
+                logOutputs,
+                loadBalancerUrl,
+                ecrRepoAccountId,
+                agGridLicenseKey]) => {
 
                 const ecrAccountId = ecrRepoAccountId && ecrRepoAccountId !== "" ? ecrRepoAccountId : accountId;
 
@@ -136,7 +138,7 @@ export class ConsoleService extends pulumi.ComponentResource {
                     portmappings: [{
                         containerPort: consolePort
                     }],
-                    environment: this.constructEnvironmentVariables(loadBalancerUrl),
+                    environment: this.constructEnvironmentVariables(loadBalancerUrl, agGridLicenseKey),
                     secret: [],
                     logConfiguration: logDriver && {
                         logDriver: LogType[logDriver!.logType],
@@ -160,7 +162,7 @@ export class ConsoleService extends pulumi.ComponentResource {
     }
 
     // Complete list of environment variables that each ECS task of Pulumi API (service) will inherit
-    constructEnvironmentVariables(loadBalancerUrl: string): any[] {
+    constructEnvironmentVariables(loadBalancerUrl: string, agGridLicenseKey: string | undefined): any[] {
 
         const {
             dns,
@@ -188,7 +190,7 @@ export class ConsoleService extends pulumi.ComponentResource {
                 name: "AWS_REGION",
                 value: region
             },
-            { 
+            {
                 // enabling SSO requires that an org already be created and configured to use a SSO provider
                 // https://github.com/pulumi/pulumi-service/pull/7953
                 name: "SAML_SSO_ENABLED",
@@ -200,7 +202,7 @@ export class ConsoleService extends pulumi.ComponentResource {
             },
             {
                 name: "AG_GRID_LICENSE_KEY",
-                value: this.baseArgs.agGridLicenseKey
+                value: agGridLicenseKey ?? ""
             },
             {
                 // https://github.com/pulumi/pulumi-service/pull/7953

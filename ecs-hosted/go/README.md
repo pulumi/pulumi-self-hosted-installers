@@ -18,6 +18,7 @@ Version ID | Date       | Note
 6 | 07/17/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble.
 7 | 10/20/2024 | Add ESC deployment to the installer.
 8 | 05/23/2025 | Updated Go module.
+9 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 
 ## User Guides
 
@@ -38,7 +39,7 @@ Version ID | Date       | Note
   - At least two private subnet available.
   - At least two isolated subnet available. In this case as `isolated` subnet is one which can only be connected to or from other instances in the same subnet. They do not route traffic to the internet, therefore, they do not require NAT gateways.
 - [ACM][acm] certificate that covers the base domain (eg- example.com) and also the subdomain, if one is being utilized (eg- sub.example.com). Lastly, the certificate must cover `app.{sub}.example.com` and `api.{sub}.example.com`. Note: `sub` is optional in this case.
-- [Route53][route53] hosted zone which conincides with the above ACM certificate.
+- [Route53][route53] hosted zone which coincides with the above ACM certificate.
 - [KMS][kms] key to be used by Pulumi service for encryption/decryption purposes.
 
 ## Services used
@@ -87,8 +88,8 @@ The Pulumi services operate in AWS Elastic Container Service (ECS) with the foll
 1. Clone the repo and install dependencies:
 
     ```bash
-    git clone https://github.com/pulumi/self-hosted
-    cd fully-managed-aws-ecs/{ts|go}
+    git clone https://github.com/pulumi/pulumi-self-hosted-installers.git
+    cd ecs-hosted/{ts|go}
     ```
 
 2. Login to your [Self-Managed Backend](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend).

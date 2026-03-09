@@ -72,6 +72,8 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     trafficManager: TrafficManager,
     disableEmailSignup: boolean,
     disableEmailLogin: boolean,
+    engineEventsSchemaV2: boolean,
+    engineEventsLegacyWrite: boolean,
     database: {
         dbClusterEndpoint: string,
         dbPort: number,
