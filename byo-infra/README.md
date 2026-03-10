@@ -10,6 +10,8 @@ This folder and sub-folders contain the three Pulumi programs to use and deploy 
 Version ID | Date | K8s Version Supported | Note
 ---|---|---|--
 0.1 | September 12, 2022 | 1.24.1 | Initial version. This version is based on the GKE installer and keeps the different projects even though 01-infrastructure and 02-kubernetes are for the most part just passing through config values.
+1.0 | March, 2026 | 1.34.0 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER OR CHANGE OR SET THE ENGINE_EVENTS_* ENVIRONMENT VARIABLES FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+
 
 ## Prerequisites
 * K8s Cluster

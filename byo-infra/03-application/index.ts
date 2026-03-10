@@ -215,7 +215,15 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 {
                   name: "RECAPTCHA_SECRET_KEY",
                   valueFrom: createEnvValueFromSecret(secrets.RecaptchaSecret, "secretKey")
-                }
+                },
+                {
+                  name: "PULUMI_ENGINE_EVENTS_SCHEMA_V2",
+                  value: config.engineEventsSchemaV2,
+                },
+                {
+                  name: "PULUMI_ENGINE_EVENTS_LEGACY_WRITE",
+                  value: config.engineEventsLegacyWrite,
+                },
               ],
             },
           ],
