@@ -44,8 +44,8 @@ export async function hydrateConfig() {
     const openSearchEndpoint = stackConfig.get("opensearchEndpoint");
     const openSearchDomainName = stackConfig.get("opensearchDomainName");
 
-    const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey"); 
-    const recaptchaSecretKey = stackConfig.get("recaptchaSecretKey");
+    const recaptchaSiteKey = stackConfig.require("recaptchaSiteKey");
+    const recaptchaSecretKey = stackConfig.requireSecret("recaptchaSecretKey");
 
     const samlCertPublicKey = stackConfig.getSecret("samlCertPublicKey");
     const samlCertPrivateKey = stackConfig.getSecret("samlCertPrivateKey");
@@ -69,6 +69,8 @@ export async function hydrateConfig() {
     const apiContainerMemoryReservation = stackConfig.getNumber("apiContainerMemoryReservation");
     const apiDisableEmailLogin = stackConfig.getBoolean("apiDisableEmailLogin") || false;
     const apiDisableEmailSignup = stackConfig.getBoolean("apiDisableEmailSignUp") || false;
+    const apiEngineEventsSchemaV2 = stackConfig.getBoolean("apiEngineEventsSchemaV2") ?? true;
+    const apiEngineEventsLegacyWrite = stackConfig.getBoolean("apiEngineEventsLegacyWrite") ?? false;
 
     // Pulumi Console
     const consoleDesiredNumberTasks = stackConfig.getNumber("consoleDesirecNumberTasks") || 1;
@@ -115,8 +117,8 @@ export async function hydrateConfig() {
         publicSubnetIds,
         isolatedSubnetIds,
         endpointSecurityGroupId,
-        recaptchaSecretKey: pulumi.output(recaptchaSecretKey),
-        recaptchaSiteKey,
+        recaptchaSecretKey: recaptchaSecretKey,
+        recaptchaSiteKey: recaptchaSiteKey,
         kmsServiceKeyId,
         ecrRepoAccountId,
         dockerHub: {
@@ -138,7 +140,9 @@ export async function hydrateConfig() {
             samlCertPrivateKey,
             samlCertPublicKey,
             apiDisableEmailLogin,
-            apiDisableEmailSignup
+            apiDisableEmailSignup,
+            apiEngineEventsSchemaV2,
+            apiEngineEventsLegacyWrite
         },
         console: {
             consoleDesiredNumberTasks,

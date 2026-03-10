@@ -60,7 +60,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 	}
 
 	engine := "aurora-mysql"
-	engineVersion := "8.0.mysql_aurora.3.07.0"
+	engineVersion := "8.0.mysql_aurora.3.12.0"
 
 	clusterOpts := append(options, pulumi.Protect(true))
 	cluster, err := rds.NewCluster(ctx, ToCommonName(name, "aurora-cluster"), &rds.ClusterArgs{
@@ -106,6 +106,10 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 			&rds.ParameterGroupParameterArgs{
 				Name:  pulumi.String("log_output"),
 				Value: pulumi.String("FILE"),
+			},
+			&rds.ParameterGroupParameterArgs{
+				Name:  pulumi.String("sql_mode"),
+				Value: pulumi.String("ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"),
 			},
 		},
 	}, options...)
@@ -170,7 +174,7 @@ func NewDatabase(ctx *pulumi.Context, name string, args *DatabaseArgs, opts ...p
 		instanceId := fmt.Sprintf("instance-%d", i)
 		_, err := rds.NewClusterInstance(ctx, ToCommonName(name, instanceId), &rds.ClusterInstanceArgs{
 			ClusterIdentifier:    cluster.ID(),
-			Engine:               pulumi.String(engine),
+			Engine:               rds.EngineType(engine).ToEngineTypeOutput(),
 			EngineVersion:        pulumi.String(engineVersion),
 			InstanceClass:        args.instanceType,
 			DbParameterGroupName: parameterGroup.Name,

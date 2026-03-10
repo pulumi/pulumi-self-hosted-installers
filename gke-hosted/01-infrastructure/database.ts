@@ -23,7 +23,6 @@ export class Database extends pulumi.ComponentResource {
     DatabasePassword: Output<string>;
     DatabaseName: Output<string>;
     DatabaseServerName: Output<string>;
-    DatabaseKmsKeyId: Output<string>;
     constructor(name: string, args: DatabaseArgs, opts?: ComponentResourceOptions) {
         super("x:infrastructure:database", name, opts);
 
@@ -33,32 +32,6 @@ export class Database extends pulumi.ComponentResource {
             throw new Error("GCP region must be configured (gcp:region)");
         }
 
-        // Create KMS key ring for database encryption (regional for best practices)
-        const keyRing = new gcp.kms.KeyRing(`${name}-db-keyring`, {
-            location: region,
-        }, { parent: this });
-
-        // Create KMS key for database encryption with 90-day rotation (industry standard)
-        const dbKmsKey = new gcp.kms.CryptoKey(`${name}-db-encryption-key`, {
-            keyRing: keyRing.id,
-            rotationPeriod: "7776000s", // 90 days (industry standard for database encryption keys)
-            purpose: "ENCRYPT_DECRYPT",
-            labels: args.tags,
-        }, { parent: this });
-
-        // Grant Cloud SQL service account access to KMS key
-        const project = gcp.organizations.getProject({});
-        const sqlServiceAccount = project.then(proj =>
-            `service-${proj.number}@gcp-sa-cloud-sql.iam.gserviceaccount.com`
-        );
-
-        // Use IAMMember for additive IAM binding (doesn't replace existing members)
-        const kmsBinding = new gcp.kms.CryptoKeyIAMMember(`${name}-db-kms-member`, {
-            cryptoKeyId: dbKmsKey.id,
-            role: "roles/cloudkms.cryptoKeyEncrypterDecrypter",
-            member: pulumi.interpolate`serviceAccount:${sqlServiceAccount}`,
-        }, { parent: this });
-
         const dbInstance = new gcp.sql.DatabaseInstance(`${name}-db`, {
             region: region,
             databaseVersion: "MYSQL_8_0",
@@ -67,7 +40,7 @@ export class Database extends pulumi.ComponentResource {
                 ipConfiguration: {
                     ipv4Enabled: false,
                     privateNetwork: args.vpcId,
-                    sslMode: "ENCRYPTED_ONLY",
+                    sslMode: "ALLOW_UNENCRYPTED_AND_ENCRYPTED",
                 },
                 databaseFlags: [
                     // Slow query log for performance tuning (minimal overhead)
@@ -77,11 +50,10 @@ export class Database extends pulumi.ComponentResource {
                     // General log only if explicitly enabled (10-30% performance impact)
                     ...(args.enableGeneralLog ? [{ name: "general_log", value: "on" }] : [])
                 ],
-                // Configure encrypted backups
                 backupConfiguration: {
                     enabled: true,
                     startTime: "03:00",
-                    pointInTimeRecoveryEnabled: true,
+                    binaryLogEnabled: true,
                     backupRetentionSettings: {
                         retainedBackups: args.backupRetentionDays || 30,
                         retentionUnit: "COUNT"
@@ -101,9 +73,8 @@ export class Database extends pulumi.ComponentResource {
                     recordClientAddress: true
                 }
             },
-            deletionProtection: true,
-            encryptionKeyName: dbKmsKey.id,
-        }, { parent: this, protect: true, dependsOn: [kmsBinding] });
+            deletionProtection: false,
+        }, { parent: this, protect: true });
 
         // Create a user with the configured credentials and generated password for API service to use.
         const password = new random.RandomPassword(`${name}-dbpassword`, {
@@ -116,6 +87,7 @@ export class Database extends pulumi.ComponentResource {
         const user = new gcp.sql.User(`${name}-dbuser`, {
             instance: dbInstance.name,
             name: args.dbUser,
+            host: "%",
             password: password.result,
         }, { parent: dbInstance, protect: true });
 
@@ -130,14 +102,12 @@ export class Database extends pulumi.ComponentResource {
         this.DatabasePassword = password.result;
         this.DatabaseName = db.name;
         this.DatabaseServerName = dbInstance.name;
-        this.DatabaseKmsKeyId = dbKmsKey.id;
         this.registerOutputs({
             DatabaseConnectionString: this.DatabaseConnectionString,
             DatabaseLogin: this.DatabaseLogin,
             DatabasePassword: this.DatabasePassword,
             DatabaseName: this.DatabaseName,
             DatabaseServerName: this.DatabaseServerName,
-            DatabaseKmsKeyId: this.DatabaseKmsKeyId,
         });
     }
 }

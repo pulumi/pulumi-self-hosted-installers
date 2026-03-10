@@ -63,5 +63,7 @@ export const config = {
     recaptchaSiteKey: stackConfig.get("recaptchaSiteKey") || "", 
     samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
     ingressAllowList: stackConfig.get("ingressAllowList") || "",
+    dbSchemaV2Enabled: stackConfig.get("dbSchemaV2Enabled") ?? "true",
+    dbSchemaLegacyWrite: stackConfig.get("dbSchemaLegacyWrite") ?? "false",
 };
 

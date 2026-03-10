@@ -43,6 +43,5 @@ export const dbLogin = database.DatabaseLogin;
 export const dbPassword = database.DatabasePassword;
 export const dbConnectionString = database.DatabaseConnectionString;
 export const dbHost = database.DatabaseHost;
-export const dbKmsKeyId = database.DatabaseKmsKeyId;
 export const stackName1 = config.stackName;
 export const networkName = network.networkName;

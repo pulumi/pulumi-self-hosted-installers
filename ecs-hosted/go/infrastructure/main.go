@@ -172,10 +172,17 @@ func main() {
 		ctx.Export("dbSecurityGroupId", database.dbSecurityGroupId)
 		ctx.Export("endpointSecurityGroupId", endpointSecurityGroup.ID())
 		ctx.Export("s3EndpointPrefixId", privateS3PrefixList.Id())
-		ctx.Export("opensearchDomainName", OpenSearchDomain.DomainName)
-		ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
-		ctx.Export("opensearchUser", OpenSearchDomain.User)
-		ctx.Export("opensearchPassword", OpenSearchDomain.Password)
+		if OpenSearchDomain != nil {
+			ctx.Export("opensearchDomainName", OpenSearchDomain.DomainName)
+			ctx.Export("opensearchEndpoint", OpenSearchDomain.Endpoint)
+			ctx.Export("opensearchUser", OpenSearchDomain.User)
+			ctx.Export("opensearchPassword", OpenSearchDomain.Password)
+		} else {
+			ctx.Export("opensearchDomainName", pulumi.String(""))
+			ctx.Export("opensearchEndpoint", pulumi.String(""))
+			ctx.Export("opensearchUser", pulumi.String(""))
+			ctx.Export("opensearchPassword", pulumi.String(""))
+		}
 
 		return nil
 	})

@@ -1,11 +1,10 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
-import { config } from "./config";
 
 interface KubernetesClusterArgs {
   region: pulumi.Input<string>,
   networkName: pulumi.Input<string>,
-  clusterVersion: pulumi.Input<string>,
+  releaseChannel?: pulumi.Input<string>,
   tags?: pulumi.Input<{
     [key: string]: pulumi.Input<string>;
   }>,
@@ -23,7 +22,9 @@ export class KubernetesCluster extends pulumi.ComponentResource {
       enableAutopilot: true,
       location: args.region,
       ipAllocationPolicy: {}, // need to work around a bug in the underlying TF provider
-      minMasterVersion: config.clusterVersion,
+      releaseChannel: {
+        channel: args.releaseChannel ?? "REGULAR",
+      },
     }, { parent: this, protect: true });
 
     const kubeconfig = pulumi.

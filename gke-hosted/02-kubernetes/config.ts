@@ -12,7 +12,7 @@ const stackName = pulumi.getStack();
 const commonName = stackConfig.get("commonName") || "pulumi-selfhosted";
 const resourceNamePrefix = `${commonName}-${stackName}`;
 
-const clusterVersion = stackConfig.get("clusterVersion") || "1.30";
+const releaseChannel = stackConfig.get("releaseChannel") || "REGULAR";
 
 export const config = {
   projectName,
@@ -22,7 +22,7 @@ export const config = {
     project: projectName,
     stack: stackName,
   },
-  clusterVersion,
+  releaseChannel,
   networkName: <Output<string>>infrastructureStack.requireOutput("networkName"),
   serviceAccountName: <Output<string>>(
     infrastructureStack.requireOutput("serviceAccountName")

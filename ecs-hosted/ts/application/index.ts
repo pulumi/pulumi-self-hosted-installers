@@ -54,6 +54,8 @@ export = async () => {
         database: config.database,
         disableEmailLogin: config.api.apiDisableEmailLogin,
         disableEmailSignup: config.api.apiDisableEmailSignup,
+        engineEventsSchemaV2: config.api.apiEngineEventsSchemaV2,
+        engineEventsLegacyWrite: config.api.apiEngineEventsLegacyWrite,
         ecrRepoAccountId: config.ecrRepoAccountId,
         dns: {
             apiUrl: apiUrl,
