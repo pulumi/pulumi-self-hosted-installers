@@ -6,6 +6,12 @@ This folder and sub folders contain the three Pulumi programs to build the infra
 
 > ℹ️ You will likely want to use one of the [Self-Managed Backends](https://www.pulumi.com/docs/intro/concepts/state/#logging-into-a-self-managed-backend) as the state storage for this installer. Please document this (in the repo your store this code, an internal wiki, etc) so that future updates will be straightforward for you and your colleagues.
 
+## Installer Revision History
+Version ID | Date | K8s Version Supported | Note
+---|---|---|--
+1.0 | -- | Initial versions of the new eks installer.
+2.0 | March, 2026 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+
 ## Prerequisites
 * Domain name and access to create two endpoints:
   * api.{domain} - e.g. api.pulumi.example.com
@@ -178,8 +184,8 @@ openssl \
 
 openssl \
   req -x509 -newkey rsa:4096 -keyout api.key.pem -out api.cert.pem \
-  -days 365 -nodes -subj "/CN=app.pulumi.example.com" \
-  -addext "subjectAltName = DNS:app.pulumi.example.com"
+  -days 365 -nodes -subj "/CN=api.pulumi.example.com" \
+  -addext "subjectAltName = DNS:api.pulumi.example.com"
 ```
 The resultant X.key.pem and X.cert.pem files will be used when configuring the `03-application` stack.
 
