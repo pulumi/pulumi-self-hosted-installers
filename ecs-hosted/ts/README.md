@@ -13,8 +13,7 @@ Version ID | Date | Note
 1 | 01/22/2022 | DNS project added; Route53 A records are contained in a separate project to allow a different AWS account to be used, if needed.
 2 | 05/03/2022 | README.md split into Golang and TypeScript specific versions
 3 | 01/20/2023 | MySQL 8 support
-4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other 
-configuration values, all prefixed OpenSearch are availble. 
+4 | 07/25/2024 | Pulumi [Resource Search](https://www.pulumi.com/blog/self-hosted-search-and-deploy/) now available in Self-Hosted. Resource Search is enabled by setting the `enableOpenSearch` flag in the Infrastructure project. Note, other configuration values, all prefixed OpenSearch are availble. 
 5 | 07/30/2024 | Use of Stack References removed in favor of Stack Configuration. 
 6 | 10/15/2024 | Add ESC deployment to the installer.
 7 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
