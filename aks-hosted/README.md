@@ -17,8 +17,8 @@ As you make changes or customize it, please commit these to your repo as well. T
 
 ## Installer Revision History
 Version ID | Date | Note
----|---|---|--
-1.0 | --- | Initial version of the new eks installer.
+---|---|---
+1.0 | --- | Initial version of the new aks installer.
 2.0 | March, 2026 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 
 ## Prerequisites
