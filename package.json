@@ -4,7 +4,7 @@
   "description": "Development tools for Pulumi Self-Hosted Installers",
   "private": true,
   "scripts": {
-    "lint:markdown": "markdownlint-cli **/*.md --ignore node_modules",
+    "lint:markdown": "markdownlint **/*.md --ignore node_modules",
     "lint:mermaid": "npm run validate:standalone",
     "lint": "npm run lint:markdown && npm run lint:mermaid",
     "validate:diagrams": "echo \"Note: Most diagrams are now standalone .mmd files. Use validate:standalone instead.\"",
