@@ -198,3 +198,6 @@ settings.local.*
 # Build artifacts
 out/
 target/
+
+# PR message (local only)
+PR_MESSAGE.md
