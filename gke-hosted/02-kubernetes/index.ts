@@ -7,11 +7,14 @@ import { KubernetesCluster } from "./cluster";
 import { NginxIngress } from "./helmNginxIngress";
 import { OpenSearch } from "./search";
 
-const region = gcp.config.region!;
+const region = gcp.config.region;
+if (!region) {
+    throw new Error("GCP region must be configured (gcp:region)");
+}
 const cluster = new KubernetesCluster(`${config.resourceNamePrefix}`, {
   region: region,
   networkName: config.networkName,
-  clusterVersion: config.clusterVersion,
+  releaseChannel: config.releaseChannel,
   tags: config.baseTags,
 });
 

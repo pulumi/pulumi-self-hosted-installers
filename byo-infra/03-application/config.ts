@@ -54,6 +54,8 @@ export const config = {
     smtpFromAddress: stackConfig.get("smtpFromAddress") || "message@pulumi.com",
     recaptchaSecretKey: stackConfig.getSecret("recaptchaSecretKey"),
     recaptchaSiteKey: stackConfig.get("recaptchaSiteKey"),
-    samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false"
+    samlSsoEnabled: stackConfig.get("samlSsoEnabled") ?? "false",
+    engineEventsSchemaV2: stackConfig.get("engineEventsSchemaV2") ?? "true",
+    engineEventsLegacyWrite: stackConfig.get("engineEventsLegacyWrite") ?? "false",
 };
 

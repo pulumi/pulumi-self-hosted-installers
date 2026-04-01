@@ -9,7 +9,7 @@ export interface SecretsCollectionArgs {
     apiDomain: Input<string>
     secretValues: {
         licenseKey: Input<string>,
-        agGridLicenseKey: Input<string>,
+        agGridLicenseKey: Input<string> | undefined,
         apiTlsKey: Output<string>,
         apiTlsCert: Output<string>,
         consoleTlsKey: Output<string>,
@@ -63,7 +63,7 @@ export class SecretsCollection extends ComponentResource {
 
         this.AgGridLicenseKeySecret = new k8s.core.v1.Secret(`${args.commonName}-ag-grid-license-key`, {
             metadata: { namespace: args.namespace },
-            stringData: { key: args.secretValues.agGridLicenseKey },
+            stringData: { key: args.secretValues.agGridLicenseKey ?? "" },
         }, { provider: args.provider, parent: this });
 
         this.ApiCertificateSecret = new k8s.core.v1.Secret(`${args.commonName}-api-tls`, {

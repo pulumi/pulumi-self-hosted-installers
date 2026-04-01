@@ -58,6 +58,12 @@ config:
   # Github Settings
   # github_oauth_endpoint is needed to configure the Github integration for features such as project templates. e.g. "https://github.acme.com"
   # github_oauth_id and github_oauth_secret are needed to configure the Github SSO.
-  github_oauth_endpoint:  
-  github_oauth_id: 
-  github_oauth_secret: 
+  github_oauth_endpoint:
+  github_oauth_id:
+  github_oauth_secret:
+
+  # Engine Events Schema Settings
+  # engineEventsSchemaV2 enables the v2 engine events schema.
+  engineEventsSchemaV2: "true"
+  # engineEventsLegacyWrite enables writing engine events in the legacy format alongside v2.
+  engineEventsLegacyWrite: "false"

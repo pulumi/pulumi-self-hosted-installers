@@ -103,6 +103,12 @@ export const getConfig = async () => {
         certManagerNamespace,
         managedClientId,
         certManagerEmail,
+        // Engine Database Schema Settings 
+        // DO NOT OVERRIDE THESE DEFAULTS OR SETTINGS UNLESS YOU KNOW WHAT YOU ARE DOING.
+        // These settings are for advanced users who need to customize the schema of engine events for specific use cases.
+        // Changing these settings can cause database issues.
+        engineEventsSchemaV2: stackConfig.get("engineEventsSchemaV2") ?? "true",
+        engineEventsLegacyWrite: stackConfig.get("engineEventsLegacyWrite") ?? "false",
     };
 };
 

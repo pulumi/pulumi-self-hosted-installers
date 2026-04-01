@@ -19,6 +19,7 @@ Version ID | Date | K8s Version Supported | Note
 2.1 | Nov, 2024 | 1.30.3 | Add GITHUB support and more BYO support.
 3.0 | Dec, 2024 | 1.30.3 | Moves to Managed NodeGroups. See section at bottom for upgrade steps.
 3.1 | Feb, 2025 | 1.31.0 | Migrated off archived `@pulumi/kubernetesx` package to use core `@pulumi/kubernetes` resources. Minor cleanup related to move to Turnstile for recaptcha. 
+4.0 | March, 2026 | 1.34.0 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 
 ## How to Use
 
