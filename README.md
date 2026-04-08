@@ -35,5 +35,14 @@ This repository uses automated Claude AI code review workflows for quality assur
 3. **Scope**: Each workflow focuses on platform-specific best practices and patterns
 4. **Security**: Workflows automatically exclude bot PRs (`dependabot[bot]`, `pulumi-renovate[bot]`)
 
-For questions about the review process, see the individual workflow files in `.github/workflows/`.
+#### Dependency Bot Automation
 
+* **Controller**: `.github/workflows/bot-pr-controller.yml` approves
+  Dependabot PRs and enables squash auto-merge for supported bot PRs.
+* **Queue**: `.github/workflows/bot-pr-rebase-queue.yml` keeps bot PRs
+  moving by rebasing at most one behind PR at a time when no other bot PR
+  checks are already running.
+* **Fallback**: `scripts/rebase-and-merge.sh` remains available for
+  maintainers when manual intervention is needed.
+
+For questions about the review process, see the individual workflow files in `.github/workflows/`.
