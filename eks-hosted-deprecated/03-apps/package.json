@@ -8,8 +8,8 @@
     "@pulumi/aws": "^7.0.0",
     "@pulumi/kubernetes": "^4.0.0",
     "@pulumi/kubernetesx": "0.1.6",
-    "@pulumi/pulumi": "3.238.0",
-    "@pulumi/random": "4.19.2",
-    "@pulumi/tls": "5.3.1"
+    "@pulumi/pulumi": "3.239.0",
+    "@pulumi/random": "4.20.0",
+    "@pulumi/tls": "5.4.0"
   }
 }
