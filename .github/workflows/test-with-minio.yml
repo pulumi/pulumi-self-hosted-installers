@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Fetch secrets from ESC
         id: esc-secrets
-        uses: pulumi/esc-action@6cf9520e68354d86f81c455e8d43eabd58f5c9f5 # v1
+        uses: pulumi/esc-action@197ccaa42ab49560ce838a3010eb8345ce086896 # v1
       - name: Set env vars
         run: |
           # There doesn't seem to be a way to map environment variables into other enviroments
