@@ -213,8 +213,8 @@ github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 h1:vkHw5I/plNdTr435
 github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231/go.mod h1:murToZ2N9hNJzewjHBgfFdXhZKjY3z5cYC1VXk+lbFE=
 github.com/pulumi/esc v0.23.0 h1:5lOXO+5vvXOEQxXw7cTuYhjg9lVng23f9XNLWDR9EP4=
 github.com/pulumi/esc v0.23.0/go.mod h1:mkghIFn/TvN3XnP4jmCB4U5BG1I4UjGluARi39ckrCE=
-github.com/pulumi/pulumi-aws/sdk/v7 v7.29.0 h1:TToRXVa8nWelU581SP6lxP3TjQdDp+NS6OrO3ukw6nY=
-github.com/pulumi/pulumi-aws/sdk/v7 v7.29.0/go.mod h1:MvfGxMurVnahZ4UtHSxvjuoytba7IsojtbsplqlXhdg=
+github.com/pulumi/pulumi-aws/sdk/v7 v7.30.0 h1:CJBeCvVfMmy7f0vPZHIxkYQOsBpx6cfKUzt7oE4P4WQ=
+github.com/pulumi/pulumi-aws/sdk/v7 v7.30.0/go.mod h1:iri0lya1u/qsulT5drsRvV/50gAX1WyvGA7BkKIFCAI=
 github.com/pulumi/pulumi-random/sdk/v4 v4.20.0 h1:tVXLwMYLV4F/XkMzAwWoXAA+GyuwoYy1NGP2elMsvGI=
 github.com/pulumi/pulumi-random/sdk/v4 v4.20.0/go.mod h1:IY4Nek4KJ2Anf6oHnAaz9J0SV2a9/tj1XenfMO0RuRw=
 github.com/pulumi/pulumi-tls/sdk/v5 v5.4.0 h1:Yx0dYOU09u4W60KkYmr2yin76TTk/qJMxEk+QCtNYxg=
