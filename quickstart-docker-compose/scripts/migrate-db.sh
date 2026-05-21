@@ -19,14 +19,17 @@ echo "Running migrations"
 # this tool is pre-installed as part of creating the container image.
 which migratecli >/dev/null || {
     echo "Building 'migratecli' from source."
-    CLONE_DIR="${GOPATH}/src/github.com/pulumi/golang-migrate"
-    git clone git@github.com:pulumi/golang-migrate.git "${CLONE_DIR}"
-    pushd "${CLONE_DIR}"
-    # https://github.com/golang-migrate/migrate/blob/master/CONTRIBUTING.md
+    # Pinned to match the pulumi/migrations container image; sync with the
+    # service repo's migrations/Dockerfile and go.mod when bumping.
+    MIGRATECLI_VERSION="v4.13.2-0.20260317180800-e25d528f435d"
     INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
-
-    DATABASE=mysql SOURCE=file CLI_BUILD_OUTPUT=${INSTALL_DEST}/migratecli make build-cli
-    popd
+    mkdir -p "${INSTALL_DEST}"
+    GOBIN="${INSTALL_DEST}" CGO_ENABLED=0 go install \
+        -tags=mysql \
+        -ldflags="-X main.Version=${MIGRATECLI_VERSION}" \
+        "github.com/pulumi/golang-migrate/v4/cmd/migrate@${MIGRATECLI_VERSION}"
+    # Rename to migratecli — that's the name our scripts expect.
+    mv "${INSTALL_DEST}/migrate" "${INSTALL_DEST}/migratecli"
 
     # Ensure the version we built is on the PATH for the rest of this script
     export PATH="${INSTALL_DEST}:${PATH}"
