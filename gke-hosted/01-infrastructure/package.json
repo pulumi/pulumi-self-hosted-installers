@@ -4,8 +4,8 @@
     "@types/node": "24.10.9"
   },
   "dependencies": {
-    "@pulumi/gcp": "9.24.0",
+    "@pulumi/gcp": "9.25.0",
     "@pulumi/pulumi": "3.242.0",
-    "@pulumi/random": "4.20.0"
+    "@pulumi/random": "4.21.0"
   }
 }
