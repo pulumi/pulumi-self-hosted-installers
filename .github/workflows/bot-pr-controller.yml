@@ -1,0 +1,50 @@
+name: Bot PR controller
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  configure-bot-pr:
+    if: >
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.draft == false &&
+      (
+        startsWith(github.event.pull_request.head.ref, 'dependabot/') ||
+        startsWith(github.event.pull_request.head.ref, 'renovate/')
+      )
+
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: bot-pr-controller-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Approve Dependabot PR
+        if: startsWith(github.event.pull_request.head.ref, 'dependabot/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr review "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --approve \
+            --body "Automated approval for dependency update PR"
+
+      - name: Enable squash auto-merge
+        if: github.event.pull_request.auto_merge == null
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --auto \
+            --squash
