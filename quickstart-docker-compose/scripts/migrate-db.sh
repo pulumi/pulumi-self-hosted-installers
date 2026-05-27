@@ -14,11 +14,11 @@ cd "$(dirname "${BASH_SOURCE}")/.."
 
 echo "Running migrations"
 
-# Ensure that the migratecli tool is installed already.
+# Ensure that the migrate tool is installed already.
 # When this script is run inside the `pulumi/migrations` container,
 # this tool is pre-installed as part of creating the container image.
-which migratecli >/dev/null || {
-    echo "Building 'migratecli' from source."
+which migrate >/dev/null || {
+    echo "Building 'migrate' from source."
     # Pinned to match the pulumi/migrations container image; sync with the
     # service repo's migrations/Dockerfile and go.mod when bumping.
     MIGRATECLI_VERSION="v4.13.2-0.20260317180800-e25d528f435d"
@@ -28,8 +28,6 @@ which migratecli >/dev/null || {
         -tags=mysql \
         -ldflags="-X main.Version=${MIGRATECLI_VERSION}" \
         "github.com/pulumi/golang-migrate/v4/cmd/migrate@${MIGRATECLI_VERSION}"
-    # Rename to migratecli — that's the name our scripts expect.
-    mv "${INSTALL_DEST}/migrate" "${INSTALL_DEST}/migratecli"
 
     # Ensure the version we built is on the PATH for the rest of this script
     export PATH="${INSTALL_DEST}:${PATH}"
@@ -91,7 +89,7 @@ fi
 
 skip_first_migration() {
     echo "NOTE: Skipping the first migration script. You will need to set the PULUMI_DATABASE_USER_NAME and PULUMI_DATABASE_USER_PASSWORD environment variables in the API container, to specify a custom database user name and password for your service instance."
-    migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
+    migrate -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" force 1
 }
 
 # Force the migration to 1 if the option to skip creation of the
@@ -101,7 +99,7 @@ if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
     # Since this script sets errexit option at the beginning, we should ensure that the command
     # failure is captured properly or the script will stop at the first failed command. Redirecting
     # the output alone is not enough.
-    current_version=$(migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version 2>&1) || {
+    current_version=$(migrate -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" version 2>&1) || {
         # Skip the first migration script only if the error is because there isn't a previous
         # migration. We do a regexp search here for the string "no migration".
         if [[ "${current_version}" == *"no migration"* ]]; then
@@ -117,4 +115,4 @@ if [ -n "${SKIP_CREATE_DB_USER:-}" ]; then
 fi
 
 # Options are only recognized if they come *before* the command.
-migratecli -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" up
+migrate -path "${MIGRATIONS_DIR}" -database "${DB_CONNECTION_STRING}" up
