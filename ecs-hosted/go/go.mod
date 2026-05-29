@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.41.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
-	github.com/pulumi/pulumi-aws/sdk/v7 v7.31.0
+	github.com/pulumi/pulumi-aws/sdk/v7 v7.32.0
 	github.com/pulumi/pulumi-random/sdk/v4 v4.21.0
 	github.com/pulumi/pulumi-tls/sdk/v5 v5.5.0
 	github.com/pulumi/pulumi/sdk/v3 v3.242.0
