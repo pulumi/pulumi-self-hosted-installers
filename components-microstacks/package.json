@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "dependencies": {
         "@pulumi/pulumi": "^3.135.0",
-        "@pulumi/kubernetes": "4.31.1"
+        "@pulumi/kubernetes": "4.32.0"
     },
     "files": [
         "api.ts",
