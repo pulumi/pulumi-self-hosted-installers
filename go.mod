@@ -3,7 +3,7 @@ module github.com/pulumi/pulumi-self-hosted-installers
 go 1.26.1
 
 require (
-	github.com/pulumi/pulumi/sdk/v3 v3.243.0
+	github.com/pulumi/pulumi/sdk/v3 v3.246.0
 	github.com/stretchr/testify v1.11.1
 )
 
