@@ -10,6 +10,15 @@ on:
 name: PR test
 
 jobs:
+  script-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Test migrate-db.sh's migrate/migratecli discovery logic
+        run: ./quickstart-docker-compose/scripts/migrate-db_test.sh
+
   test:
 
     runs-on: ubuntu-latest
