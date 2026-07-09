@@ -1,0 +1,67 @@
+name: Bot PR rebase queue
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: bot-pr-rebase-queue
+  cancel-in-progress: false
+
+jobs:
+  rebase-one:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rebase next behind bot PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          prs=$(gh pr list --repo "$REPO" --state open --json number,headRefName,isDraft,baseRefName \
+            --jq '.[] | select(.baseRefName == "main" and .isDraft == false and (.headRefName | startswith("renovate/") or startswith("dependabot/"))) | .number' | sort -n)
+
+          if [ -z "$prs" ]; then
+            echo "No open bot PRs to process."
+            exit 0
+          fi
+
+          for pr in $prs; do
+            in_progress=$(gh pr checks "$pr" --repo "$REPO" --json state \
+              --jq '[.[] | select(.state == "IN_PROGRESS" or .state == "PENDING" or .state == "QUEUED")] | length' 2>/dev/null || echo "0")
+
+            if [ "$in_progress" -gt 0 ]; then
+              echo "PR #$pr already has checks running; leaving the queue idle."
+              exit 0
+            fi
+          done
+
+          selected_pr=""
+
+          for pr in $prs; do
+            merge_state=$(gh pr view "$pr" --repo "$REPO" --json mergeStateStatus --jq '.mergeStateStatus' 2>/dev/null || echo "")
+
+            if [ "$merge_state" = "BEHIND" ]; then
+              selected_pr="$pr"
+              break
+            fi
+          done
+
+          if [ -z "$selected_pr" ]; then
+            echo "No behind bot PRs found."
+            exit 0
+          fi
+
+          echo "Rebasing bot PR #$selected_pr..."
+          gh pr update-branch "$selected_pr" --repo "$REPO" --rebase
