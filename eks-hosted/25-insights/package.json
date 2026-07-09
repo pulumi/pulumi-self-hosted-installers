@@ -7,9 +7,9 @@
     "postinstall": "(cd ../../components-microstacks/ && npm install);"
 },
   "dependencies": {
-    "@pulumi/aws": "7.35.0",
+    "@pulumi/aws": "7.36.0",
     "@pulumi/kubernetes": "4.33.0",
-    "@pulumi/pulumi": "3.250.0",
+    "@pulumi/pulumi": "3.251.0",
     "@pulumi/random": "4.21.0",
     "@pulumiverse/time": "0.1.1"
   }
