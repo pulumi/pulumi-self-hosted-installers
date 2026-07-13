@@ -21,11 +21,10 @@ which migrate >/dev/null || {
     echo "Building 'migrate' from source."
     # Pinned to match the pulumi/migrations container image; sync with the
     # service repo's migrations/Dockerfile and go.mod when bumping.
-    MIGRATECLI_VERSION="v4.13.2-0.20260317180800-e25d528f435d"
+    MIGRATECLI_VERSION="v4.19.1-pulumi.1"
     INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
     mkdir -p "${INSTALL_DEST}"
     GOBIN="${INSTALL_DEST}" CGO_ENABLED=0 go install \
-        -tags=mysql \
         -ldflags="-X main.Version=${MIGRATECLI_VERSION}" \
         "github.com/pulumi/golang-migrate/v4/cmd/migrate@${MIGRATECLI_VERSION}"
 
