@@ -21,7 +21,7 @@ which migrate >/dev/null || {
     echo "Building 'migrate' from source."
     # Pinned to match the pulumi/migrations container image; sync with the
     # service repo's migrations/Dockerfile and go.mod when bumping.
-    MIGRATECLI_VERSION="v4.19.1-pulumi.2"
+    MIGRATECLI_VERSION="v4.19.1-pulumi.3"
     INSTALL_DEST=${GOBIN:-$(go env GOPATH)/bin}
     mkdir -p "${INSTALL_DEST}"
     GOBIN="${INSTALL_DEST}" CGO_ENABLED=0 go install \
