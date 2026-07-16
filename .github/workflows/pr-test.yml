@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Fetch secrets from ESC
         id: esc-secrets
-        uses: pulumi/esc-action@8afe12bb7bb3df0a599e5309ee429ff1079ba85f # v3
+        uses: pulumi/esc-action@3af4859af8a73a362fb599b944124097d4bb80c5 # v3
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Login to Docker Hub as pulumi-bot
