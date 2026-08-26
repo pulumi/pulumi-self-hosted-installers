@@ -137,4 +137,43 @@ Every deployment needs two DNS entries: `api.{domain}` (Pulumi API) and
 
 - `eks-hosted/AGENTS.md` — 8-stage sequence, BYO scenarios, version matrix
 - `ecs-hosted/AGENTS.md` — dual TypeScript + Go, Go ARN partition handling
+- `aks-hosted/AGENTS.md` — 3-stage AKS deployment, review guidance
+- `gke-hosted/AGENTS.md` — 3-stage GKE deployment, review guidance
+- `components-microstacks/AGENTS.md` — shared K8s components, review guidance
 - `quickstart-docker-compose/AGENTS.md` — Docker all-in-one, integration test requirements
+
+## Code Review Guidance
+
+For changes outside the platform directories (general repository files,
+documentation, CI/CD, shared utilities). Platform-specific guidance lives in each
+platform's own `AGENTS.md`. Be constructive and focus on production deployment
+reliability.
+
+### Pulumi Infrastructure-as-Code best practices
+
+- Proper resource naming conventions and tagging
+- Stack references and output handling between deployment stages
+- Configuration management (`Pulumi.*.yaml` files)
+- Provider version consistency and updates
+
+### Security and production readiness
+
+- Secret management and encryption at rest
+- Network security (private endpoints, ingress/egress rules)
+- Certificate management and TLS configuration
+- RBAC and service account permissions
+- Bring-your-own (BYO) infrastructure compatibility
+
+### Code quality
+
+- TypeScript/Go idioms and error handling
+- Resource cleanup and lifecycle management
+- Documentation updates (README.md, architecture diagrams)
+- Test coverage for integration tests
+- Mermaid diagram accuracy and enterprise styling standards
+
+### Deployment patterns
+
+- Validate numbered stage dependencies are maintained
+- Check for breaking changes in component interfaces
+- Ensure backwards compatibility with existing deployments

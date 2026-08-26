@@ -87,3 +87,52 @@ set in config, typically `pulumiselfhost`.
 | `package.json` in any stage | `npm install` and commit `package-lock.json` |
 | Stack output names in any stage | Update all downstream stages that consume that output |
 | `Pulumi.README.yaml` | Do not edit — it is the config documentation template |
+
+## Code Review Guidance
+
+Be constructive and focus on production EKS deployment reliability.
+
+### Pulumi Infrastructure-as-Code best practices
+
+- Proper resource naming conventions and tagging
+- Stack references and output handling between deployment stages
+- Configuration management (`Pulumi.*.yaml` files)
+- Provider version consistency and updates
+
+### EKS-specific considerations
+
+- AWS EKS configurations, node groups, and cluster settings
+- IAM policies and service accounts (01-iam stage)
+- VPC networking and security groups (02-networking stage)
+- EKS cluster setup and worker nodes (05-eks-cluster stage)
+- Ingress controllers and cluster services (10-cluster-svcs stage)
+- State management and policies (15-state-policies-mgmt stage)
+- RDS/Aurora database configuration (20-database stage)
+- OpenSearch insights setup (25-insights stage)
+- ESC configuration (30-esc stage)
+- Pulumi service deployment (90-pulumi-service stage)
+- Multi-stage deployment dependencies and numbered ordering
+
+### Security and production readiness
+
+- Secret management and encryption at rest
+- Network security (private endpoints, ingress/egress rules)
+- Certificate management and TLS configuration
+- RBAC and service account permissions
+- Bring-your-own (BYO) infrastructure compatibility
+
+### Code quality
+
+- TypeScript idioms and error handling
+- Resource cleanup and lifecycle management
+- Documentation updates (README.md, architecture diagrams)
+- Test coverage for integration tests
+- Mermaid diagram accuracy and enterprise styling standards
+
+### EKS deployment patterns
+
+- Validate numbered stage dependencies are maintained (01→02→05→10→15→20→25→30→90)
+- Check for breaking changes in component interfaces
+- Ensure backwards compatibility with existing EKS deployments
+- ALB ingress controller configuration
+- EKS-specific networking and security patterns

@@ -14,26 +14,10 @@ Learn more about how to self-host Pulumi for your organization [here](https://ww
 
 ## Contributing
 
-### Code Review Workflows
+### Code Review
 
-This repository uses automated Claude AI code review workflows for quality assurance:
-
-#### Platform-Specific Reviews
-- **EKS**: `.github/workflows/claude-eks-review.yml` - Reviews changes to `eks-hosted/**`
-- **ECS**: `.github/workflows/claude-ecs-review.yml` - Reviews changes to `ecs-hosted/**` 
-- **AKS**: `.github/workflows/claude-aks-review.yml` - Reviews changes to `aks-hosted/**`
-- **GKE**: `.github/workflows/claude-gke-review.yml` - Reviews changes to `gke-hosted/**`
-- **Components**: `.github/workflows/claude-components-review.yml` - Reviews changes to `components-microstacks/**`
-
-#### General Code Review
-- **All Changes**: `.github/workflows/claude-code-review.yml` - Reviews repository-wide changes
-- **Interactive**: `.github/workflows/claude.yml` - Triggered by `@claude` mentions in PR comments
-
-#### Review Process
-1. **Automatic**: Platform-specific workflows trigger on relevant path changes
-2. **Manual**: Use `@claude` in PR comments for targeted reviews
-3. **Scope**: Each workflow focuses on platform-specific best practices and patterns
-4. **Security**: Workflows automatically exclude bot PRs (`dependabot[bot]`, `pulumi-renovate[bot]`)
-
-For questions about the review process, see the individual workflow files in `.github/workflows/`.
-
+Review guidance lives in `AGENTS.md` files: the root `AGENTS.md` covers repository-wide
+concerns, and each platform directory (`eks-hosted/`, `ecs-hosted/`, `aks-hosted/`,
+`gke-hosted/`, `components-microstacks/`) carries its own with a platform-specific
+"Code Review Guidance" section. AI reviewers and coding agents pick these up
+automatically; human reviewers can use the same checklists.
