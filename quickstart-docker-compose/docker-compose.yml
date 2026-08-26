@@ -93,7 +93,7 @@ services:
         bind:
           create_host_path: false
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/status"]
+      test: ["CMD", "/go/bin/http_health", "-f", "http://localhost:8080/api/status"]
       interval: 30s
       timeout: 5s
       retries: 3
