@@ -76,3 +76,61 @@ China regions, IAM policy ARNs use different prefixes:
 | `go/common/utils.go` | `go test ./common/` from `ecs-hosted/go/` (ARN partition tests) |
 | `go/go.mod` | `go mod tidy` and commit `go.sum` |
 | `go/dns/go.mod` | `cd dns && go mod tidy` and commit `dns/go.sum` |
+
+## Code Review Guidance
+
+Covers both the TypeScript (`ts/`) and Go (`go/`) implementations of the ECS Fargate
+deployment. Be constructive and focus on production ECS deployment reliability.
+
+### Pulumi Infrastructure-as-Code best practices
+
+- Proper resource naming conventions and tagging
+- Stack references and output handling between deployment stages
+- Configuration management (`Pulumi.*.yaml` files)
+- Provider version consistency and updates
+
+### ECS-specific considerations
+
+- AWS ECS Fargate configurations and task definitions
+- Container service definitions (apiService, consoleService, migrationsService)
+- ALB/NLB load balancer configurations for public and private deployments
+- VPC networking and security groups for container networking
+- Aurora MySQL database configuration and connection handling
+- ECS service discovery and container communication
+- Private load balancer support for air-gapped deployments (Go version)
+- VPC endpoints for private ECS networking
+- Database migration task handling
+- Log aggregation with CloudWatch integration
+- DNS configuration and Route53 setup
+- Multi-stage deployment: infrastructure → application → DNS
+
+### TypeScript vs Go implementation differences
+
+- Compare consistency between `ts/` and `go/` implementations
+- Validate similar functionality across both versions
+- Check for feature parity in networking and security configurations
+- Ensure both versions handle private networking correctly
+
+### Security and production readiness
+
+- Secret management and encryption at rest
+- Network security (private endpoints, ingress/egress rules)
+- Certificate management and TLS configuration
+- IAM roles and task execution permissions
+- Container security and least privilege access
+
+### Code quality
+
+- TypeScript/Go idioms and error handling
+- Resource cleanup and lifecycle management
+- Documentation updates (README.md, architecture diagrams)
+- Test coverage for integration tests
+- Mermaid diagram accuracy and enterprise styling standards
+
+### ECS deployment patterns
+
+- Validate deployment stage dependencies are maintained
+- Check for breaking changes in service interfaces
+- Ensure backwards compatibility with existing ECS deployments
+- Container orchestration and scaling patterns
+- Health check and service mesh considerations
