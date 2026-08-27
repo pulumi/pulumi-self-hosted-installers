@@ -12,10 +12,14 @@ env:
 on:
   pull_request: null
   workflow_dispatch: null
+  schedule:
+    # Daily certification that the published latest images pass the
+    # integration tests (feeds the README badge).
+    - cron: '17 9 * * *'
   repository_dispatch:
     types: [integration_tests]
 
-name: Test Minio as object storage
+name: Test latest images
 
 jobs:
   minio-test:
@@ -187,7 +191,7 @@ jobs:
       - uses: ./.github/actions/run-self-hosted
         timeout-minutes: 5
         with:
-          compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml -f ./quickstart-docker-compose/all-in-one/docker-compose.edge.yml'
+          compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml'
 
       - name: Run integration tests
         run: go test ./quickstart-docker-compose/tests/... -v --tags=minio

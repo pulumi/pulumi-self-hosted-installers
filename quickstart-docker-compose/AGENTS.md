@@ -31,7 +31,7 @@ After the service is running:
 - With Minio object storage: `go test -tags=minio ./...` from the same directory
 
 Minio tests require additional environment variables; see
-`.github/workflows/test-with-minio.yml` for the full list.
+`.github/workflows/test-latest-images.yml` for the full list.
 
 ## Test structure
 
@@ -46,7 +46,7 @@ Minio tests require additional environment variables; see
 ## Escalate immediately if
 
 - `PULUMI_LICENSE_KEY` is not available — integration tests cannot run
-- The Minio CI workflow fails on env var mapping — check `test-with-minio.yml`
+- The Minio CI workflow fails on env var mapping — check `test-latest-images.yml`
 
 ## Change triggers
 

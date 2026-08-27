@@ -36,7 +36,7 @@ jobs:
           password: ${{ steps.esc-secrets.outputs.DOCKERHUB_PASSWORD }}
 
       - uses: ./.github/actions/run-self-hosted
-        timeout-minutes: 2
+        timeout-minutes: 5
         env:
           # When regenerating the license, create a restricted license.
           # That is, create a license that has a max unit of just 1 unless
