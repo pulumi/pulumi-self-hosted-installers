@@ -10,11 +10,6 @@
   platformAutomerge: true,            // Use GitHub's native auto-merge
   prConcurrentLimit: 10,              // Limit concurrent PRs to reduce noise  
   
-  // Ignore specific paths
-  ignorePaths: [
-    "quickstart-docker-compose/all-in-one/*.yml",
-  ],
-  
   // Package-specific rules
   packageRules: [
     {

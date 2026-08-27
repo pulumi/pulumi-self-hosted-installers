@@ -32,7 +32,7 @@ services:
       PULUMI_API_DOMAIN: "localhost:8443"
       PULUMI_CONSOLE_DOMAIN: "localhost:3443"
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost:8443/api/status"]
+      test: ["CMD", "/go/bin/http_health", "-f", "https://localhost:8443/api/status"]
   console:
     ports:
       - "3000:3000"
