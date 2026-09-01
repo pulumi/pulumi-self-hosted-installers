@@ -57,7 +57,7 @@ services:
   api:
     ports:
       - "8080:8080"
-    image: "pulumi/service:latest@sha256:248c016cac6c9b2a9fb4613de9d145452b34ee92ad94256545076230ed0f3912"
+    image: "pulumi/service:latest@sha256:c0df089565111fd55457e8be53a57fc31245063ea38aa8f8425c7092009850a1"
     env_file: ../service_vars.env
     # Environment variables can be dynamically configured by setting them in your host's environment.
     # Only the keys of such environment variables must be listed below. The value part must be left
@@ -156,7 +156,7 @@ services:
   console:
     ports:
       - "3000:3000"
-    image: "pulumi/console:latest@sha256:49b21117025f3769bfff5ac3fa6884b4373c8916d023f72bf84f15eeb6423c6e"
+    image: "pulumi/console:latest@sha256:d5d340328998ef52e1bd149c5107d5612faa91c3f7ca803fa4bd5e3a543a09f3"
     env_file: ../console_vars.env
     networks:
       - pulumi-services
@@ -201,7 +201,7 @@ services:
     restart: unless-stopped
 
   migration:
-    image: "pulumi/migrations:latest@sha256:55fccfef698fe64803ee3c61c68522dd411077c43d6d15ec54fb7a4191e6ea61"
+    image: "pulumi/migrations:latest@sha256:43b14cdcbc6891257b165ef1be6fd2949c8402483fd43d4522b1ed4947dde433"
     environment:
       PULUMI_DATABASE_ENDPOINT: "${PULUMI_DATABASE_ENDPOINT}"
     networks:
