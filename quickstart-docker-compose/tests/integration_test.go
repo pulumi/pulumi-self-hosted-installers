@@ -1,6 +1,6 @@
 // Copyright 2016-2021, Pulumi Corporation.  All rights reserved.
 
-//go:build minio
+//go:build s3
 
 package tests
 
@@ -19,7 +19,7 @@ import (
 	ptesting "github.com/pulumi/pulumi/sdk/v3/go/common/testing"
 )
 
-func TestStackUpdateForMinioStorage(t *testing.T) {
+func TestStackUpdateForS3CompatibleStorage(t *testing.T) {
 	ctx := context.Background()
 
 	checkpointStorageEndpoint := os.Getenv("PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT")

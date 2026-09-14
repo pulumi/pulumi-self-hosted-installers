@@ -57,4 +57,18 @@
       enabled: false,
     },
   ],
+
+  customManagers: [
+    {
+      // Docker images pinned in workflow env vars and used from `run:` scripts,
+      // which the github-actions manager doesn't parse. Annotate the variable
+      // with `# renovate: datasource=docker depName=<image>` on the line above
+      // and pin it as `<image>:<tag>@sha256:<digest>`.
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)\\s+[A-Za-z0-9_]+:\\s*\"?[^\\s\"@]+:(?<currentValue>[^\\s\"@]+)@(?<currentDigest>sha256:[a-f0-9]{64})\"?",
+      ],
+    },
+  ],
 }

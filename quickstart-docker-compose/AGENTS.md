@@ -28,9 +28,9 @@ Console (`localhost:3000/index.html`) before returning.
 After the service is running:
 
 - Standard: `go test ./...` from `quickstart-docker-compose/tests/`
-- With Minio object storage: `go test -tags=minio ./...` from the same directory
+- With S3-compatible object storage: `go test -tags=s3 ./...` from the same directory
 
-Minio tests require additional environment variables; see
+S3 storage tests require additional environment variables; see
 `.github/workflows/test-latest-images.yml` for the full list.
 
 ## Test structure
@@ -46,7 +46,7 @@ Minio tests require additional environment variables; see
 ## Escalate immediately if
 
 - `PULUMI_LICENSE_KEY` is not available — integration tests cannot run
-- The Minio CI workflow fails on env var mapping — check `test-latest-images.yml`
+- The `s3-test` CI job fails on its storage env vars — check `test-latest-images.yml`
 
 ## Change triggers
 

@@ -27,7 +27,7 @@ The following are requirements of this deployment option:
     - A databaser user that has the following grants:
         - `GRANT ALL PRIVILEGES ON 'pulumi'.* TO 'pulumi'@'%'`
         - `GRANT CREATE USER ON *.* TO 'pulumi'@'%' WITH GRANT OPTION`
-- Object storage (for example, Minio)
+- Object storage (for example, SeaweedFS)
     - At least 200GB SSD storage space
 - [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/)
 
