@@ -23,8 +23,8 @@ export class OpenSearch extends ComponentResource {
         super("x:kubernetes:opensearch", name, opts);
         const osRepoUrl = "https://opensearch-project.github.io/helm-charts/"
         const osChartName = "opensearch"
-        const chartVersion = "2.24.1"
-        const oscVersion = "2.14.0"
+        const chartVersion = "3.7.0"
+        const oscVersion = "3.7.0"
         opts = {...opts, parent: this}  
         const opensearch = new k8s.helm.v3.Chart("opensearch", {
             chart: osChartName,
@@ -81,7 +81,7 @@ export class OpenSearch extends ComponentResource {
 
         const opensearchDashboard = new k8s.helm.v3.Chart("opensearch-dashboards", {
             chart: `${osChartName}-dashboards`,
-            version: "2.22.0",
+            version: "3.7.0",
             namespace: args.namespace,
             // Comment out the fetchOpts block if using local copy of the helm chart.
             // And, uncomment the path field and set it to the local path of the helm chart if using a local copy of the helm chart.
