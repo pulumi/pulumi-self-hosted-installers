@@ -89,10 +89,16 @@ export class DatabaseMigrationTask {
 
         pulumi.log.info(`Waiting for task ${taskArn} to start`);
 
-        await waitUntilTasksRunning(
-            { client: this.client, maxWaitTime: 300, minDelay: 10 },
-            { cluster: clusterId, tasks: [taskArn] }
-        );
+        // A no-op migration can exit before the waiter ever observes RUNNING. The exit
+        // code is checked in assertDbMigrationSuccessful, so this is not a failure.
+        try {
+            await waitUntilTasksRunning(
+                { client: this.client, maxWaitTime: 300, minDelay: 10 },
+                { cluster: clusterId, tasks: [taskArn] }
+            );
+        } catch (err) {
+            pulumi.log.info(`Task ${taskArn} never observed running; it likely exited immediately`);
+        }
 
         pulumi.log.info(`Task ${taskArn} successfully started. Now waiting for task completion`);
 
