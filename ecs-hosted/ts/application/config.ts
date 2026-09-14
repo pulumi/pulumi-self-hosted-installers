@@ -44,8 +44,10 @@ export async function hydrateConfig() {
     const openSearchEndpoint = stackConfig.get("opensearchEndpoint");
     const openSearchDomainName = stackConfig.get("opensearchDomainName");
 
-    const recaptchaSiteKey = stackConfig.require("recaptchaSiteKey");
-    const recaptchaSecretKey = stackConfig.requireSecret("recaptchaSecretKey");
+    // Optional, as in eks-hosted and the Go implementation. Not `require`: an empty
+    // value reaches Secrets Manager as an empty SecretString, which it rejects.
+    const recaptchaSiteKey = stackConfig.get("recaptchaSiteKey") ?? "";
+    const recaptchaSecretKey = stackConfig.getSecret("recaptchaSecretKey");
 
     const samlCertPublicKey = stackConfig.getSecret("samlCertPublicKey");
     const samlCertPrivateKey = stackConfig.getSecret("samlCertPrivateKey");
