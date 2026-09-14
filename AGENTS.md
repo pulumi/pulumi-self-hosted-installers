@@ -47,7 +47,7 @@ numbered order.
 - Format: `go fmt ./...`
 - Vet: `go vet ./...`
 - Unit tests: `go test ./common/` from `ecs-hosted/go/`
-- Integration tests: `go test -tags=minio ./...` from `quickstart-docker-compose/tests/`
+- Integration tests: `go test -tags=s3 ./...` from `quickstart-docker-compose/tests/`
   (requires running service — see `quickstart-docker-compose/AGENTS.md`)
 
 ## Forbidden actions

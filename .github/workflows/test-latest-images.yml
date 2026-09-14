@@ -22,41 +22,28 @@ on:
 name: Test latest images
 
 jobs:
-  minio-test:
+  s3-test:
 
     runs-on: ubuntu-latest
     env:
-      # The fake access keys used to configure the Minio container.
-      # We will use these keys as the AWS access keys so that the
-      # Pulumi service can connect to the Minio storage service.
-      MINIO_ROOT_USER: "minio-access-key"
-      MINIO_ROOT_PASSWORD: "minio-secret-key"
-      MINIO_HOST: "minio:9000"
-      MINIO_BUCKET_NAME: "pulumi-checkpoints"
-      MINIO_PP_BUCKET_NAME: "pulumi-policy-packs"
+      # The service stores checkpoints and policy packs in a local
+      # S3-compatible storage container (currently SeaweedFS). These fake keys
+      # are the storage server's admin credentials and also the AWS credentials
+      # the service and the AWS CLI use to reach it. Nothing in this job talks
+      # to AWS.
+      AWS_REGION: "us-west-2"
+      AWS_ACCESS_KEY_ID: "s3-access-key"
+      AWS_SECRET_ACCESS_KEY: "s3-secret-key"
+      PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT: "s3://pulumi-checkpoints?endpoint=object-storage:8333&disableSSL=true&s3ForcePathStyle=true"
+      PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT: "s3://pulumi-policy-packs?endpoint=object-storage:8333&disableSSL=true&s3ForcePathStyle=true"
+      # renovate: datasource=docker depName=chrislusf/seaweedfs
+      S3_STORAGE_IMAGE: "docker.io/chrislusf/seaweedfs:4.47@sha256:ce9e796f1fe6f06968f4c04bdaf8f678dad9c8acdfef3d244133d71bfa6bf882"
       ESC_ACTION_EXPORT_ENVIRONMENT_VARIABLES: PULUMI_LICENSE_KEY
 
     steps:
       - name: Fetch secrets from ESC
         id: esc-secrets
         uses: pulumi/esc-action@32dda43ffe7a2ab21e6bce11c781b44a3e5623cf # v3
-      - name: Set env vars
-        run: |
-          # There doesn't seem to be a way to map environment variables into other enviroments
-          # when these are also defined in the same place as the ones they depend on.
-          # So set those env vars using:
-          # https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-
-          # The only AWS resource the service will access is the Minio container
-          # so we map its keys as the AWS keys for the service.
-          echo "AWS_REGION=us-west-2" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}" >> $GITHUB_ENV
-
-          checkpoint_endpoint="s3://${MINIO_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
-          pp_endpoint="s3://${MINIO_PP_BUCKET_NAME}?endpoint=${MINIO_HOST}&disableSSL=true&s3ForcePathStyle=true"
-          echo "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${checkpoint_endpoint}" >> $GITHUB_ENV
-          echo "PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${pp_endpoint}" >> $GITHUB_ENV
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
         with:
@@ -75,118 +62,57 @@ jobs:
           username: ${{ steps.esc-secrets.outputs.DOCKERHUB_USERNAME }}
           password: ${{ steps.esc-secrets.outputs.DOCKERHUB_PASSWORD }}
 
-      - name: Run Minio
+      - name: Run S3-compatible storage
         run: |
           set -x  # Enable command tracing
 
-          echo "===== Creating Docker volume for MinIO ====="
-          docker volume create minio-data
+          # `weed mini` runs a single-node SeaweedFS server with its S3 API on
+          # port 8333, using the AWS_* env vars as its admin credentials.
+          docker run -d --name object-storage \
+              --publish 8333:8333 \
+              --volume object-storage-data:/data \
+              --env AWS_ACCESS_KEY_ID \
+              --env AWS_SECRET_ACCESS_KEY \
+              "${S3_STORAGE_IMAGE}" \
+              mini -dir=/data
 
-          echo "===== Starting MinIO container ====="
-          docker run -d --name minio \
-              --publish 9000:9000 \
-              --volume minio-data:/data \
-              --env MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
-              --env MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
-              cgr.dev/chainguard/minio:latest \
-              server /data
-
-          DOCKER_EXIT=$?
-          echo "Docker run exit code: $DOCKER_EXIT"
-
-          sleep 5
-
-          echo "===== Container Status ====="
-          docker ps -a
-
-          echo "===== Container Inspection ====="
-          docker inspect minio | jq '.[0] | {State, Config: {Env, Cmd}, NetworkSettings: {Ports}}'
-
-          echo "===== Full MinIO Logs ====="
-          docker logs minio 2>&1
-
-          echo "===== Network Information ====="
-          netstat -tlnp | grep 9000 || echo "No process listening on port 9000"
-
-          echo "===== Port Test with nc ====="
-          nc -zv 127.0.0.1 9000 2>&1 || echo "nc failed to connect"
-
-          echo "===== Port Test with telnet ====="
-          timeout 2 telnet 127.0.0.1 9000 2>&1 || echo "telnet failed"
-
-          echo "===== Testing Raw HTTP Connection ====="
-          (echo -e "GET / HTTP/1.0\r\n\r\n"; sleep 1) | nc 127.0.0.1 9000 2>&1 || echo "Raw HTTP test failed"
-
-          echo "===== Waiting for MinIO with Health Check ====="
-          READY=false
+          # The AWS CLI ships with the runner image and works as a generic S3
+          # client, so a successful authenticated call means the server is ready.
           for i in {1..30}; do
-            echo "Attempt $i/30: Checking MinIO health..."
-
-            # Try health endpoint
-            if curl -v http://127.0.0.1:9000/minio/health/live 2>&1; then
-              echo "✓ MinIO health check passed!"
-              READY=true
+            if aws s3 ls --endpoint-url http://127.0.0.1:8333; then
               break
             fi
-
-            # Also try root endpoint
-            echo "Trying root endpoint..."
-            curl -v http://127.0.0.1:9000/ 2>&1 || true
-
+            if [ "$i" -eq 30 ]; then
+              echo "ERROR: S3 storage never became ready after 60 seconds"
+              docker logs object-storage 2>&1
+              exit 1
+            fi
             sleep 2
           done
 
-          if [ "$READY" = false ]; then
-            echo "ERROR: MinIO never became ready after 60 seconds"
-            echo "===== Final Container Status ====="
-            docker ps -a
-            echo "===== Final MinIO Logs ====="
-            docker logs minio 2>&1
-            exit 1
-          fi
+          # Let processes on the runner resolve the host used in the storage endpoints.
+          echo "127.0.0.1 object-storage" | sudo tee -a /etc/hosts
 
-          echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
-
-      - name: Create Minio buckets
+      - name: Create S3 buckets
         run: |
           set -x  # Enable command tracing
 
-          echo "===== Downloading mc client ====="
-          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-          ./mc --version
+          # Bucket names must match the endpoints in the job env.
+          for bucket in pulumi-checkpoints pulumi-policy-packs; do
+            aws s3 mb "s3://${bucket}" --endpoint-url http://127.0.0.1:8333 || {
+              echo "ERROR: Failed to create bucket ${bucket}"
+              docker logs object-storage 2>&1
+              exit 1
+            }
+          done
 
-          echo "===== Pre-flight checks ====="
-          echo "Testing connection to MinIO..."
-          curl -v http://127.0.0.1:9000/ 2>&1 || echo "Curl to root failed"
+          aws s3 ls --endpoint-url http://127.0.0.1:8333
 
-          echo "===== Creating mc alias ====="
-          # Create a new alias called minio for our Minio container.
-          # Use 127.0.0.1:9000 (IPv4) since MinIO is published to the host's port 9000
-          ./mc alias set minio "http://127.0.0.1:9000" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}" --api S3v4 2>&1 || {
-            echo "ERROR: Failed to create mc alias"
-            echo "===== MinIO container status ====="
-            docker ps -a | grep minio
-            echo "===== MinIO logs ====="
-            docker logs minio 2>&1
-            exit 1
-          }
-
-          echo "===== Verifying alias ====="
-          ./mc alias list
-
-          echo "===== Creating buckets ====="
-          ./mc mb "minio/${MINIO_BUCKET_NAME}" 2>&1
-          ./mc mb "minio/${MINIO_PP_BUCKET_NAME}" 2>&1
-
-          echo "===== Listing buckets ====="
-          ./mc ls minio/
-
-      - name: Configure Minio network
+      - name: Configure S3 storage network
         run: |
-          # Connect Minio to the pulumi-self-hosted-installers docker network.
+          # Connect the storage container to the pulumi-self-hosted-installers docker network.
           docker network create pulumi-self-hosted-installers
-          docker network connect pulumi-self-hosted-installers minio
+          docker network connect pulumi-self-hosted-installers object-storage
 
       - uses: ./.github/actions/run-self-hosted
         timeout-minutes: 5
@@ -194,7 +120,7 @@ jobs:
           compose-args: '-f ./quickstart-docker-compose/all-in-one/docker-compose.yml'
 
       - name: Run integration tests
-        run: go test ./quickstart-docker-compose/tests/... -v --tags=minio
+        run: go test ./quickstart-docker-compose/tests/... -v --tags=s3
 
       - name: Upload service log as artifact
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

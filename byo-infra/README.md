@@ -22,7 +22,7 @@ Version ID | Date | K8s Version Supported | Note
     * `GRANT CREATE USER ON *.* TO 'pulumi'@'%' WITH GRANT OPTION`
   * Create a database named `pulumi` on the server.
   * The MySQL server must have inbound ICMP (ping) enabled.
-* S3-compatible Object storage (for example, Minio)
+* S3-compatible Object storage (for example, SeaweedFS)
   * At least 200GB SSD storage space
 * Domain name and access to create two endpoints:
   * api.{domain} - e.g. api.pulumi.example.com
