@@ -8,9 +8,11 @@
         "@aws-sdk/client-ecs": "^3.0.0",
         "@pulumi/aws": "^7.0.0",
         "@pulumi/awsx": "^3.0.0",
+        "@pulumi/esc-sdk": "^0.14.0",
         "@pulumi/pulumi": "^3.0.0",
         "@pulumi/pulumiservice": "^1.0.0",
         "@pulumi/random": "^4.16.3",
-        "@pulumiverse/time": "^0.1.0"
+        "@pulumiverse/time": "^0.1.0",
+        "yaml": "^2.9.0"
     }
 }
