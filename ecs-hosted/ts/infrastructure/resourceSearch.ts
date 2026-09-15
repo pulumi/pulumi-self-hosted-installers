@@ -80,7 +80,7 @@ export class ResourceSearch extends pulumi.ComponentResource {
 
         const domain = new aws.opensearch.Domain("pulumi-res-search", {
             domainName: name,
-            engineVersion: "OpenSearch_2.13",
+            engineVersion: "OpenSearch_3.7",
             clusterConfig: {
                 instanceType: args.instanceType,
                 instanceCount: args.instanceCount,

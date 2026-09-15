@@ -6,6 +6,7 @@ export interface OpenSearchComponentArgs {
     storageClassName: string;
     storageSizeGB: number;
     accessModes: string[];
+    initialAdminPassword: pulumi.Input<string>;
 }
 
 export class OpenSearchComponent extends pulumi.ComponentResource {
@@ -15,7 +16,7 @@ export class OpenSearchComponent extends pulumi.ComponentResource {
         const serviceName = "opensearch";
         const headlessServiceName = "opensearch-headless";
         const dashboardServiceName = "opensearch-dashboards";
-        const imageTag = "2.5.0";
+        const imageTag = "3.7.0";
         const searchImage = `opensearchproject/opensearch:${imageTag}`;
         const dashboardImage = `opensearchproject/opensearch-dashboards:${imageTag}`;
         const mountPath = "/usr/share/opensearch/data";
@@ -80,8 +81,12 @@ export class OpenSearchComponent extends pulumi.ComponentResource {
                                             value: "false",
                                         },
                                         {
-                                            name: "plugins.security.ssl.transport.enforce_hostname_verification",
+                                            name: "transport.ssl.enforce_hostname_verification",
                                             value: "false",
+                                        },
+                                        {
+                                            name: "OPENSEARCH_INITIAL_ADMIN_PASSWORD",
+                                            value: args.initialAdminPassword,
                                         },
                                     ],
                                     ports: [

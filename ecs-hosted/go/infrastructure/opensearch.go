@@ -122,7 +122,7 @@ func NewOpenSearch(ctx *pulumi.Context, name string, args *OpenSearchArgs, opts 
 
 	domain, err := opensearch.NewDomain(ctx, name, &opensearch.DomainArgs{
 		DomainName:    pulumi.String(args.DomainName),
-		EngineVersion: pulumi.String("OpenSearch_2.13"),
+		EngineVersion: pulumi.String("OpenSearch_3.7"),
 		ClusterConfig: &opensearch.DomainClusterConfigArgs{
 			InstanceType:           pulumi.String(args.InstanceType),
 			InstanceCount:          pulumi.Int(args.InstanceCount),

@@ -19,6 +19,7 @@ Version ID | Date       | Note
 7 | 10/20/2024 | Add ESC deployment to the installer.
 8 | 05/23/2025 | Updated Go module.
 9 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+10 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
 
 ## User Guides
 
@@ -320,6 +321,43 @@ See the [pulumi login][pulumi-login-docs] docs for more details.
 * Update the application project's configuration file to point at the latest pulumi docker image tags (imageTag).
 
 - Run the **Deploy Pulumi** steps described above.
+
+## Upgrading OpenSearch 2.x -> 3.7
+
+This update moves the managed OpenSearch domain to 3.7 and does NOT touch the database, the buckets, or the services.
+Allow for about two hours; each AWS engine upgrade runs for a while and they cannot be overlapped.
+
+New installs need nothing here - the domain is created at `OpenSearch_3.7` directly, and installs that never set
+`enableOpenSearch` have no domain at all. The rest of this section is for installs that already run a 2.x domain.
+
+- Upgrade the domain out of band BEFORE pulling this version of the installer.
+  - AWS will not move a domain from 2.13 to 3.7 in one hop, and `engineVersion` is hardcoded in the installer rather
+    than exposed as a config value, so the intermediate hops cannot be driven through Pulumi.
+  - Running `pulumi up` against a 2.13 domain sends an `UpgradeDomain` call that AWS rejects as an incompatible
+    target. That errors the stack, and every later `up` retries the same failing call, which blocks unrelated
+    infrastructure changes until the domain is sorted out.
+- Step the domain up through 2.19, which is the gateway release to the 3.x line.
+  - `aws opensearch get-compatible-versions --domain-name <openSearchDomainName>`
+    - From 2.13 the in-place targets AWS offers are 2.15, 2.17 and 2.19. Only from 2.19 does 3.7 appear.
+  - `aws opensearch upgrade-domain --domain-name <openSearchDomainName> --target-version OpenSearch_2.19`
+  - Wait for the domain to leave "Processing" before starting the second hop.
+  - `aws opensearch upgrade-domain --domain-name <openSearchDomainName> --target-version OpenSearch_3.7`
+  - Both upgrades can be driven from the OpenSearch console instead of the CLI.
+  - OpenSearch 3.7 reads indices written by 2.x, so the existing search data survives both hops.
+- Then pull this version of the installer and reconcile the `infrastructure` project.
+  - Run `pulumi refresh`
+    - The two upgrades were made outside of Pulumi, so state still records the old `engineVersion`.
+  - Run `pulumi preview`
+    - The domain MUST show as an `update`, not a `replace`. `engineVersion` on its own is an in-place update, but
+      the domain is declared with `deleteBeforeReplace: true`, so a `replace` - which only `domainName` or
+      `vpcOptions` drift can trigger - would destroy the domain before re-creating it. Abort and fix that drift
+      first.
+  - Run `pulumi up`
+    - After the refresh this should be a no-op on the domain itself.
+
+Once the domain is back to "Active", log in to the service and check that the resources page still lists your stacks.
+If it is empty or looks stale, an admin can go to Settings->Self-hosted and reindex the search cluster:
+[Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
 
 [get-started-aws]: https://www.pulumi.com/docs/get-started/aws/
 [s3-backend]: https://www.pulumi.com/docs/intro/concepts/state/#logging-into-the-aws-s3-backend
