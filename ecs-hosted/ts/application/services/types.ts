@@ -64,7 +64,7 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     logType?: LogType,
     logArgs?: any,
     numberDesiredTasks?: number,
-    recaptchaSecretKey: pulumi.Output<string>,
+    recaptchaSecretKey: pulumi.Output<string> | undefined,
     samlCertPublicKey?: pulumi.Output<string>,
     samlCertPrivateKey?: pulumi.Output<string>,
     taskMemory?: number,
