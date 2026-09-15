@@ -24,7 +24,7 @@ export async function hydrateConfig() {
     const openSearchInstanceCount = stackConfig.getNumber("openSearchInstanceCount") || 2;
     const openSearchDomainName = stackConfig.get("openSearchDomainName") || "pulumi";
     const openSearchDedicatedMasterCount = stackConfig.getNumber("openSearchDedicatedMasterCount") || 0;
-    const enableVpcEndpoints = stackConfig.getBoolean("enableVpcEndpoints") || true;
+    const enableVpcEndpoints = stackConfig.getBoolean("enableVpcEndpoints") ?? true;
 
     const callerId = await aws.getCallerIdentity();
 
