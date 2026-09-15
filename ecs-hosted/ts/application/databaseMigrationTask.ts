@@ -97,7 +97,7 @@ export class DatabaseMigrationTask {
                 { cluster: clusterId, tasks: [taskArn] }
             );
         } catch (err) {
-            pulumi.log.info(`Task ${taskArn} never observed running; it likely exited immediately`);
+            pulumi.log.info(`Task ${taskArn} was never observed running: ${err}`);
         }
 
         pulumi.log.info(`Task ${taskArn} successfully started. Now waiting for task completion`);
