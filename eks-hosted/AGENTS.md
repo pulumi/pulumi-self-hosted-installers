@@ -71,6 +71,8 @@ set in config, typically `pulumiselfhost`.
 - Kubernetes 1.31.0 as of installer v3.1 (Feb 2025)
 - v3.0 migrated to managed node groups (from self-managed) — breaking change
 - v3.1 migrated off deprecated `@pulumi/kubernetesx` — check README before upgrading
+- OpenSearch 3.7.0 in 25-insights as of installer v4.1 (Sept 2026) — chart and app version are both 3.7.0
+- v4.1 in-place upgrades need the `opensearch-dashboards` Deployment deleted first — `spec.selector` is immutable
 
 ## Escalate immediately if
 
