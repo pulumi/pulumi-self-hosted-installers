@@ -37,19 +37,50 @@ runs:
         # spread out.
         echo "Running Docker Compose with args ${COMPOSE_ARGS}..."
         ./quickstart-docker-compose/scripts/run-ee.sh ${COMPOSE_ARGS} > "${SERVICE_LOG}" 2>&1 &
+
+        # Let the wait step below notice if Compose gives up (an unhealthy
+        # dependency, say) instead of polling until the step's timeout.
+        echo "COMPOSE_PID=$!" >> $GITHUB_ENV
       env:
         COMPOSE_ARGS: ${{ inputs.compose-args }}
 
     - name: Wait for services to start
       shell: bash
       run: |
-        printf "API Service "
-        while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080/api/status)" != "200" ]]; do printf '.' && sleep 1; done
-        echo ""
+        # Compose runs in the background from the step above. If it exits, no
+        # service will ever answer, so report why rather than polling on.
+        give_up() {
+          echo ""
+          echo "ERROR: $1"
+          echo "===== containers ====="
+          docker ps -a
+          echo "===== service log (tail) ====="
+          tail -50 "${SERVICE_LOG}"
+          exit 1
+        }
 
-        printf "Console Backend "
-        until $(curl --output /dev/null --silent http://localhost:3000/index.html); do
+        api_ready() {
+          [[ "$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/api/status)" == "200" ]]
+        }
+
+        console_ready() {
+          curl --output /dev/null --silent http://localhost:3000/index.html
+        }
+
+        wait_for() {
+          local what="$1" attempts="$2" check="$3" i
+          printf "%s " "${what}"
+          for ((i = 1; i <= attempts; i++)); do
+            if "${check}"; then
+              echo ""
+              return 0
+            fi
+            kill -0 "${COMPOSE_PID}" 2>/dev/null || give_up "Docker Compose exited before ${what} came up"
             printf '.'
-            sleep 1
-        done
-        echo ""
+            sleep 2
+          done
+          give_up "${what} did not come up within $((attempts * 2))s"
+        }
+
+        wait_for "API Service" 100 api_ready
+        wait_for "Console Backend" 40 console_ready
