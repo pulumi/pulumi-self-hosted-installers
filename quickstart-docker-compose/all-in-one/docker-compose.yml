@@ -9,7 +9,7 @@ networks:
 services:
 
   opensearch:
-    image: opensearchproject/opensearch:2.11.1@sha256:cbca8e35fb333af938289ac0f370abdcbde46dbe7629acc1af0cd4219da85b62
+    image: opensearchproject/opensearch:3.7.0@sha256:44ba7ea58a319adf61c33ab16873f9ef5dbb30b291a832d375172f0b2d24e3c9
     container_name: search
     ulimits:
       memlock:
@@ -29,10 +29,14 @@ services:
       - 9300
       - 9600
     env_file: ../search_vars.env
+    environment:
+      # OpenSearch 2.12 removed the admin/admin default; the demo security
+      # config will not install without an initial admin password.
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: Pulumi_Quickstart_1!
     networks:
       - pulumi-services
     healthcheck:
-      test: ["CMD-SHELL", "curl -u admin:admin -f http://localhost:9200 || exit 1"]
+      test: ["CMD-SHELL", "curl -u 'admin:Pulumi_Quickstart_1!' -f http://localhost:9200 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -40,7 +44,7 @@ services:
     restart: unless-stopped
 
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.11.1@sha256:223eaaca192bcfe3101ddf49682d1dfb1a4cefbafdae18b54b7562170d29e8d1
+    image: opensearchproject/opensearch-dashboards:3.7.0@sha256:1c9e0a50472123bd2cde615ffb7157ef436db794e082dba09e42c3a6d3ce91a3
     container_name: opensearch-dashboards
     ports:
       - "5601:5601"
@@ -57,7 +61,7 @@ services:
   api:
     ports:
       - "8080:8080"
-    image: "pulumi/service:latest@sha256:382d8b420c990ee27fa069b3acf610ff3696d1a9cc0a9f7906562cb583a4f688"
+    image: "pulumi/service:latest@sha256:63f2df2e4c784ada9d21bab5c5cb982c26e15eda4a8f947bf2d9008007dd8ad3"
     env_file: ../service_vars.env
     # Environment variables can be dynamically configured by setting them in your host's environment.
     # Only the keys of such environment variables must be listed below. The value part must be left
@@ -110,7 +114,7 @@ services:
       # Search env vars
       PULUMI_SEARCH_DOMAIN: http://opensearch:9200
       PULUMI_SEARCH_USER: admin
-      PULUMI_SEARCH_PASSWORD: admin
+      PULUMI_SEARCH_PASSWORD: Pulumi_Quickstart_1!
     networks:
       pulumi-self-hosted-installers:
       pulumi-services:
@@ -156,7 +160,7 @@ services:
   console:
     ports:
       - "3000:3000"
-    image: "pulumi/console:latest@sha256:52edaf6ce9df1f1babf9dcdb6353a22b96b3d8937bb72ad32cdce94224fcd904"
+    image: "pulumi/console:latest@sha256:4ef0db84c66d6eb04067b7ebe509798e47d1b7f49796b207c275b18a728deecb"
     env_file: ../console_vars.env
     networks:
       - pulumi-services
@@ -201,7 +205,7 @@ services:
     restart: unless-stopped
 
   migration:
-    image: "pulumi/migrations:latest@sha256:7aa599785f28ff5c2eb4e5a09e0f8b46c79f06e55a55bd3fde3e98abe273dab3"
+    image: "pulumi/migrations:latest@sha256:b1e05ba3a94292d31407417b8fb0dbb5d79ee4963f68fcee90c5a4e03e5afb0b"
     environment:
       PULUMI_DATABASE_ENDPOINT: "${PULUMI_DATABASE_ENDPOINT}"
     networks:

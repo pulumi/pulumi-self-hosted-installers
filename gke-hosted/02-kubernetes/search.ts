@@ -30,8 +30,8 @@ export class OpenSearch extends ComponentResource {
     super("x:kubernetes:opensearch", name, opts);
     const osRepoUrl = "https://opensearch-project.github.io/helm-charts/";
     const osChartName = "opensearch";
-    const chartVersion = "2.24.1";
-    const oscVersion = "2.14.0";
+    const chartVersion = "3.7.0";
+    const oscVersion = "3.7.0";
     opts = { ...opts, parent: this };
 
     const sysctlInitEnabled: boolean =

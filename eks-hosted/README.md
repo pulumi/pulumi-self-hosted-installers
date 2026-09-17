@@ -20,6 +20,7 @@ Version ID | Date | K8s Version Supported | Note
 3.0 | Dec, 2024 | 1.30.3 | Moves to Managed NodeGroups. See section at bottom for upgrade steps.
 3.1 | Feb, 2025 | 1.31.0 | Migrated off archived `@pulumi/kubernetesx` package to use core `@pulumi/kubernetes` resources. Minor cleanup related to move to Turnstile for recaptcha. 
 4.0 | March, 2026 | 1.34.0 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+4.1 | September, 2026 | 1.34.0 | Moves the 25-insights search cluster from OpenSearch 2.x to 3.7.0. Existing installs must follow the OpenSearch upgrade procedure below.
 
 ## How to Use
 
@@ -160,6 +161,60 @@ Destroy the following stacks in the given order.
 
 At this point, you should be able to login to the service. Note, it may take a few minutes for DNS to populate and/or caches to update.
 If you have stacks deployed but they do not show up on the resources page, an admin can go to Settings->Self-hosted and reindex the search cluster.
+
+## OpenSearch 2.x -> 3.7 Upgrade Procedure
+
+This is a disruptive update to 25-insights but does NOT destroy any stateful resources (e.g. DB, or buckets).
+Allow for about thirty minutes, plus the time it takes to reindex.
+
+This stack deploys the OpenSearch chart with `persistence` disabled, so the pods hold their indices in ephemeral
+storage and any pod replacement discards them. A reindex is therefore required after this upgrade whichever route
+you take. Since the search cluster is not stateful/can be reindexed on demand, destroying and redeploying
+25-insights is the simplest route, and it also avoids the immutable-field problem described under 25-insights below.
+
+### Update and Deploy the Search Cluster
+
+* 01-iam
+  * SKIP
+* 02-networking
+  * SKIP
+* 05-eks-cluster
+  * SKIP
+* 10-cluster-svcs
+  * SKIP
+* 15-state-policies-mgmt
+  * SKIP
+* 20-database
+  * SKIP
+* 25-insights
+  * Confirm `opensearchPassword` is set in the stack config.
+    * OpenSearch dropped the built-in `admin`/`admin` account in 2.12, so the chart now requires
+      `OPENSEARCH_INITIAL_ADMIN_PASSWORD`. This stack supplies it from that config value.
+  * Run `npm update`
+  * Destroy and redeploy the stack:
+    * Coordinate with 90-pulumi-service based on which stack (currently) owns the `pulumi-service` namespace.
+    * `pulumi state unprotect --all -y; pulumi destroy`
+    * `pulumi up`
+    * This deploys the whole stack at OpenSearch 3.7.0 with empty indices.
+  * To upgrade in place instead, delete the dashboards Deployment first:
+    * `kubectl -n pulumi-service delete deployment opensearch-dashboards`
+      * The `opensearch-dashboards` chart moves the Deployment's `spec.selector` from `app`/`release` to
+        `app.kubernetes.io/name` and `app.kubernetes.io/instance`. `spec.selector` is immutable on a Deployment, so
+        the API server rejects the update and `pulumi up` fails partway through the stack.
+    * Run `pulumi refresh`
+      * This is to drop the Deployment you just deleted from state, since it was removed outside of Pulumi.
+    * Run `pulumi up`
+      * The `opensearch` StatefulSet selector is unchanged, so it rolls to the 3.7.0 image rather than being
+        replaced. The indices still do not survive the roll, because the pods have no persistent storage.
+* 30-esc
+  * SKIP
+* 90-pulumi-service
+  * SKIP
+
+Once the 25-insights pods are running again (`kubectl -n pulumi-service get pods`), log in to the service. The
+resources page will be empty until the search cluster is repopulated, so an admin should go to Settings->Self-hosted
+and reindex it:
+[Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
 
 ## Architecture Diagrams
 
