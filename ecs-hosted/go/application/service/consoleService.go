@@ -212,7 +212,7 @@ func newConsoleEnvironmentVariables(args *ConsoleContainerServiceArgs, lbDnsName
 		env = append(env, CreateEnvVar("PULUMI_HIDE_EMAIL_LOGIN", "true"))
 	}
 
-	if args.HideEmailLogin {
+	if args.HideEmailSignup {
 		env = append(env, CreateEnvVar("PULUMI_HIDE_EMAIL_SIGNUP", "true"))
 	}
 
