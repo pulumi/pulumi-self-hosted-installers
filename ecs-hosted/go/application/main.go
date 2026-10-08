@@ -130,6 +130,13 @@ func main() {
 		// logs will be created based on configuration
 		// could be awslogs, firelens, etc
 		apiLogs := log.NewLogs(ctx, config.LogType, "pulumi-api", config.Region, config.LogArgs)
+
+		// Signing keys for the API's two OIDC issuers.
+		oidcKeySets, err := service.NewOidcKeySets(ctx)
+		if err != nil {
+			return err
+		}
+
 		_, err = service.NewApiContainerService(ctx, "pulumi-api", &service.ApiContainerServiceArgs{
 			ApiUrl:                     apiUrl,
 			CheckPointbucket:           checkpointsBucket,
@@ -148,6 +155,7 @@ func main() {
 			LicenseKey:                 config.LicenseKey,
 			LogDriver:                  apiLogs,
 			MetadataBucket:             metadataBucket,
+			OidcKeySets:                oidcKeySets,
 			PolicyPacksBucket:          policypackBucket,
 			RecaptchaSecretKey:         config.RecaptchaSecretKey,
 			RootDomain:                 domain,

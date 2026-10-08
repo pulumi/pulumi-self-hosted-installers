@@ -5,6 +5,7 @@ import { hydrateConfig } from "./config";
 import { ApiService } from "./services/apiService";
 import { ConsoleService } from "./services/consoleService";
 import { TrafficManager } from "./networking/trafficManager";
+import { createOidcKeySets } from "./oidcKeys";
 
 /*
 Entry point to creating all application related infrastructure.
@@ -44,6 +45,9 @@ export = async () => {
 
     const secretsPrefix = `${pulumi.getProject()}/${pulumi.getStack()}`;
 
+    // Signing keys for the API's two OIDC issuers.
+    const oidcKeySets = createOidcKeySets();
+
     // Entry point to Pulumi API (service)
     // ECS Cluster/Service and all required infra will be created and attached to the LoadBalancer created above, via listneners and target groups
     new ApiService("pulumi-service", {
@@ -77,6 +81,7 @@ export = async () => {
         logType: config.logs.logType,
         metadataBucket: metadataBucket,
         numberDesiredTasks: config.api.apiDesiredNumberTasks,
+        oidcKeySets: oidcKeySets,
         policyPacksBucket: policyPacksBucket,
         privateSubnetIds: config.privateSubnetIds,
         recaptchaSecretKey: config.recaptchaSecretKey,

@@ -5,6 +5,7 @@ import * as docker from "@pulumi/docker";
 require("./prechecks");
 
 import { SsoCertificate } from "./sso";
+import { createOidcKeySets } from "./oidcKeys";
 import { writeFileSync, createSha, } from "./utils";
 import { config } from "./config";
 
@@ -80,6 +81,9 @@ const ssoCert = new SsoCertificate("service", {
     apiDomain: config.apiDomain,
 });
 
+// Signing keys for the API's two OIDC issuers.
+const oidcKeySets = createOidcKeySets();
+
 const serviceImage = new docker.RemoteImage("service", {
     name: config.serviceImageName,
     keepLocally: true,
@@ -110,6 +114,9 @@ const serviceContainer = new docker.Container("service", {
 
         pulumi.interpolate`SAML_CERTIFICATE_PUBLIC_KEY=${ssoCert.cert.certPem}`,
         pulumi.interpolate`SAML_CERTIFICATE_PRIVATE_KEY=${ssoCert.privateKey.privateKeyPem}`,
+
+        pulumi.interpolate`OIDC_KEYS=${oidcKeySets.v1}`,
+        pulumi.interpolate`OIDC_KEYS_V2=${oidcKeySets.v2}`,
 
         pulumi.interpolate`SMTP_SERVER=${config.smtpServer}`,
         pulumi.interpolate`SMTP_USERNAME=${config.smtpUsername}`,

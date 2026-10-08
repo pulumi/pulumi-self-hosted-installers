@@ -54,6 +54,7 @@ See [Deploy 02-kubernetes](#deploy_02_kuberenetes)
 This program creates and deploys the following:
 
 * SAML/SSO Certificate used for SAML/SSO if set up in the service.
+* OIDC signing keys for the API's v1 and v2 OIDC issuers (`OIDC_KEYS` and `OIDC_KEYS_V2`).
 * Encryption Services
   *Currently sets up a "Local keys" encryption service as per: https://www.pulumi.com/docs/guides/self-hosted/components/api/#encryption-services.
   * This service is used to encrypt Pulumi config values and outputs. This will be migrated to GCP Secrets Manager when this issue is closed: https://github.com/pulumi/pulumi-service/issues/8785
@@ -159,6 +160,7 @@ pulumi login $(pulumi stack output apiUrl)
 Due to the dependencies between the stacks, you'll need to reverse the order that you deployed them in:
 
 1. `cd 03-application`
+1. `pulumi state unprotect --all`
 1. `pulumi destroy`
 1. `cd ../02-kubernetes`
 1. `pulumi state unprotect --all`
@@ -170,6 +172,11 @@ Due to the dependencies between the stacks, you'll need to reverse the order tha
 ## Notes
 
 * The SSO certificate has the `currentYear()` in the name. This means that it will get replaced during the first deployment of each calendar year. The expiry date on the certificate is set to 400 days so that although a deployment may not happen each year, it will be necessary to do so otherwise the certificate will expire.
+* 03-application generates the RSA signing keys for the API's two OIDC issuers and passes them to the API as
+  `OIDC_KEYS` (v1 issuer at `/oidc`) and `OIDC_KEYS_V2` (v2 issuer at `/oidc/v2`). The keys are protected resources:
+  replacing one rotates that issuer's signing key, and tokens already signed with the old key stop verifying.
+  On an existing install, the first deploy with this version also switches the v1 issuer from the key the service stored
+  in its database to the generated key, with the same effect.
 
 ## Creating and Using Self-Signed Certificates
 ### Creating Self-Signed Certificates

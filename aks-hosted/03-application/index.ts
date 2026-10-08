@@ -3,6 +3,7 @@ import { Provider, core, apps, networking } from "@pulumi/kubernetes";
 import { getConfig } from "./config";
 import { SecretsCollection } from "./secrets";
 import { SsoCertificate } from "./sso-cert";
+import { createOidcKeySets } from "./oidc-keys";
 import { CertManagerDeployment } from "./cert-manager";
 import { createEnvValueFromSecret } from "./secret-utils";
 
@@ -73,6 +74,16 @@ export = async () => {
     namespace: appsNamespace.metadata.name,
     provider: provider
   });
+
+  // Signing keys for the API's two OIDC issuers.
+  const oidcKeySets = createOidcKeySets();
+  const oidcKeysSecret = new core.v1.Secret(`${commonName}-oidc-keys`, {
+    metadata: { namespace: appsNamespace.metadata.name },
+    stringData: {
+      v1: oidcKeySets.v1,
+      v2: oidcKeySets.v2,
+    },
+  }, { provider: provider });
 
   const apiPortName = "http";
   const apiDeployment = new apps.v1.Deployment(`${commonName}-${apiName}`, {
@@ -159,6 +170,14 @@ export = async () => {
                 {
                   name: "SAML_CERTIFICATE_PRIVATE_KEY",
                   valueFrom: createEnvValueFromSecret(ssoSecret.SamlSsoSecret, "privatekey")
+                },
+                {
+                  name: "OIDC_KEYS",
+                  valueFrom: createEnvValueFromSecret(oidcKeysSecret, "v1")
+                },
+                {
+                  name: "OIDC_KEYS_V2",
+                  valueFrom: createEnvValueFromSecret(oidcKeysSecret, "v2")
                 },
                 {
                   name: "AZURE_CLIENT_ID",
