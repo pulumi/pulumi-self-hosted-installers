@@ -50,6 +50,57 @@ else
     chmod 644 $PULUMI_LOCAL_KEYS
 fi
 
+# Prints a one-key OIDC key set: [{"kid":"<hex>","privateKeyPem":"<PEM>"}].
+generate_oidc_key_set() {
+    local pem
+    # The service accepts only a PKCS#1 PEM. OpenSSL 3 needs -traditional for that; LibreSSL and OpenSSL 1.1 reject
+    # the flag but emit PKCS#1 by default.
+    pem=$(openssl genrsa -traditional 4096 2>/dev/null || openssl genrsa 4096 2>/dev/null) || return 1
+    case "${pem}" in
+        "-----BEGIN RSA PRIVATE KEY-----"*) ;;
+        *) return 1 ;;
+    esac
+    local kid
+    kid=$(openssl rand -hex 32) || return 1
+    local pem_json
+    pem_json=$(printf '%s\n' "${pem}" | awk 'BEGIN { ORS = "\\n" } { print }')
+    printf '[{"kid":"%s","privateKeyPem":"%s"}]' "${kid}" "${pem_json}"
+}
+
+# OIDC_KEYS and OIDC_KEYS_V2 hold the signing keys for the API's v1 (/oidc) and v2 (/oidc/v2) OIDC issuers. Each is
+# generated once into PULUMI_DATA_PATH and reused; a value already set in the environment wins.
+seed_oidc_key_set() {
+    local var_name="$1"
+    local key_file="$2"
+    if [ -n "${!var_name:-}" ]; then
+        echo "Using ${var_name} from the environment"
+        return
+    fi
+    if [ ! -f "${key_file}" ]; then
+        if ! command -v openssl >/dev/null 2>&1; then
+            echo "openssl not found; leaving ${var_name} unset"
+            return
+        fi
+        echo "Generating new OIDC signing key for ${var_name}"
+        local key_set
+        if ! key_set=$(generate_oidc_key_set); then
+            echo "Could not generate an RSA key with openssl; leaving ${var_name} unset"
+            return
+        fi
+        (umask 077 && printf '%s' "${key_set}" >"${key_file}")
+    fi
+    local value
+    value=$(cat "${key_file}")
+    if [ -z "${value}" ]; then
+        echo "Error: ${key_file} is empty. Delete it to generate a new key."
+        exit 1
+    fi
+    export "${var_name}=${value}"
+}
+
+seed_oidc_key_set OIDC_KEYS "${PULUMI_DATA_PATH}/oidc-keys.json"
+seed_oidc_key_set OIDC_KEYS_V2 "${PULUMI_DATA_PATH}/oidc-keys-v2.json"
+
 if docker network inspect pulumi-self-hosted-installers >/dev/null 2>&1; then
     echo "pulumi-self-hosted-installers network exists already"
 else

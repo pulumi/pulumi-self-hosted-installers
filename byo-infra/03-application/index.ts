@@ -3,6 +3,7 @@ import * as k8s from "@pulumi/kubernetes";
 import {config} from "./config";
 import {SecretsCollection} from "./secrets";
 import {SsoCertificate} from "./sso-cert";
+import {createOidcKeySets} from "./oidc-keys";
 import {EncryptionService} from "./encryption-service";
 import {createEnvValueFromSecret} from "./secret-utils";
 
@@ -77,6 +78,16 @@ const ssoSecret = new SsoCertificate(`${commonName}-sso-certificate`, {
   namespace: appsNamespace.metadata.name,
   provider: provider
 });
+
+// Signing keys for the API's two OIDC issuers.
+const oidcKeySets = createOidcKeySets();
+const oidcKeysSecret = new k8s.core.v1.Secret(`${commonName}-oidc-keys`, {
+  metadata: { namespace: appsNamespace.metadata.name },
+  stringData: {
+    v1: oidcKeySets.v1,
+    v2: oidcKeySets.v2,
+  },
+}, { provider });
 
 const pulumiLocalKeySecret = new EncryptionService(`${commonName}-local-key`, {
   commonName: commonName,
@@ -175,6 +186,14 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 {
                   name: "SAML_CERTIFICATE_PRIVATE_KEY",
                   valueFrom: createEnvValueFromSecret(ssoSecret.SamlSsoSecret, "privatekey")
+                },
+                {
+                  name: "OIDC_KEYS",
+                  valueFrom: createEnvValueFromSecret(oidcKeysSecret, "v1")
+                },
+                {
+                  name: "OIDC_KEYS_V2",
+                  valueFrom: createEnvValueFromSecret(oidcKeysSecret, "v2")
                 },
                 {
                   name: "AWS_REGION",

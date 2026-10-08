@@ -4,6 +4,7 @@ import * as s3 from "@pulumi/aws/s3";
 import * as input from "@pulumi/aws/types/input";
 
 import { LogDriver, LogType } from "../logs/types";
+import { OidcKeySets } from "../oidcKeys";
 import { TrafficManager } from "../networking/trafficManager";
 import { PulumiLoadBalancer } from "../networking/pulumiLoadBalanacer";
 
@@ -64,6 +65,7 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     logType?: LogType,
     logArgs?: any,
     numberDesiredTasks?: number,
+    oidcKeySets: OidcKeySets,
     recaptchaSecretKey: pulumi.Output<string> | undefined,
     samlCertPublicKey?: pulumi.Output<string>,
     samlCertPrivateKey?: pulumi.Output<string>,
