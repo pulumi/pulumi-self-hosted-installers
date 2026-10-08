@@ -74,7 +74,7 @@ The following stacks manage stateful resources or resources that are foundationa
 * 20-database
 * 30-esc
 
-The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss:
+The following stacks do not manage stateful resources and so can be destroyed/re-created without losing data. Destroying/recreating these stacks will cause a service disruption but no permanent data loss. The exception is 90-pulumi-service, which also holds the API's OIDC signing keys (see below):
 * 05-eks-cluster
   * Note: You will have to modify the RDS to use a "throw-away" security group if you want to redeploy the cluster, and then replace the security group for the RDS with the security group from eks cluster.
   * Note: You shouldn't destroy 05-eks-cluster before destroying 90-pulumi-service, 25-insights and 10-cluster-svcs first.
@@ -82,6 +82,11 @@ The following stacks do not manage stateful resources and so can be destroyed/re
 * 25-insights: If restarted, use the service UI "selfhosted" page to reindex the searchclsuter.. See: [Re-index opensearch](https://www.pulumi.com/docs/pulumi-cloud/admin/self-hosted/components/search/#backfilling-data)
   * Coordinate with 90-pulumi-service based on which stack (currently) owns the `pulumi-service` namespace.
 * 90-pulumi-service
+  * This stack generates the RSA signing keys for the API's two OIDC issuers and passes them to the API as
+    `OIDC_KEYS` (v1 issuer at `/oidc`) and `OIDC_KEYS_V2` (v2 issuer at `/oidc/v2`). The keys are protected
+    resources. Recreating the stack generates new keys, and tokens already signed with the old keys stop verifying.
+    On an existing install, the first deploy with this version also switches the v1 issuer from the key the service
+    stored in its database to the generated key, with the same effect.
 
 
 ## 2.x -> 3.x+ Installer Update Procedure
@@ -94,6 +99,8 @@ Allow for about an hour to complete the process.
 Destroy the following stacks in the given order.
 
 * 90-pulumi-service:
+  * Destroying this stack deletes the API's OIDC signing keys. The next deploy generates new ones, and OIDC tokens
+    issued before the teardown stop verifying.
   * pulumi state unprotect –all -y; 
   * pulumi destroy
 * 25-insights:
