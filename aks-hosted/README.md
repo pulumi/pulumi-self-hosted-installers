@@ -192,6 +192,7 @@ pulumi login $(pulumi stack output apiUrl)
 Due to the dependencies between the stacks, you'll need to reverse the order that you deployed them in:
 
 1. `cd 03-application`
+1. `pulumi state unprotect --all`
 1. `pulumi destroy`
 1. `cd ../02-kubernetes`
 1. `pulumi destroy`
@@ -203,6 +204,11 @@ Due to the dependencies between the stacks, you'll need to reverse the order tha
 * The SSO certificate has the `currentYear()` in the name. This means that it will get replaced during the first deployment
  of each calendar year. The expiry date on the certificate is set to 400 days so that although a deployment may not
  happen each year, it will be necessary to do so otherwise the certificate will expire.
+* 03-application generates the RSA signing keys for the API's two OIDC issuers and passes them to the API as
+  `OIDC_KEYS` (v1 issuer at `/oidc`) and `OIDC_KEYS_V2` (v2 issuer at `/oidc/v2`). The keys are protected resources:
+  replacing one rotates that issuer's signing key, and tokens already signed with the old key stop verifying.
+  On an existing install, the first deploy with this version also switches the v1 issuer from the key the service stored
+  in its database to the generated key, with the same effect.
 
 ## Architecture Diagrams
 

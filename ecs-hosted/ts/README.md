@@ -257,6 +257,13 @@ pulumi up
 ```
 Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the application project, will be retrieved as Stack References from the infrastructure project.
 
+The `application` project generates the RSA signing keys for the API's two OIDC issuers and passes them to the API,
+through Secrets Manager, as `OIDC_KEYS` (v1 issuer at `/oidc`) and `OIDC_KEYS_V2` (v2 issuer at `/oidc/v2`). The keys
+are protected resources: replacing one rotates that issuer's signing key, and tokens already signed with the old key
+stop verifying. Run `pulumi state unprotect --all` before destroying the project.
+On an existing install, the first deploy with this version also switches the v1 issuer from the key the service stored
+in its database to the generated key, with the same effect.
+
 5. Navigate to the `dns` directory initialize and create the route53 A records for the Pulumi API and Pulumi UI
 
 ```bash

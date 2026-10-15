@@ -56,6 +56,14 @@ func NewApiContainerService(ctx *pulumi.Context, name string, args *ApiContainer
 			Name:  "PULUMI_DATABASE_USER_PASSWORD",
 			Value: args.DatabaseArgs.Password,
 		},
+		{
+			Name:  "OIDC_KEYS",
+			Value: args.OidcKeySets.V1,
+		},
+		{
+			Name:  "OIDC_KEYS_V2",
+			Value: args.OidcKeySets.V2,
+		},
 	}
 
 	if args.RecaptchaSecretKey != "" {
@@ -530,6 +538,7 @@ type ApiContainerServiceArgs struct {
 	CheckPointbucket           *s3.Bucket
 	PolicyPacksBucket          *s3.Bucket
 	MetadataBucket             *s3.Bucket
+	OidcKeySets                *OidcKeySets
 	ExecuteMigrations          bool
 	HasOpenSearch              bool
 	OpenSearchUser             pulumi.StringOutput

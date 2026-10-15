@@ -4,6 +4,7 @@ import * as aws from "@pulumi/aws";
 import { config } from "./config";
 import { SecretsCollection } from "./secrets";
 import { EncryptionService } from "./encryptionService";
+import { createOidcKeySets } from "./oidcKeys";
 
 const k8sprovider = new k8s.Provider("provider", { kubeconfig: config.kubeconfig, deleteUnreachable: true });
 
@@ -103,6 +104,16 @@ const secrets = new SecretsCollection(`${commonName}-secrets`, {
     provider: k8sprovider
   });
 
+// Signing keys for the API's two OIDC issuers.
+const oidcKeySets = createOidcKeySets();
+const oidcKeysSecret = new k8s.core.v1.Secret(`${commonName}-oidc-keys`, {
+    metadata: { namespace: appsNamespaceName },
+    stringData: {
+        v1: oidcKeySets.v1,
+        v2: oidcKeySets.v2,
+    },
+}, { provider: k8sprovider });
+
 // Returns an EnvVar object that references a secret key.
 function generateEnvVarFromSecret(envVarName: string, secretName: pulumi.Output<string>, secretKey: string) : k8s.types.input.core.v1.EnvVar {
     return {
@@ -173,6 +184,8 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
               generateEnvVarFromSecret("PULUMI_DATABASE_USER_PASSWORD", secrets.DBConnSecret.metadata.name, "password"),
               generateEnvVarFromSecret("SAML_CERTIFICATE_PUBLIC_KEY", secrets.SamlSsoSecret.metadata.name, "pubkey"),
               generateEnvVarFromSecret("SAML_CERTIFICATE_PRIVATE_KEY", secrets.SamlSsoSecret.metadata.name, "privatekey"),
+              generateEnvVarFromSecret("OIDC_KEYS", oidcKeysSecret.metadata.name, "v1"),
+              generateEnvVarFromSecret("OIDC_KEYS_V2", oidcKeysSecret.metadata.name, "v2"),
               generateEnvVarFromSecret("SMTP_SERVER", secrets.SmtpSecret.metadata.name, "server"),
               generateEnvVarFromSecret("SMTP_USERNAME", secrets.SmtpSecret.metadata.name, "username"),
               generateEnvVarFromSecret("SMTP_PASSWORD", secrets.SmtpSecret.metadata.name, "password"),
