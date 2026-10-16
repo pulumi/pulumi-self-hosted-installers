@@ -24,11 +24,14 @@ services:
     ports:
       - "8080:8080"
     image: "pulumi-local/service:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
+    pull_policy: never
 
   console:
     ports:
       - "3000:3000"
     image: "pulumi-local/console:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
+    pull_policy: never
 
   migration:
     image: "pulumi-local/migrations:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
+    pull_policy: never

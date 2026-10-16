@@ -26,6 +26,7 @@ services:
       - "8080:8080"
       - "8443:8443"
     image: "pulumi-local/service:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
+    pull_policy: never
     environment:
       API_TLS_CERTIFICATE: "${API_TLS_CERTIFICATE}"
       API_TLS_PRIVATE_KEY: "${API_TLS_PRIVATE_KEY}"
@@ -39,6 +40,7 @@ services:
       - "3000:3000"
       - "3443:3443"
     image: "pulumi-local/console:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
+    pull_policy: never
     environment:
       PULUMI_API: "https://localhost:8443"
       PULUMI_API_INTERNAL_ENDPOINT: "https://pulumi-api:8443"
