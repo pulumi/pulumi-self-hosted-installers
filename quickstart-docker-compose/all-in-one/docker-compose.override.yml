@@ -1,6 +1,14 @@
 # This is the DEV version of the all-in-one compose file.
-# The overrides the build context so that it uses the local sources
-# to build an image rather than the published image.
+# It runs images built from a local pulumi-service checkout instead of the
+# published images. pulumi-service builds them with Bazel, so load them into
+# the local docker daemon first, from the pulumi-service checkout:
+#
+#   ./tools/bazel run //tools/docker:load_service_linux_${ARCH}
+#   ./tools/bazel run //tools/docker:load_console_linux_${ARCH}
+#   ./tools/bazel run //tools/docker:load_migrations_linux_${ARCH}
+#
+# where ARCH is arm64 (Apple silicon, the default here) or amd64. For amd64,
+# also export PULUMI_DEV_IMAGE_ARCH=amd64 before running docker compose.
 
 networks:
   pulumi-self-hosted-installers:
@@ -15,26 +23,12 @@ services:
   api:
     ports:
       - "8080:8080"
-    image: "pulumi/service:scratch"
-    build:
-      context: ../../../
-      dockerfile: ./cmd/service/Dockerfile
-      target: service
-      ssh:
-        - default
+    image: "pulumi-local/service:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
 
   console:
     ports:
       - "3000:3000"
-    image: "pulumi/console:scratch"
-    build:
-      context: ../../../
-      dockerfile: ./cmd/console2/Dockerfile.full
-      ssh:
-        - default
+    image: "pulumi-local/console:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
 
   migration:
-    image: "pulumi/migrations:scratch"
-    build:
-      context: ../../../
-      dockerfile: ./migrations/Dockerfile
+    image: "pulumi-local/migrations:linux-${PULUMI_DEV_IMAGE_ARCH:-arm64}"
