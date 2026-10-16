@@ -16,7 +16,8 @@ checkout:
 ./tools/bazel run //tools/docker:load_migrations_linux_arm64   # all-in-one only
 ```
 
-Use `amd64` in place of `arm64` on x86 hosts and set
+The services set `pull_policy: never`, so a missing tag fails instead of being
+pulled from Docker Hub. Use `amd64` in place of `arm64` on x86 hosts and set
 `PULUMI_DEV_IMAGE_ARCH=amd64` so compose looks for the matching tag (it
 defaults to `arm64`). Then pass the override file with the base file, e.g.
 
