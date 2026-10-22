@@ -85,6 +85,14 @@ export class ApiService extends pulumi.ComponentResource {
                 name: "PULUMI_DATABASE_USER_NAME",
                 value: pulumi.secret(this.baseArgs.database.dbUsername),
             },
+            {
+                name: "OIDC_KEYS",
+                value: this.baseArgs.oidcKeySets.v1,
+            },
+            {
+                name: "OIDC_KEYS_V2",
+                value: this.baseArgs.oidcKeySets.v2,
+            },
         ];
 
         if (args.opensearch?.password) {
