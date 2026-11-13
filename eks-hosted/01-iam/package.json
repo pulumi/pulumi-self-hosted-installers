@@ -4,7 +4,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@pulumi/aws": "7.52.1",
-    "@pulumi/pulumi": "3.273.0"
+    "@pulumi/aws": "7.55.0",
+    "@pulumi/pulumi": "3.276.0"
   }
 }

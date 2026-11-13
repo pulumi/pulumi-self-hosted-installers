@@ -5,10 +5,10 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@pulumi/aws": "7.52.1",
-    "@pulumi/kubernetes": "4.34.2",    
-    "@pulumi/pulumi": "3.273.0",
-    "@pulumi/random": "4.21.4",
-    "@pulumi/tls": "5.6.2"
+    "@pulumi/aws": "7.55.0",
+    "@pulumi/kubernetes": "4.34.3",    
+    "@pulumi/pulumi": "3.276.0",
+    "@pulumi/random": "4.21.6",
+    "@pulumi/tls": "5.6.3"
   }
 }
