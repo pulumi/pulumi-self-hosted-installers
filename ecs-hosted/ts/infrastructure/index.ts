@@ -30,8 +30,11 @@ export = async () => {
     let endpointSgId: pulumi.Output<string> | undefined;
     let s3PrefixListId: pulumi.Output<string> | undefined;
     if (config.enableVpcEndpoints) {
-        // the S3 gateway endpoint only takes effect for subnets whose route tables it is associated with
-        const routeTableIds = await lookupRouteTableIds(config.vpcId, [...config.privateSubnetIds, ...config.isolatedSubnetIds]);
+        // private mode only: the S3 gateway endpoint only takes effect for subnets whose route tables it is associated with.
+        // Left out otherwise, so existing installs keep their endpoint unchanged.
+        const routeTableIds = config.enablePrivateLoadBalancerAndLimitEgress ?
+            await lookupRouteTableIds(config.vpcId, [...config.privateSubnetIds, ...config.isolatedSubnetIds]) :
+            undefined;
 
         // retrieve the prefix id and export for downstream SGs to use
         const endpoints = createVpcEndpoints(config, routeTableIds, providers.aws);
@@ -125,7 +128,7 @@ async function lookupRouteTableIds(vpcId: string, subnetIds: string[]): Promise<
     return [...ids].sort();
 }
 
-function createVpcEndpoints(config: any, routeTableIds: string[], awsProvider: AwsProvider) {
+function createVpcEndpoints(config: any, routeTableIds: string[] | undefined, awsProvider: AwsProvider) {
     // if needed, ingress can be narrowed down to ECS services, although all traffic should originate from within our VPC
     const endpointSecurityGroup = new ec2.SecurityGroup(`${config.commonName}-endpoint-sg`, {
         vpcId: config.vpcId,
@@ -189,19 +192,22 @@ function createVpcEndpoints(config: any, routeTableIds: string[], awsProvider: A
         serviceName: `com.amazonaws.${config.region}.ssm`,
     });
 
-    // the Pulumi API encrypts and decrypts stack secrets with the KMS key (PULUMI_KMS_KEY)
-    createEndpoint({
-        ...endpointArgs,
-        name: `${config.commonName}-kms-endpoint`,
-        serviceName: `com.amazonaws.${config.region}.kms`,
-    });
+    // private mode only, so existing installs get no new endpoints
+    if (config.enablePrivateLoadBalancerAndLimitEgress) {
+        // the Pulumi API encrypts and decrypts stack secrets with the KMS key (PULUMI_KMS_KEY)
+        createEndpoint({
+            ...endpointArgs,
+            name: `${config.commonName}-kms-endpoint`,
+            serviceName: `com.amazonaws.${config.region}.kms`,
+        });
 
-    // the awslogs log driver of the ECS tasks, including the migrations task, ships to CloudWatch Logs
-    createEndpoint({
-        ...endpointArgs,
-        name: `${config.commonName}-logs-endpoint`,
-        serviceName: `com.amazonaws.${config.region}.logs`,
-    });
+        // the awslogs log driver of the ECS tasks, including the migrations task, ships to CloudWatch Logs
+        createEndpoint({
+            ...endpointArgs,
+            name: `${config.commonName}-logs-endpoint`,
+            serviceName: `com.amazonaws.${config.region}.logs`,
+        });
+    }
 
     return {
         s3PrivatePrefixList,

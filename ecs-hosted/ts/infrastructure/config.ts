@@ -12,11 +12,18 @@ export async function hydrateConfig() {
 
     const commonName = stackConfig.get("commonName") || "pulumiselfhosted";
 
+    // Private (internal-only) mode, opt-in and off by default; same key as the application and dns stages. When true and
+    // enableVpcEndpoints is true, the S3 gateway endpoint is associated with the private and isolated route tables and
+    // KMS and CloudWatch Logs interface endpoints are added. publicSubnetIds becomes optional.
+    const enablePrivateLoadBalancerAndLimitEgress = stackConfig.getBoolean("enablePrivateLoadBalancerAndLimitEgress") ?? false;
+
     // NOTE: We will assume all networking pieces are already created properly; this may change in the future to allow for networking to be created as part of this process.
     const vpcId = stackConfig.require("vpcId");
     // Not used by this stage; only passed through to the application stage, which needs it for internet-facing load
-    // balancers. Leave it unset for a private (internal-only) deployment in a VPC without public subnets.
-    const publicSubnetIds: string[] = stackConfig.getObject<string[]>("publicSubnetIds") ?? [];
+    // balancers. Optional in private mode, for a VPC without public subnets.
+    const publicSubnetIds: string[] = enablePrivateLoadBalancerAndLimitEgress ?
+        stackConfig.getObject<string[]>("publicSubnetIds") ?? [] :
+        stackConfig.requireObject("publicSubnetIds");
     const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
     const isolatedSubnetIds: string[] = stackConfig.requireObject("isolatedSubnetIds");
     const numberDbReplicas = stackConfig.getNumber("numberDbReplicas") || 0;
@@ -35,6 +42,7 @@ export async function hydrateConfig() {
         accountId: callerId.accountId,
         projectName,
         commonName,
+        enablePrivateLoadBalancerAndLimitEgress,
         vpcId,
         numberDbReplicas,
         publicSubnetIds,

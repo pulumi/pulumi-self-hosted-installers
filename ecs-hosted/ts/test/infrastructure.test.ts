@@ -19,12 +19,12 @@ async function run(config: Record<string, unknown>): Promise<{ harness: mocks.Ha
     return { harness, outputs };
 }
 
-describe("infrastructure, VPC endpoints enabled (default), no publicSubnetIds", () => {
+describe("infrastructure, enablePrivateLoadBalancerAndLimitEgress, no publicSubnetIds", () => {
     let harness: mocks.Harness;
     let outputs: any;
 
     before(async () => {
-        ({ harness, outputs } = await run(baseConfig));
+        ({ harness, outputs } = await run({ ...baseConfig, enablePrivateLoadBalancerAndLimitEgress: true }));
     });
 
     it("associates the S3 gateway endpoint with the private and isolated route tables", () => {
@@ -52,11 +52,32 @@ describe("infrastructure, VPC endpoints enabled (default), no publicSubnetIds", 
     });
 });
 
-describe("infrastructure, enableVpcEndpoints=false", () => {
+describe("infrastructure, default (flag off)", () => {
     let harness: mocks.Harness;
 
     before(async () => {
-        ({ harness } = await run({ ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, enableVpcEndpoints: false }));
+        ({ harness } = await run({ ...baseConfig, publicSubnetIds: mocks.publicSubnetIds }));
+    });
+
+    it("leaves the S3 gateway endpoint without route tables and adds no KMS or logs endpoint", () => {
+        const s3 = harness.named(endpointType, "pulumiselfhosted-s3-endpoint");
+        assert.equal(s3.inputs.routeTableIds, undefined);
+        const services = harness.ofType(endpointType).map(e => e.inputs.serviceName);
+        assert.ok(!services.includes(`com.amazonaws.${mocks.region}.kms`));
+        assert.ok(!services.includes(`com.amazonaws.${mocks.region}.logs`));
+        assert.equal(harness.callsTo("aws:ec2/getRouteTables:getRouteTables").length, 0);
+    });
+
+    it("still requires publicSubnetIds", async () => {
+        await assert.rejects(run(baseConfig), /publicSubnetIds/);
+    });
+});
+
+describe("infrastructure, private mode with enableVpcEndpoints=false", () => {
+    let harness: mocks.Harness;
+
+    before(async () => {
+        ({ harness } = await run({ ...baseConfig, enablePrivateLoadBalancerAndLimitEgress: true, enableVpcEndpoints: false }));
     });
 
     it("creates no endpoints and looks up no route tables", () => {
