@@ -208,6 +208,50 @@ describe("application, consoleDesiredNumberTasks", () => {
     });
 });
 
+describe("application, imagePrefix (ECR pull-through cache)", () => {
+    const flagOff = { ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, endpointSecurityGroupId: "sg-endpoints" };
+    const taskDefinitions = ["pulumi-service-api-task-def", "pulumi-console-task-def", "pulumi-service-migrations-task-def"];
+    const images = (harness: mocks.Harness) => taskDefinitions.map(name =>
+        JSON.parse(harness.named(taskDefType, name).inputs.containerDefinitions)[0].image);
+    const importPolicies = (harness: mocks.Harness) => harness.ofType("aws:iam/rolePolicy:RolePolicy")
+        .filter(p => String(p.inputs.policy).includes("ecr:BatchImportUpstreamImage"));
+
+    it("puts the prefix between the registry and pulumi/<image>, normalizing slashes", async () => {
+        for (const imagePrefix of ["docker-hub", "/docker-hub/"]) {
+            assert.deepEqual(images(await run({ ...flagOff, imagePrefix })), ["service", "console", "migrations"].map(image =>
+                `${mocks.accountId}.dkr.ecr.${mocks.region}.amazonaws.com/docker-hub/pulumi/${image}:latest`));
+        }
+    });
+
+    it("keeps the master image URIs when unset", async () => {
+        const harness = await run(flagOff);
+        assert.deepEqual(images(harness), ["service", "console", "migrations"].map(image =>
+            `${mocks.accountId}.dkr.ecr.${mocks.region}.amazonaws.com/pulumi/${image}:latest`));
+        assert.equal(importPolicies(harness).length, 0);
+    });
+
+    it("ecrPullThroughCacheImport grants the import permissions on the prefixed repos to all three roles", async () => {
+        const harness = await run({ ...flagOff, imagePrefix: "docker-hub", ecrRepoAccountId: "210987654321", ecrPullThroughCacheImport: true });
+        const policies = importPolicies(harness);
+        assert.deepEqual(policies.map(p => p.name).sort(), [
+            "pulumi-console-execution-role-att-0",
+            "pulumi-service-api-execution-role-att-0",
+            "pulumi-service-migrations-migration-pull-through-cache-pol",
+        ]);
+        for (const policy of policies) {
+            assert.deepEqual(JSON.parse(policy.inputs.policy).Statement, [{
+                Effect: "Allow",
+                Action: ["ecr:BatchImportUpstreamImage", "ecr:CreateRepository"],
+                Resource: `arn:aws:ecr:${mocks.region}:210987654321:repository/docker-hub/pulumi/*`,
+            }]);
+        }
+    });
+
+    it("rejects ecrPullThroughCacheImport without imagePrefix", async () => {
+        await assert.rejects(run({ ...flagOff, ecrPullThroughCacheImport: true }), /imagePrefix/);
+    });
+});
+
 describe("application, default (flag off)", () => {
     let harness: mocks.Harness;
 

@@ -6,7 +6,7 @@ import { kms } from "@pulumi/aws";
 import { ContainerService } from "./containerService";
 import { MigrationService } from "./migrationsService";
 import { TaskDefinitionArgs, ApiServiceArgs, ApiServiceEnvironmentArgs, Secret } from "./types";
-import { buildECRImageTag } from "../utils";
+import { buildECRImageTag, generatePullThroughCachePolicy } from "../utils";
 import { LogFactory } from "../logs/logFactory";
 import { LogDriver, LogType } from "../logs/types";
 import { Secrets } from "./secrets";
@@ -223,7 +223,7 @@ export class ApiService extends pulumi.ComponentResource {
 
                 const def = JSON.stringify([{
                     name: apiContainerName,
-                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.apiImage),
+                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.apiImage, this.baseArgs.imagePrefix),
                     cpu: containerCpu,
                     memoryReservation: containerMemoryReservation,
                     ulimits: [{
@@ -330,6 +330,7 @@ export class ApiService extends pulumi.ComponentResource {
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
+            executionRolePolicyDocs: this.pullThroughCachePolicyDocs(),
             taskRolePolicyDocs,
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
@@ -339,6 +340,16 @@ export class ApiService extends pulumi.ComponentResource {
         };
 
         return taskArgs;
+    }
+
+    // opt-in (ecrPullThroughCacheImport): lets the execution role import the image through the ECR pull-through cache
+    pullThroughCachePolicyDocs(): pulumi.Output<string>[] | undefined {
+        const { ecrPullThroughCacheImport, imagePrefix, ecrRepoAccountId, accountId, region } = this.baseArgs;
+        if (!ecrPullThroughCacheImport || !imagePrefix) {
+            return undefined;
+        }
+        const ecrAccountId = ecrRepoAccountId && ecrRepoAccountId !== "" ? ecrRepoAccountId : accountId;
+        return [pulumi.output(generatePullThroughCachePolicy(region, ecrAccountId, imagePrefix))];
     }
 
     // Complete list of environment variables that each ECS task of Pulumi API (service) will inherit

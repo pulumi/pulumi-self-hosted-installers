@@ -41,6 +41,10 @@ export interface TaskDefinitionArgs {
 export interface ServiceBaseArgs {
     accountId: string,
     cluster?: ecs.Cluster,
+    // ECR pull-through cache: repository prefix in front of pulumi/<image> (normalized, ends with "/"), and whether the
+    // execution roles may import images through the cache
+    ecrPullThroughCacheImport?: boolean,
+    imagePrefix?: string,
     kmsServiceKeyId?: string,
     // set in private mode (enablePrivateLoadBalancerAndLimitEgress); restricts task egress to the VPC and S3
     privateNetwork?: PrivateNetwork,

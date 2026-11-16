@@ -4,7 +4,7 @@ import { input } from "@pulumi/aws/types";
 
 import { ContainerService } from "./containerService";
 import { TaskDefinitionArgs, ConsoleServiceArgs } from "./types";
-import { buildECRImageTag } from "../utils";
+import { buildECRImageTag, generatePullThroughCachePolicy } from "../utils";
 import { LogType, LogDriver } from "../logs/types";
 import { LogFactory } from "../logs/logFactory";
 import { privateEgressRules } from "../networking/privateNetwork";
@@ -135,7 +135,7 @@ export class ConsoleService extends pulumi.ComponentResource {
 
                 return JSON.stringify([{
                     name: consoleContainerName,
-                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.consoleImage),
+                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.consoleImage, this.baseArgs.imagePrefix),
                     cpu: containerCpu,
                     memoryReservation: containerMemoryReservation,
                     portmappings: [{
@@ -152,8 +152,16 @@ export class ConsoleService extends pulumi.ComponentResource {
             });
 
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
+        // opt-in (ecrPullThroughCacheImport): lets the execution role import the image through the ECR pull-through cache
+        const { ecrPullThroughCacheImport, imagePrefix, ecrRepoAccountId, accountId, region } = this.baseArgs;
+        const pullThroughCacheAccountId = ecrRepoAccountId && ecrRepoAccountId !== "" ? ecrRepoAccountId : accountId;
+        const executionRolePolicyDocs = ecrPullThroughCacheImport && imagePrefix ?
+            [pulumi.output(generatePullThroughCachePolicy(region, pullThroughCacheAccountId, imagePrefix))] :
+            undefined;
+
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
+            executionRolePolicyDocs,
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
             memory: taskMemory,

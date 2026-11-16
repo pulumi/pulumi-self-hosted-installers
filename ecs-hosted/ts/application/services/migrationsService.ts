@@ -5,7 +5,7 @@ import * as ecs from "@pulumi/aws/ecs";
 import * as ec2 from "@pulumi/aws/ec2";
 
 import { DatabaseMigrationTask } from "../databaseMigrationTask";
-import { buildECRImageTag, generateSecretsManagerPolicy } from "../utils";
+import { buildECRImageTag, generatePullThroughCachePolicy, generateSecretsManagerPolicy } from "../utils";
 import { Secrets } from "./secrets";
 import { MigrationsArgs } from "./types";
 import { getIamPolicyArn } from "../../common/utils";
@@ -51,6 +51,15 @@ export class MigrationService extends pulumi.ComponentResource {
             role: role,
             policy: doc
         }, this.baseOptions);
+
+        // opt-in (ecrPullThroughCacheImport): lets the role import the image through the ECR pull-through cache
+        if (args.ecrPullThroughCacheImport && args.imagePrefix) {
+            const ecrAccountId = args.ecrRepoAccountId && args.ecrRepoAccountId !== "" ? args.ecrRepoAccountId : args.accountId;
+            new iam.RolePolicy(`${this.baseName}-migration-pull-through-cache-pol`, {
+                role: role,
+                policy: generatePullThroughCachePolicy(args.region, ecrAccountId, args.imagePrefix)
+            }, this.baseOptions);
+        }
 
         // in private mode the task reaches ECR, Secrets Manager and CloudWatch Logs through interface endpoints in the VPC,
         // image layers through the S3 gateway endpoint, and Aurora through its security group
@@ -142,7 +151,7 @@ export class MigrationService extends pulumi.ComponentResource {
                 // TODO: follow log groups implementation
                 return JSON.stringify([{
                     name: "pulumi-migration",
-                    image: buildECRImageTag(ecrAccountId, args.region, image),
+                    image: buildECRImageTag(ecrAccountId, args.region, image, args.imagePrefix),
                     cpu: cpu,
                     memoryReservation: memoryReservation,
                     logConfiguration: {

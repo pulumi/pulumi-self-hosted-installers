@@ -83,6 +83,8 @@ export = async () => {
         engineEventsSchemaV2: config.api.apiEngineEventsSchemaV2,
         engineEventsLegacyWrite: config.api.apiEngineEventsLegacyWrite,
         ecrRepoAccountId: config.ecrRepoAccountId,
+        ecrPullThroughCacheImport: config.ecrPullThroughCacheImport,
+        imagePrefix: config.imagePrefix,
         dns: {
             apiUrl: apiUrl,
             consoleUrl: consoleUrl,
@@ -133,6 +135,8 @@ export = async () => {
             whiteListCidrBlocks: config.dns.whiteListCidrBlocks
         },
         ecrRepoAccountId: config.ecrRepoAccountId,
+        ecrPullThroughCacheImport: config.ecrPullThroughCacheImport,
+        imagePrefix: config.imagePrefix,
         endpointSecurityGroupId: config.endpointSecurityGroupId,
         imageTag: config.dockerHub.imageTag,
         hideEmailLogin: config.console.consoleHideEmailLogin,

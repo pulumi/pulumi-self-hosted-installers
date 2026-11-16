@@ -1,6 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import { getCallerIdentity } from "@pulumi/aws";
-import { toLogType } from "./utils";
+import { normalizeImagePrefix, toLogType } from "./utils";
 import { LogType } from "./logs/types";
 import { parseProxyUrl } from "./networking/proxy";
 
@@ -69,6 +69,17 @@ export async function hydrateConfig() {
 
     const ecrRepoAccountId = stackConfig.get("ecrRepoAccountId");
     const imageTag = stackConfig.require("imageTag");
+
+    // Optional repository prefix in front of pulumi/<image>, eg- "docker-hub" for an ECR pull-through cache rule with that
+    // prefix: <account>.dkr.ecr.<region>.amazonaws.com/docker-hub/pulumi/service:<tag>. A trailing "/" is added if missing.
+    const imagePrefix = normalizeImagePrefix(stackConfig.get("imagePrefix"));
+    // Opt-in: lets the task execution roles import images through the pull-through cache on first pull
+    // (ecr:BatchImportUpstreamImage and ecr:CreateRepository on <imagePrefix>pulumi/*). undefined rather than false when
+    // off, so the component inputs stay as they were.
+    const ecrPullThroughCacheImport = stackConfig.getBoolean("ecrPullThroughCacheImport") || undefined;
+    if (ecrPullThroughCacheImport && !imagePrefix) {
+        throw new Error("ecrPullThroughCacheImport requires imagePrefix, the prefix of the ECR pull-through cache rule");
+    }
 
     const route53ZoneName = stackConfig.require("domainName");
     const route53Subdomain = stackConfig.get("subDomain") || "";
@@ -153,6 +164,8 @@ export async function hydrateConfig() {
         recaptchaSiteKey: recaptchaSiteKey,
         kmsServiceKeyId,
         ecrRepoAccountId,
+        imagePrefix,
+        ecrPullThroughCacheImport,
         dockerHub: {
             imageTag,
         },
