@@ -291,6 +291,9 @@ export class ApiService extends pulumi.ComponentResource {
             keyId: this.baseArgs.kmsServiceKeyId!
         });
 
+        // The four actions the self-hosting docs list for AWS KMS (components/api.md, "Encryption services"). The service
+        // calls GenerateDataKey and Encrypt when it creates an ESC environment key; without them `pulumi env init` fails
+        // with "error generating environment key".
         const kmsKeyPolicyDoc = pulumi
             .all([kmsKey])
             .apply(([kmsKey]) => {
@@ -299,7 +302,9 @@ export class ApiService extends pulumi.ComponentResource {
                     Statement: [{
                         Effect: "Allow",
                         Action: [
+                            "kms:Encrypt",
                             "kms:Decrypt",
+                            "kms:GenerateDataKey",
                             "kms:GenerateDataKeyWithoutPlaintext"
                         ],
                         Resource: [

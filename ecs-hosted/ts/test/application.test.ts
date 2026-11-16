@@ -252,6 +252,18 @@ describe("application, imagePrefix (ECR pull-through cache)", () => {
     });
 });
 
+describe("application, API task role KMS permissions", () => {
+    it("grants the four actions the self-hosting docs require", async () => {
+        const harness = await run({ ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, endpointSecurityGroupId: "sg-endpoints" });
+        const policy = JSON.parse(harness.named("aws:iam/rolePolicy:RolePolicy", "pulumi-service-api-task-role-att-1").inputs.policy);
+        assert.deepEqual(policy.Statement, [{
+            Effect: "Allow",
+            Action: ["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey", "kms:GenerateDataKeyWithoutPlaintext"],
+            Resource: [`arn:aws:kms:${mocks.region}:${mocks.accountId}:key/key-1234`],
+        }]);
+    });
+});
+
 describe("application, default (flag off)", () => {
     let harness: mocks.Harness;
 

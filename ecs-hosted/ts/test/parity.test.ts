@@ -13,6 +13,8 @@ Flag-off parity: with enablePrivateLoadBalancerAndLimitEgress unset, every stage
 Allowlisted differences from master, each a deliberate fix that applies to every install (see allowlistedFixes):
 - the OpenSearch master password (infrastructure) now sets minUpper/minLower/minNumeric/minSpecial = 1, because
   OpenSearch rejects a password without every character class. ignoreChanges keeps existing installs from replacing it.
+- the API task role KMS policy (application) now also grants kms:Encrypt and kms:GenerateDataKey, which the service
+  needs to create ESC environment keys (self-hosting docs, components/api.md "Encryption services").
 
 fixtures/flag-off-parity.json holds a sha256 of each stage's canonical recording. It was produced by compiling this file
 against the origin/master sources and running it with PARITY_FIXTURE_UPDATE=<path to the fixture>. On a mismatch the
@@ -88,12 +90,30 @@ const explicitlyOff: Record<string, Record<string, unknown>> = {
 // recording is still compared with master. Unit tests in infrastructure.test.ts assert the fix itself.
 function allowlistedFixes(resources: mocks.Recorded[]): mocks.Recorded[] {
     const passwordFix: Record<string, unknown> = { minUpper: 1, minLower: 1, minNumeric: 1, minSpecial: 1 };
+
+    // The KMS policy JSON appears in the API task role policy and, as task definition args, in the API container
+    // service component. Swap exactly the fixed action list back to master's in those two resources only.
+    const kmsFixed = '"Action":["kms:Encrypt","kms:Decrypt","kms:GenerateDataKey","kms:GenerateDataKeyWithoutPlaintext"]';
+    const kmsMaster = '"Action":["kms:Decrypt","kms:GenerateDataKeyWithoutPlaintext"]';
+    const kmsResources = ["aws:iam/rolePolicy:RolePolicy::pulumi-service-api-task-role-att-1", "pulumi:containerService::pulumi-service-api"];
+    const swapKmsActions = (value: any): any =>
+        typeof value === "string" ? value.split(kmsFixed).join(kmsMaster) :
+        Array.isArray(value) ? value.map(swapKmsActions) :
+        value && Object.getPrototypeOf(value) === Object.prototype ?
+            Object.fromEntries(Object.entries(value).map(([k, v]) => [k, swapKmsActions(v)])) :
+        value;
+
     return resources.map(r => {
-        if (r.type !== "random:index/randomPassword:RandomPassword" || r.name !== "pulumiselfhosted-ressearch-pw") {
-            return r;
+        if (r.type === "random:index/randomPassword:RandomPassword" && r.name === "pulumiselfhosted-ressearch-pw") {
+            const inputs = Object.fromEntries(Object.entries(r.inputs).filter(([k, v]) => passwordFix[k] !== v));
+            return { ...r, inputs };
         }
-        const inputs = Object.fromEntries(Object.entries(r.inputs).filter(([k, v]) => passwordFix[k] !== v));
-        return { ...r, inputs };
+
+        if (kmsResources.includes(`${r.type}::${r.name}`)) {
+            return { ...r, inputs: swapKmsActions(r.inputs) };
+        }
+
+        return r;
     });
 }
 
