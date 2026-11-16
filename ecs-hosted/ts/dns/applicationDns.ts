@@ -16,8 +16,12 @@ export class ApplicationDns extends pulumi.ComponentResource {
         const options = pulumi.mergeOptions(opts, { parent: this });
 
         // retrieve the hosted zone that will host our A records
-        // zone should match the domain name.
-        const zoneId = pulumi.output(route53.getZoneOutput({
+        // zone should match the domain name. Private mode needs privateZone, otherwise only public zones match.
+        const zoneId = pulumi.output(route53.getZoneOutput(args.privateZone ? {
+            name: args.zoneName,
+            privateZone: true,
+            vpcId: args.vpcId,
+        } : {
             name: args.zoneName
         }, options)).apply(result => result.zoneId);
 
