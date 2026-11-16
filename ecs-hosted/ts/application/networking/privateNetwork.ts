@@ -17,7 +17,7 @@ export interface PrivateNetwork {
 export interface EgressOptions {
     // adds MySQL egress to the Aurora security group
     dbSecurityGroupId?: string;
-    // extra TCP ports allowed to the VPC CIDR blocks, eg- the port of an HTTP proxy; 80 and 443 are always allowed
+    // extra TCP ports allowed to the VPC CIDR blocks (HTTP proxy, SMTP server); 80 and 443 are always allowed
     extraVpcPorts?: number[];
 }
 
@@ -84,7 +84,7 @@ export function privateEgressRules(network: PrivateNetwork, options: EgressOptio
     const extraPorts = [...new Set(options.extraVpcPorts ?? [])].filter(port => port !== 80 && port !== 443);
     for (const port of extraPorts) {
         rules.push({
-            description: `TCP ${port} to the VPC, eg- an HTTP proxy`,
+            description: `TCP ${port} to the VPC: HTTP proxy or SMTP server`,
             protocol: "tcp",
             fromPort: port,
             toPort: port,

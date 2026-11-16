@@ -148,6 +148,7 @@ describe("application, private mode with httpsProxy", () => {
         enablePrivateLoadBalancerAndLimitEgress: true,
         httpsProxy: "http://proxy.internal.example:3128",
         noProxy: [".corp.example"],
+        smtpServer: "email-smtp.us-west-2.amazonaws.com:587",
         opensearchEndpoint: "https://vpc-pulumi-abc.us-west-2.es.amazonaws.com",
     };
 
@@ -182,6 +183,11 @@ describe("application, private mode with httpsProxy", () => {
         assert.deepEqual(proxyRule(apiSg)?.cidrBlocks, mocks.vpcCidrBlocks);
         assert.equal(proxyRule(consoleSg), undefined);
         assert.equal(proxyRule(migrationsSg), undefined);
+    });
+
+    it("opens the SMTP port to the VPC on the API security group", () => {
+        const smtpRule = egress(harness, apiSg).find(rule => rule.fromPort === 587);
+        assert.deepEqual(smtpRule?.cidrBlocks, mocks.vpcCidrBlocks);
     });
 
     it("rejects a proxy without a scheme", async () => {

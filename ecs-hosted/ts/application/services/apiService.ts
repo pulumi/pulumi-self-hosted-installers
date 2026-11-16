@@ -125,7 +125,10 @@ export class ApiService extends pulumi.ComponentResource {
             pulumiLoadBalancer: trafficManager.api,
             securityGroupEgress: args.privateNetwork && privateEgressRules(args.privateNetwork, {
                 dbSecurityGroupId: args.database.dbSecurityGroupId,
-                extraVpcPorts: args.proxy ? [proxyPort(args.proxy.url)] : [],
+                extraVpcPorts: [
+                    ...(args.proxy ? [proxyPort(args.proxy.url)] : []),
+                    ...smtpPort(args.smtp?.smtpServer),
+                ],
             }),
             targetPort: apiPort,
             taskDefinitionArgs: taskArgs,
@@ -455,4 +458,11 @@ export class ApiService extends pulumi.ComponentResource {
             ...proxyVariables,
         ];
     }
+}
+
+// port of an SMTP server given as host:port; in private mode it has to be reachable inside the VPC, eg- an SES
+// email-smtp interface endpoint or an internal relay
+function smtpPort(smtpServer: string | undefined): number[] {
+    const match = smtpServer?.match(/:(\d+)$/);
+    return match ? [Number(match[1])] : [];
 }
