@@ -1,5 +1,8 @@
 {
     "name": "self-hosted-aws-ecs-ts",
+    "scripts": {
+        "test": "tsc -p test && node --test \"test/bin/test/*.test.js\""
+    },
     "devDependencies": {
         "@types/node": "24.10.9",
         "typescript": "5.9.3"
