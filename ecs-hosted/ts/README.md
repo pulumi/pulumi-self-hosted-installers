@@ -18,6 +18,7 @@ Version ID | Date | Note
 6 | 10/15/2024 | Add ESC deployment to the installer.
 7 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 8 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
+9 | 11/16/2026 | Private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress`, see [Private (internal-only) deployment](#private-internal-only-deployment). The infrastructure stage now also creates KMS and CloudWatch Logs endpoints and routes the S3 gateway endpoint through the private and isolated route tables; review its `pulumi preview` when upgrading.
 
 ## User Guides
 
@@ -35,7 +36,7 @@ Version ID | Date | Note
   - Set PULUMI_CONFIG_PASSPHRASE to some secret passphrase for handling secrets.
 - [ECR][ecr] repositories which contain Pulumi API (service), Pulumi UI (console), and Pulumi Migration images. NOTE: the below `imageTag` configuration value corresponds to image tag in each ECR repo. Also, by default this program expects the ECR repos to be named after the Pulumi containers. Eg- `pulumi/service`, `pulumi/console`, `pulumi/migrations`.
 - [VPC][vpc]
-  - At least two public subnet available.
+  - At least two public subnet available. Not needed in [private mode](#private-internal-only-deployment).
   - At least two private subnet available.
   - At least two isolated subnet available. In this case as `isolated` subnet is one which can only be connected to or from other instances in the same subnet. They do not route traffic to the internet, therefore, they do not require NAT gateways.
 - [ACM][acm] certificate that covers the base domain (eg- example.com) and also the subdomain, if one is being utilized (eg- sub.example.com). Lastly, the certificate must cover `app.{sub}.example.com` and `api.{sub}.example.com`. Note: `sub` is optional in this case.
@@ -114,7 +115,6 @@ pulumi stack init # follow prompt
 ```bash
 region - AWS Region
 vpcId - Valid, pre-existing AWS VPC 
-publicSubnetIds - At least two subnet ID
 privateSubnetIds - At least two private subnet ID
 isolatedSubnetIds - At least two isolated subnet ID
 ```
@@ -122,6 +122,8 @@ isolatedSubnetIds - At least two isolated subnet ID
 ### Optional Configuration
 
 ```bash
+publicSubnetIds - At least two subnet ID. Only passed through to the application stage; leave unset in private mode.
+enableVpcEndpoints - Create the VPC endpoints listed below (default is true)
 dbInstanceType - RDS Database Instance Type (default is db.t3.small)
 enableOpenSearch - Deploys an AWS OpenSearch Domain as part of the project
 openSearchInstanceType - AWS OpenSearch Instance Type (default is t3.medium.search)
@@ -144,6 +146,26 @@ pulumi config set isolatedSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443
 
 Optionally, configure the DB Instance Type of your choice.
 
+### VPC Endpoints
+
+With `enableVpcEndpoints` (the default) this stage creates:
+
+- an S3 gateway endpoint, associated with the route tables of the private and isolated subnets (the VPC main route
+  table for subnets without an explicit association)
+- interface endpoints with private DNS in the private subnets for `ecr.api`, `ecr.dkr`, `secretsmanager`, `ssm`, `kms`
+  and `logs`
+
+If the VPC already has any of these endpoints, or already resolves these service names privately (for example through
+centrally shared endpoints), creating them fails on the private DNS conflict. Set `enableVpcEndpoints` to `false` in
+that case and make sure the VPC provides, for the private subnets:
+
+- interface endpoints with private DNS for `kms`, `ecr.api`, `ecr.dkr`, `logs` and `secretsmanager`, plus `sts` if the
+  service has to assume AWS roles (for example ESC `aws-login`), with security groups that allow 443 from the VPC
+- an S3 gateway endpoint associated with the route tables of the private subnets (and the isolated subnets)
+
+On an existing install, `pulumi preview` shows the new `kms` and `logs` endpoints and an update of the S3 endpoint's
+route tables. Switching an existing install to `enableVpcEndpoints=false` deletes the endpoints this stage created.
+
 ### Deploy
 
 ```bash
@@ -165,7 +187,7 @@ pulumi stack init # follow prompt
 ```bash
 region - AWS Region
 vpcId - Valid, pre-existing AWS VPC 
-publicSubnetIds - At least two subnet ID
+publicSubnetIds - At least two subnet ID. Not required when enablePrivateLoadBalancerAndLimitEgress is true.
 privateSubnetIds - At least two private subnet ID
 isolatedSubnetIds - At least two isolated subnet ID
 dbClusterEndpoint - RDS Cluster Enpoint
@@ -174,7 +196,6 @@ dbName - Database Name
 dbSecurityGroupId - Database Security Group ID
 dbUsername - Database Username for Pulumi Cloud
 dbPassword - Database Password for Pulumi Cloud
-endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints
 openSearchUser - AWS OpenSearch User for Pulumi Cloud
 openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
 openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
@@ -218,6 +239,17 @@ smtpGenericSender - Email to be used for sending emails from Pulumi API.
 
 logType - Type of logs to be used. Default is no logging.
 logArgs - Arguments provided to log configuration. See Logging section below.
+
+endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints (infrastructure output; not used by the program).
+whiteListCidrBlocks - List of CIDRs allowed to reach both load balancers on 80/443. Default is 0.0.0.0/0, or the VPC
+    CIDR blocks in private mode.
+
+enablePrivateLoadBalancerAndLimitEgress - Private (internal-only) mode. See "Private (internal-only) deployment".
+s3EndpointPrefixId - S3 gateway endpoint prefix list (infrastructure output). Private mode only; looked up by name
+    (com.amazonaws.<region>.s3) when unset.
+httpsProxy - HTTP proxy URL for the API's outbound internet calls, eg- http://proxy.internal:3128. Sets HTTPS_PROXY and
+    HTTP_PROXY on the API container.
+noProxy - List of extra NO_PROXY entries for the API container. See "Outbound proxy".
 ```
 
 **Note: below configuration values are examples. Provide your own.**
@@ -286,7 +318,12 @@ consoleLoadBalancerZoneId - Application Load balancer Id - API Load Balancer
 
 ### Optional Configuration
 
-none
+```bash
+enablePrivateLoadBalancerAndLimitEgress - Create the records in a Route 53 private hosted zone (privateZone lookup).
+vpcId - Private mode only: the VPC the private hosted zone is associated with, to pick one of several same-named zones.
+skipDnsRecords - Create no records, for DNS managed outside Route 53. The stack then outputs apiLoadBalancerDnsName and
+    consoleLoadBalancerDnsName; point CNAME records for api.<domain> and app.<domain> at them.
+```
 
 **Note: below configuration values are examples. Provide your own.**
 
@@ -307,6 +344,62 @@ pulumi up
 ```
 
 Review the resources to be created, if necessary, and select YES or NO. Upon completion of the deployment, information required by the dns project, will be retrieved as Stack Reference Outputs from the application project.
+
+## Private (internal-only) deployment
+
+For VPCs without an internet gateway or NAT, where the UI and API are only reachable from inside the network (for
+example through an identity-aware access proxy, a VPN or a peered network). Set `enablePrivateLoadBalancerAndLimitEgress` to `true` in the
+`application` and `dns` stages. Then:
+
+- both load balancers (console and API) are internal and placed in `privateSubnetIds`; `publicSubnetIds` is not needed
+  in any stage
+- the load balancers accept 80/443 from the VPC CIDR blocks, or from `whiteListCidrBlocks` when set. Add the CIDRs of
+  clients outside the VPC, such as access proxy agents in another VPC or VPN ranges
+- the API, console and migrations tasks have no `0.0.0.0/0` egress. They may reach 443 and 80 on the VPC CIDR blocks
+  (interface endpoints, internal load balancers, OpenSearch, a proxy), 443 on the S3 gateway prefix list, and, for API
+  and migrations, 3306 on the Aurora security group. A non-standard `httpsProxy` port and the `smtpServer` port are
+  also opened to the VPC CIDR blocks for the API
+- the console reaches the API at `https://api.<domain>`, which resolves to the internal API load balancer, so the
+  traffic stays in the VPC
+- the `dns` stage looks up the hosted zone with `privateZone: true` and creates the alias records there
+
+### Private mode prerequisites
+
+- private subnets in at least two availability zones for the tasks and load balancers, and isolated subnets for
+  Aurora
+- the VPC endpoints from [VPC Endpoints](#vpc-endpoints), created by the `infrastructure` stage or already present
+- the Pulumi images in ECR in the same region (see `ecrRepoAccountId`), since Docker Hub is not reachable
+- an ACM certificate covering `app.<domain>`, `api.<domain>` and `<domain>`. ACM DNS validation needs publicly
+  resolvable validation records; for a domain that only exists privately, import a certificate from your own CA or use
+  AWS Private CA
+- a Route 53 private hosted zone for `route53ZoneName`, associated with the VPC, so that the tasks resolve
+  `api.<domain>`. With `skipDnsRecords`, your own DNS has to answer for these names inside the VPC (for example
+  through a Route 53 Resolver rule)
+- browsers and the Pulumi CLI must reach both `app.<domain>` and `api.<domain>` under those names, because the
+  console calls the API from the browser
+- anything else the service calls on the internet (OIDC issuers, VCS integrations, webhooks) needs `httpsProxy`; SMTP
+  needs a server inside the VPC, for example an SES `email-smtp` interface endpoint
+
+Turning the flag on for an existing install replaces both load balancers (`internal` cannot be changed in place), so
+their DNS names change: run the `dns` stage again afterwards.
+
+### Outbound proxy
+
+`httpsProxy` sets `HTTPS_PROXY` and `HTTP_PROXY` on the API container, for example so the service can fetch an OIDC
+issuer's JWKS through the proxy. The proxy has to be reachable inside the VPC, for example through an interface
+endpoint. `NO_PROXY` always contains `localhost`, `127.0.0.1`, the EC2 and ECS metadata addresses (`169.254.169.254`,
+`169.254.170.2`, needed for task role credentials), the VPC CIDR blocks, `s3.amazonaws.com`,
+`s3.<region>.amazonaws.com`, `kms.<region>.amazonaws.com`, `secretsmanager.<region>.amazonaws.com`, the database and
+OpenSearch hosts, and the api/app hostnames. Add more with `noProxy`, for example
+`pulumi config set --path 'noProxy[0]' sts.us-west-2.amazonaws.com`. It works with or without private mode.
+
+### Divergence from Go
+
+The Go installer has a config key with the same name but different behaviour. Go keeps the internet-facing ALB in
+the public subnets and only adds an internal NLB for the API, so it still needs public subnets and an internet
+gateway. The TypeScript installer makes both load balancers internal, needs no public subnets, also restricts the
+migrations task egress, looks up a private hosted zone in the `dns` stage, and leaves endpoint creation to
+`enableVpcEndpoints`.
 
 ## Logging
 
@@ -424,5 +517,9 @@ If it is empty or looks stale, an admin can go to Settings->Self-hosted and rein
 
 ### Data Flow - Service Interactions
 ![Data Flow Diagram](./diagrams/05-data-flow.svg)
+
+### Private Network - Internal-only Mode
+
+![Private Network Diagram](./diagrams/06-private-network.svg)
 
 > **Note**: The architecture diagrams are maintained as standalone mermaid files in the [`diagrams/`](./diagrams/) directory. You can view them individually or use `npm run validate:standalone` to validate all diagrams.

@@ -1,9 +1,9 @@
 # ECS Hosted — AWS Elastic Container Service
 
 Two parallel implementations of the 3-stage ECS Fargate deployment: `ts/`
-(TypeScript) and `go/` (Go). Both target the same architecture; the Go
-implementation additionally supports private load balancers for air-gapped
-deployments.
+(TypeScript) and `go/` (Go). Both target the same architecture and share the
+`enablePrivateLoadBalancerAndLimitEgress` key, but its behaviour differs (see
+the table and `ts/README.md` "Divergence from Go").
 
 ## Implementation comparison
 
@@ -11,8 +11,8 @@ deployments.
 | --- | --- | --- |
 | Module system | `package.json` per stage | `go.mod` at `go/` root; `dns/` has its own `go.mod` |
 | Stages | `infrastructure/`, `application/`, `dns/` | same |
-| Air-gapped support | No | Yes — private NLB option |
-| Unit tests | None | `common/utils_test.go` (ARN partition logic) |
+| Private mode | Fully internal: both ALBs internal, no public subnets | Partial: public ALB stays, internal NLB for the API |
+| Unit tests | `ts/test/` (`pulumi.runtime.setMocks`, `npm test`) | `common/utils_test.go` (ARN partition logic) |
 
 ## Deployment sequence (both implementations)
 
@@ -47,6 +47,7 @@ China regions, IAM policy ARNs use different prefixes:
 - Install: `npm install`
 - Type-check: `tsc --noEmit`
 - Preview: `pulumi preview`
+- Unit tests (from `ts/`): `npm test` (mocks only, no AWS access)
 
 ### Go (from `ecs-hosted/go/` root)
 
@@ -64,14 +65,14 @@ China regions, IAM policy ARNs use different prefixes:
 ## Escalate immediately if
 
 - A change is needed in both TypeScript and Go — clarify if both need updating
-- Air-gapped/private deployment is in scope — Go only feature
+- Air-gapped/private deployment is in scope - the TS and Go private modes differ (TS fully internal, Go keeps a public ALB)
 - Stack output names change — breaks downstream stage references
 
 ## Change triggers
 
 | Changed | Run |
 | --- | --- |
-| Any `.ts` file | `tsc --noEmit` from that stage directory |
+| Any `.ts` file | `tsc --noEmit` from that stage directory, and `npm test` from `ts/` |
 | Any `.go` file | `go fmt ./... && go vet ./... && go test ./common/` from `ecs-hosted/go/` |
 | `go/common/utils.go` | `go test ./common/` from `ecs-hosted/go/` (ARN partition tests) |
 | `go/go.mod` | `go mod tidy` and commit `go.sum` |
@@ -97,7 +98,7 @@ deployment. Be constructive and focus on production ECS deployment reliability.
 - VPC networking and security groups for container networking
 - Aurora MySQL database configuration and connection handling
 - ECS service discovery and container communication
-- Private load balancer support for air-gapped deployments (Go version)
+- Private (internal-only) mode for air-gapped deployments (TS: internal ALBs; Go: internal NLB next to a public ALB)
 - VPC endpoints for private ECS networking
 - Database migration task handling
 - Log aggregation with CloudWatch integration
