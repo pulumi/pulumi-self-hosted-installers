@@ -189,6 +189,20 @@ function createVpcEndpoints(config: any, routeTableIds: string[], awsProvider: A
         serviceName: `com.amazonaws.${config.region}.ssm`,
     });
 
+    // the Pulumi API encrypts and decrypts stack secrets with the KMS key (PULUMI_KMS_KEY)
+    createEndpoint({
+        ...endpointArgs,
+        name: `${config.commonName}-kms-endpoint`,
+        serviceName: `com.amazonaws.${config.region}.kms`,
+    });
+
+    // the awslogs log driver of the ECS tasks, including the migrations task, ships to CloudWatch Logs
+    createEndpoint({
+        ...endpointArgs,
+        name: `${config.commonName}-logs-endpoint`,
+        serviceName: `com.amazonaws.${config.region}.logs`,
+    });
+
     return {
         s3PrivatePrefixList,
         endpointSecurityGroup
