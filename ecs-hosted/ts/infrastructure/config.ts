@@ -14,7 +14,9 @@ export async function hydrateConfig() {
 
     // NOTE: We will assume all networking pieces are already created properly; this may change in the future to allow for networking to be created as part of this process.
     const vpcId = stackConfig.require("vpcId");
-    const publicSubnetIds: string[] = stackConfig.requireObject("publicSubnetIds");
+    // Not used by this stage; only passed through to the application stage, which needs it for internet-facing load
+    // balancers. Leave it unset for a private (internal-only) deployment in a VPC without public subnets.
+    const publicSubnetIds: string[] = stackConfig.getObject<string[]>("publicSubnetIds") ?? [];
     const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
     const isolatedSubnetIds: string[] = stackConfig.requireObject("isolatedSubnetIds");
     const numberDbReplicas = stackConfig.getNumber("numberDbReplicas") || 0;
