@@ -6,7 +6,8 @@ import { ApiService } from "./services/apiService";
 import { ConsoleService } from "./services/consoleService";
 import { TrafficManager } from "./networking/trafficManager";
 import { createOidcKeySets } from "./oidcKeys";
-import { lookupPrivateNetwork } from "./networking/privateNetwork";
+import { lookupPrivateNetwork, lookupVpcCidrBlocks } from "./networking/privateNetwork";
+import { buildProxySettings } from "./networking/proxy";
 
 /*
 Entry point to creating all application related infrastructure.
@@ -54,6 +55,18 @@ export = async () => {
 
     const secretsPrefix = `${pulumi.getProject()}/${pulumi.getStack()}`;
 
+    // Optional outbound proxy for the API; NO_PROXY needs the VPC CIDR blocks even outside private mode
+    const proxy = config.proxy.httpsProxy ? buildProxySettings({
+        httpsProxy: config.proxy.httpsProxy,
+        extraNoProxy: config.proxy.noProxy,
+        region: config.region,
+        vpcCidrBlocks: privateNetwork?.vpcCidrBlocks ?? await lookupVpcCidrBlocks(config.vpcId),
+        dbClusterEndpoint: config.database.dbClusterEndpoint,
+        openSearchEndpoint: config.opensearch.endpoint,
+        apiHost: apiUrl,
+        consoleHost: consoleUrl,
+    }) : undefined;
+
     // Signing keys for the API's two OIDC issuers.
     const oidcKeySets = createOidcKeySets();
 
@@ -94,6 +107,7 @@ export = async () => {
         policyPacksBucket: policyPacksBucket,
         privateNetwork: privateNetwork,
         privateSubnetIds: config.privateSubnetIds,
+        proxy: proxy,
         recaptchaSecretKey: config.recaptchaSecretKey,
         region: config.region,
         samlCertPrivateKey: config.api.samlCertPrivateKey,

@@ -8,6 +8,7 @@ import { OidcKeySets } from "../oidcKeys";
 import { TrafficManager } from "../networking/trafficManager";
 import { PulumiLoadBalancer } from "../networking/pulumiLoadBalanacer";
 import { PrivateNetwork } from "../networking/privateNetwork";
+import { ProxySettings } from "../networking/proxy";
 
 export interface ContainerDefinitionArgs {
     name: string,
@@ -71,6 +72,8 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     logArgs?: any,
     numberDesiredTasks?: number,
     oidcKeySets: OidcKeySets,
+    // optional outbound HTTP proxy (HTTPS_PROXY, HTTP_PROXY, NO_PROXY)
+    proxy?: ProxySettings,
     recaptchaSecretKey: pulumi.Output<string> | undefined,
     samlCertPublicKey?: pulumi.Output<string>,
     samlCertPrivateKey?: pulumi.Output<string>,

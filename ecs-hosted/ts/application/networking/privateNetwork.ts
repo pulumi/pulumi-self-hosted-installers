@@ -17,16 +17,23 @@ export interface PrivateNetwork {
 export interface EgressOptions {
     // adds MySQL egress to the Aurora security group
     dbSecurityGroupId?: string;
+    // extra TCP ports allowed to the VPC CIDR blocks, eg- the port of an HTTP proxy; 80 and 443 are always allowed
+    extraVpcPorts?: number[];
+}
+
+// all IPv4 CIDR blocks associated with the VPC, primary first
+export async function lookupVpcCidrBlocks(vpcId: string): Promise<string[]> {
+    const vpc = await ec2.getVpc({ id: vpcId });
+    return [...new Set([
+        vpc.cidrBlock,
+        ...(vpc.cidrBlockAssociations ?? []).map(association => association.cidrBlock),
+    ])];
 }
 
 // Looks up the VPC CIDR blocks and, unless provided, the S3 prefix list. The prefix list exists per region whether or
 // not this installer created the S3 gateway endpoint, so customer-provided endpoints work too.
 export async function lookupPrivateNetwork(vpcId: string, region: string, s3PrefixListId?: string): Promise<PrivateNetwork> {
-    const vpc = await ec2.getVpc({ id: vpcId });
-    const vpcCidrBlocks = [...new Set([
-        vpc.cidrBlock,
-        ...(vpc.cidrBlockAssociations ?? []).map(association => association.cidrBlock),
-    ])];
+    const vpcCidrBlocks = await lookupVpcCidrBlocks(vpcId);
 
     const prefixListId = s3PrefixListId && s3PrefixListId !== "" ?
         s3PrefixListId :
@@ -71,6 +78,17 @@ export function privateEgressRules(network: PrivateNetwork, options: EgressOptio
             fromPort: 3306,
             toPort: 3306,
             securityGroups: [options.dbSecurityGroupId],
+        });
+    }
+
+    const extraPorts = [...new Set(options.extraVpcPorts ?? [])].filter(port => port !== 80 && port !== 443);
+    for (const port of extraPorts) {
+        rules.push({
+            description: `TCP ${port} to the VPC, eg- an HTTP proxy`,
+            protocol: "tcp",
+            fromPort: port,
+            toPort: port,
+            cidrBlocks: network.vpcCidrBlocks,
         });
     }
 

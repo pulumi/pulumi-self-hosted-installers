@@ -12,6 +12,7 @@ import { LogDriver, LogType } from "../logs/types";
 import { Secrets } from "./secrets";
 import { getIamPolicyArn } from "../../common/utils";
 import { privateEgressRules } from "../networking/privateNetwork";
+import { proxyPort } from "../networking/proxy";
 
 const namespace = "pulumi:apiService";
 const apiPort = 8080;
@@ -124,6 +125,7 @@ export class ApiService extends pulumi.ComponentResource {
             pulumiLoadBalancer: trafficManager.api,
             securityGroupEgress: args.privateNetwork && privateEgressRules(args.privateNetwork, {
                 dbSecurityGroupId: args.database.dbSecurityGroupId,
+                extraVpcPorts: args.proxy ? [proxyPort(args.proxy.url)] : [],
             }),
             targetPort: apiPort,
             taskDefinitionArgs: taskArgs,
@@ -354,6 +356,13 @@ export class ApiService extends pulumi.ComponentResource {
         // NOTE: the below use of property ?? "" is essential. As of 7/25/24 pulumi-aws will continuously show a diff if a property is undefined
         // cant find a pulumi-aws issue, yet...
 
+        // only added when httpsProxy is configured
+        const proxyVariables = this.baseArgs.proxy ? [
+            { name: "HTTPS_PROXY", value: this.baseArgs.proxy.url },
+            { name: "HTTP_PROXY", value: this.baseArgs.proxy.url },
+            { name: "NO_PROXY", value: this.baseArgs.proxy.noProxy },
+        ] : [];
+
         return [
             {
                 name: "PULUMI_LICENSE_KEY",
@@ -442,7 +451,8 @@ export class ApiService extends pulumi.ComponentResource {
             {
                 name: "PULUMI_ENGINE_EVENTS_LEGACY_WRITE",
                 value: String(engineEventsLegacyWrite),
-            }
+            },
+            ...proxyVariables,
         ];
     }
 }

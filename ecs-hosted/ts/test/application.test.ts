@@ -5,6 +5,7 @@ import * as mocks from "./mocks";
 
 const lbType = "aws:lb/loadBalancer:LoadBalancer";
 const sgType = "aws:ec2/securityGroup:SecurityGroup";
+const taskDefType = "aws:ecs/taskDefinition:TaskDefinition";
 
 const lbSecurityGroups = ["pulumi-tm-api-lb-lb-sg", "pulumi-tm-console-lb-lb-sg"];
 const apiSg = "pulumi-service-api-service-sg";
@@ -54,6 +55,11 @@ function hasRule(rules: any[], match: { port: number, prefixListIds?: string[], 
         rule.toPort === match.port &&
         (!match.prefixListIds || same(rule.prefixListIds, match.prefixListIds)) &&
         (!match.securityGroups || same(rule.securityGroups, match.securityGroups)));
+}
+
+function apiEnvironment(harness: mocks.Harness): Record<string, string> {
+    const definitions = JSON.parse(harness.named(taskDefType, "pulumi-service-api-task-def").inputs.containerDefinitions);
+    return Object.fromEntries(definitions[0].environment.map((e: any) => [e.name, e.value]));
 }
 
 function assertPrivateEgress(rules: any[], prefixListId: string, expectDb: boolean) {
@@ -135,6 +141,54 @@ describe("application, private mode with whiteListCidrBlocks and s3EndpointPrefi
     });
 });
 
+describe("application, private mode with httpsProxy", () => {
+    let harness: mocks.Harness;
+    const proxyConfig = {
+        ...baseConfig,
+        enablePrivateLoadBalancerAndLimitEgress: true,
+        httpsProxy: "http://proxy.internal.example:3128",
+        noProxy: [".corp.example"],
+        opensearchEndpoint: "https://vpc-pulumi-abc.us-west-2.es.amazonaws.com",
+    };
+
+    before(async () => {
+        harness = await run(proxyConfig);
+    });
+
+    it("sets the proxy variables on the API container", () => {
+        const env = apiEnvironment(harness);
+        assert.equal(env.HTTPS_PROXY, "http://proxy.internal.example:3128");
+        assert.equal(env.HTTP_PROXY, "http://proxy.internal.example:3128");
+        assert.deepEqual(env.NO_PROXY.split(","), [
+            "localhost",
+            "127.0.0.1",
+            "169.254.169.254",
+            "169.254.170.2",
+            ...mocks.vpcCidrBlocks,
+            "s3.amazonaws.com",
+            "s3.us-west-2.amazonaws.com",
+            "kms.us-west-2.amazonaws.com",
+            "secretsmanager.us-west-2.amazonaws.com",
+            "pulumi.cluster-abc.us-west-2.rds.amazonaws.com",
+            "vpc-pulumi-abc.us-west-2.es.amazonaws.com",
+            "api.pulumi.example.com",
+            "app.pulumi.example.com",
+            ".corp.example",
+        ]);
+    });
+
+    it("opens the proxy port to the VPC on the API security group only", () => {
+        const proxyRule = (sg: string) => egress(harness, sg).find(rule => rule.fromPort === 3128);
+        assert.deepEqual(proxyRule(apiSg)?.cidrBlocks, mocks.vpcCidrBlocks);
+        assert.equal(proxyRule(consoleSg), undefined);
+        assert.equal(proxyRule(migrationsSg), undefined);
+    });
+
+    it("rejects a proxy without a scheme", async () => {
+        await assert.rejects(run({ ...proxyConfig, httpsProxy: "proxy.internal.example:3128" }), /httpsProxy/);
+    });
+});
+
 describe("application, default (flag off)", () => {
     let harness: mocks.Harness;
 
@@ -165,6 +219,13 @@ describe("application, default (flag off)", () => {
 
     it("does not look up the VPC", () => {
         assert.equal(harness.callsTo("aws:ec2/getVpc:getVpc").length, 0);
+    });
+
+    it("sets no proxy variables", () => {
+        const env = apiEnvironment(harness);
+        for (const name of ["HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY"]) {
+            assert.equal(env[name], undefined);
+        }
     });
 
     it("still requires publicSubnetIds", async () => {

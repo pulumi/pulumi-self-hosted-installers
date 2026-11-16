@@ -2,6 +2,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { getCallerIdentity } from "@pulumi/aws";
 import { toLogType } from "./utils";
 import { LogType } from "./logs/types";
+import { parseProxyUrl } from "./networking/proxy";
 
 export async function hydrateConfig() {
     const awsConfig = new pulumi.Config("aws");
@@ -94,6 +95,12 @@ export async function hydrateConfig() {
     const consoleHideEmailLogin = stackConfig.getBoolean("consoleHideEmailLogin") || false;
     const consoleHideEmailSignup = stackConfig.getBoolean("consoleHideEmailSignup") || false;
 
+    // Optional HTTP proxy for the API's outbound internet calls, eg- an OIDC issuer's JWKS. Sets HTTPS_PROXY and HTTP_PROXY
+    // on the API container. NO_PROXY always lists the VPC CIDR blocks, ECS metadata, the S3/KMS/Secrets Manager endpoints,
+    // the database, OpenSearch and the api/app hostnames; noProxy (a list) adds entries.
+    const httpsProxy = parseProxyUrl(stackConfig.get("httpsProxy"));
+    const noProxy: string[] = stackConfig.getObject<string[]>("noProxy") ?? [];
+
     // SMTP settings
     const smtpServer = stackConfig.get("smtpServer");
     const smtpUsername = stackConfig.get("smtpUsername");
@@ -132,6 +139,10 @@ export async function hydrateConfig() {
         isolatedSubnetIds,
         endpointSecurityGroupId,
         s3EndpointPrefixId,
+        proxy: {
+            httpsProxy,
+            noProxy
+        },
         recaptchaSecretKey: recaptchaSecretKey,
         recaptchaSiteKey: recaptchaSiteKey,
         kmsServiceKeyId,
