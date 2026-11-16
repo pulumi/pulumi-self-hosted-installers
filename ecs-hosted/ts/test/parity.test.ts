@@ -67,6 +67,19 @@ const configs: Record<string, Record<string, unknown>> = {
     },
 };
 
+// Every opt-in key this branch adds, set to its "off" value; the recording must still match master.
+const explicitlyOff: Record<string, Record<string, unknown>> = {
+    infrastructure: { enablePrivateLoadBalancerAndLimitEgress: false },
+    application: {
+        enablePrivateLoadBalancerAndLimitEgress: false,
+        imagePrefix: "",
+        ecrPullThroughCacheImport: false,
+        httpsProxy: "",
+        noProxy: [],
+    },
+    dns: { enablePrivateLoadBalancerAndLimitEgress: false, skipDnsRecords: false },
+};
+
 // JSON with sorted object keys, so key order (irrelevant to Pulumi) does not change the hash
 function canonical(value: unknown): string {
     return JSON.stringify(value, (_key, v) => v && typeof v === "object" && !Array.isArray(v) ?
@@ -81,8 +94,16 @@ async function resolveOutput(value: any): Promise<unknown> {
     return value;
 }
 
-async function record(stage: string) {
-    const harness = await mocks.setup(stage, configs[stage]);
+async function record(stage: string, config: Record<string, unknown>) {
+    const harness = await mocks.setup(stage, config);
+    if (stage === "dns") {
+        // the dns stage reads config and registers resources at import time
+        for (const key of Object.keys(require.cache)) {
+            if (/[\\/]bin[\\/]dns[\\/]/.test(key)) {
+                delete require.cache[key];
+            }
+        }
+    }
     const stageModule = require(`../${stage}/index`);
     const outputs = typeof stageModule === "function" ? await stageModule() : stageModule;
     await harness.settle();
@@ -113,7 +134,7 @@ describe("flag-off parity with master", () => {
 
     for (const stage of ["infrastructure", "application", "dns"]) {
         it(stage, async () => {
-            const { recording, ...summary } = await record(stage);
+            const { recording, ...summary } = await record(stage, configs[stage]);
             recorded[stage] = summary;
 
             if (updatePath) {
@@ -122,6 +143,16 @@ describe("flag-off parity with master", () => {
 
             if (summary.sha256 !== expected.stages[stage].sha256) {
                 fs.writeFileSync(path.join(__dirname, `parity-${stage}.actual.json`), recording);
+            }
+            assert.deepEqual(summary, expected.stages[stage]);
+        });
+    }
+
+    for (const stage of ["infrastructure", "application", "dns"]) {
+        it(`${stage}, new keys explicitly off`, { skip: !!updatePath }, async () => {
+            const { recording, ...summary } = await record(stage, { ...configs[stage], ...explicitlyOff[stage] });
+            if (summary.sha256 !== expected.stages[stage].sha256) {
+                fs.writeFileSync(path.join(__dirname, `parity-${stage}-explicitly-off.actual.json`), recording);
             }
             assert.deepEqual(summary, expected.stages[stage]);
         });
