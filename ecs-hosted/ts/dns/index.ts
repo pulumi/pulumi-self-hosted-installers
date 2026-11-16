@@ -18,8 +18,8 @@ const domain = config.route53Subdomain && config.route53Subdomain != "" ?
 const appDns = config.skipDnsRecords ? undefined : new ApplicationDns("pulumi-dns", {
     region: config.region,
     zoneName: config.route53ZoneName,
-    privateZone: config.enablePrivateLoadBalancerAndLimitEgress,
-    vpcId: config.vpcId,
+    // only set in private mode, so the component inputs are unchanged otherwise
+    ...(config.enablePrivateLoadBalancerAndLimitEgress ? { privateZone: true, vpcId: config.vpcId } : {}),
     domain: domain,
     apiLoadBalancerDnsName: config.apiLoadBalancerDnsName,
     apiLoadBalancerZoneId: config.apiLoadBalancerZoneId,

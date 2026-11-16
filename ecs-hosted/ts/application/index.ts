@@ -33,8 +33,9 @@ export = async () => {
     const trafficManager = new TrafficManager("pulumi-tm", {
         accountId: config.accountId,
         certificateArn: config.dns.acmCertificateArn,
-        internalLb: privateNetwork !== undefined,
-        subnetIds: privateNetwork ? config.privateSubnetIds : config.publicSubnetIds!,
+        publicSubnetIds: config.publicSubnetIds,
+        // only set in private mode, so the component inputs are unchanged otherwise
+        ...(privateNetwork ? { internalLb: true, privateSubnetIds: config.privateSubnetIds } : {}),
         region: config.region,
         vpcId: config.vpcId,
         whiteListCidrBlocks: config.dns.whiteListCidrBlocks ?? privateNetwork?.vpcCidrBlocks
