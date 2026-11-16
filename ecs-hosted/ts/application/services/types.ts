@@ -116,7 +116,11 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     }
     checkPointbucket: s3.Bucket,
     policyPacksBucket: s3.Bucket,
-    metadataBucket: s3.Bucket
+    metadataBucket: s3.Bucket,
+    // opt-in buckets (enableEngineEventsBucket, enableRegistryBuckets)
+    engineEventsBucket?: s3.Bucket,
+    registryPublicBucket?: s3.Bucket,
+    registryPrivateBucket?: s3.Bucket,
 }
 
 export interface ConsoleServiceArgs extends ServiceBaseArgs {
@@ -151,6 +155,8 @@ export interface ApiServiceEnvironmentArgs {
     checkpointBucket: string,
     policyPackBucket: string,
     metadataBucket: string,
+    // *_BLOB_STORAGE_ENDPOINT variables of the opt-in buckets
+    optionalBlobStorage?: { name: string, value: string }[],
     samlSsoPublicCert?: string | undefined,
     samlSsoPrivateCert?: string | undefined,
     openSearchUser?: string | undefined,

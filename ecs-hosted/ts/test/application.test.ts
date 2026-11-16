@@ -252,6 +252,59 @@ describe("application, imagePrefix (ECR pull-through cache)", () => {
     });
 });
 
+describe("application, opt-in engine events and registry buckets", () => {
+    const flagOff = { ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, endpointSecurityGroupId: "sg-endpoints" };
+    const bucketType = "aws:s3/bucket:Bucket";
+    const optional = {
+        "pulumi-engine-events": ["PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT", "engineEventsS3BucketName"],
+        "pulumi-registry-public": ["PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT", "registryPublicS3BucketName"],
+        "pulumi-registry-private": ["PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT", "registryPrivateS3BucketName"],
+    };
+
+    async function runWithOutputs(config: Record<string, unknown>) {
+        const harness = await mocks.setup("application", config);
+        const program: () => Promise<any> = require("../application/index");
+        const outputs = await program();
+        await harness.settle();
+        return { harness, outputs };
+    }
+
+    const s3Resources = (harness: mocks.Harness): string[] =>
+        JSON.parse(harness.named("aws:iam/rolePolicy:RolePolicy", "pulumi-service-api-task-role-att-0").inputs.policy).Statement[0].Resource;
+
+    it("creates the buckets like the existing ones and wires them into the API", async () => {
+        const { harness, outputs } = await runWithOutputs({ ...flagOff, enableEngineEventsBucket: true, enableRegistryBuckets: true });
+        const env = apiEnvironment(harness);
+        const resources = s3Resources(harness);
+
+        for (const [bucket, [variable, output]] of Object.entries(optional)) {
+            const recorded = harness.named(bucketType, bucket);
+            assert.deepEqual(recorded.inputs, harness.named(bucketType, "pulumi-checkpoints").inputs);
+            assert.equal(harness.protectOf(bucketType, bucket), true);
+            assert.equal(env[variable], `s3://${bucket}`);
+            assert.ok(resources.includes(`arn:aws:s3:::${bucket}`) && resources.includes(`arn:aws:s3:::${bucket}/*`));
+            assert.equal(await new Promise(resolve => outputs[output].apply(resolve)), `${bucket}-id`);
+        }
+    });
+
+    it("enables each opt-in on its own", async () => {
+        const { harness, outputs } = await runWithOutputs({ ...flagOff, enableEngineEventsBucket: true });
+        assert.deepEqual(harness.ofType(bucketType).map(b => b.name).filter(n => n in optional), ["pulumi-engine-events"]);
+        assert.ok("engineEventsS3BucketName" in outputs && !("registryPublicS3BucketName" in outputs));
+    });
+
+    it("creates nothing extra when unset", async () => {
+        const { harness, outputs } = await runWithOutputs(flagOff);
+        const env = apiEnvironment(harness);
+        for (const [bucket, [variable, output]] of Object.entries(optional)) {
+            assert.equal(harness.ofType(bucketType).some(b => b.name === bucket), false);
+            assert.equal(env[variable], undefined);
+            assert.equal(output in outputs, false);
+        }
+        assert.equal(s3Resources(harness).length, 6);
+    });
+});
+
 describe("application, API task role KMS permissions", () => {
     it("grants the four actions the self-hosting docs require", async () => {
         const harness = await run({ ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, endpointSecurityGroupId: "sg-endpoints" });

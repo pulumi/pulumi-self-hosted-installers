@@ -100,6 +100,12 @@ export async function hydrateConfig() {
     const apiEngineEventsSchemaV2 = stackConfig.getBoolean("apiEngineEventsSchemaV2") ?? true;
     const apiEngineEventsLegacyWrite = stackConfig.getBoolean("apiEngineEventsLegacyWrite") ?? false;
 
+    // Opt-in S3 buckets, default false and recommended for new installs:
+    // engine events (PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT), keeps large engine events out of MySQL
+    const enableEngineEventsBucket = stackConfig.getBoolean("enableEngineEventsBucket") ?? false;
+    // registry artifacts (PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT and PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT)
+    const enableRegistryBuckets = stackConfig.getBoolean("enableRegistryBuckets") ?? false;
+
     // Pulumi Console
     // consoleDesirecNumberTasks is the historical misspelled key, still read so existing stacks keep working.
     // `||` as before, so 0 still means the default.
@@ -166,6 +172,8 @@ export async function hydrateConfig() {
         ecrRepoAccountId,
         imagePrefix,
         ecrPullThroughCacheImport,
+        enableEngineEventsBucket,
+        enableRegistryBuckets,
         dockerHub: {
             imageTag,
         },

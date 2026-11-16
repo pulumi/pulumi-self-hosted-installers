@@ -35,8 +35,9 @@ export interface Harness {
     calls: { token: string, inputs: any }[];
     ofType(type: string): Recorded[];
     named(type: string, name: string): Recorded;
-    // the ignoreChanges resource option as sent to the engine
+    // the ignoreChanges and protect resource options as sent to the engine
     ignoreChangesOf(type: string, name: string): string[] | undefined;
+    protectOf(type: string, name: string): boolean | undefined;
     callsTo(token: string): any[];
     settle(): Promise<void>;
 }
@@ -45,6 +46,7 @@ export async function setup(project: string, config: Record<string, unknown>): P
     const resources: Recorded[] = [];
     const calls: { token: string, inputs: any }[] = [];
     const ignoreChanges = new Map<string, string[]>();
+    const protect = new Map<string, boolean>();
 
     const allConfig: Record<string, string> = { "aws:region": region };
     for (const [key, value] of Object.entries(config)) {
@@ -109,11 +111,12 @@ export async function setup(project: string, config: Record<string, unknown>): P
         },
     }, project, "test", true);
 
-    // resource options never reach newResource; capture ignoreChanges from the register request instead
+    // resource options never reach newResource; capture them from the register request instead
     const monitor: any = pulumi.runtime.getMonitor();
     const registerResource = monitor.registerResource.bind(monitor);
     monitor.registerResource = (req: any, callback: any) => {
         ignoreChanges.set(`${req.getType()}::${req.getName()}`, req.getIgnorechangesList());
+        protect.set(`${req.getType()}::${req.getName()}`, req.getProtect());
         return registerResource(req, callback);
     };
 
@@ -129,6 +132,7 @@ export async function setup(project: string, config: Record<string, unknown>): P
             return found;
         },
         ignoreChangesOf: (type, name) => ignoreChanges.get(`${type}::${name}`),
+        protectOf: (type, name) => protect.get(`${type}::${name}`),
         callsTo: token => calls.filter(c => c.token === token).map(c => c.inputs),
         // registrations wait on outputs of other resources and invokes; wait until nothing new shows up for a while
         async settle() {

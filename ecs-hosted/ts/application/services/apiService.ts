@@ -198,6 +198,15 @@ export class ApiService extends pulumi.ComponentResource {
             ecrRepoAccountId: this.baseArgs.ecrRepoAccountId
         };
 
+        // opt-in buckets (enableEngineEventsBucket, enableRegistryBuckets) and the variables that point the API at them;
+        // empty when unset, so the container definition and the S3 policy are unchanged
+        const optionalBuckets = [
+            { variable: "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT", bucket: this.baseArgs.engineEventsBucket },
+            { variable: "PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT", bucket: this.baseArgs.registryPublicBucket },
+            { variable: "PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT", bucket: this.baseArgs.registryPrivateBucket },
+        ].filter(b => b.bucket !== undefined);
+        const optionalBucketNames = pulumi.all(optionalBuckets.map(b => b.bucket!.bucket));
+
         // JSON will be definition provided to ECS for API (service) containers
         // Fully qualified ECR tag will be built for `image` property below
         const containerDefinitions = pulumi
@@ -209,6 +218,7 @@ export class ApiService extends pulumi.ComponentResource {
                 this.baseArgs.samlCertPrivateKey,
                 this.baseArgs.samlCertPublicKey,
                 logDriver?.outputs,
+                optionalBucketNames,
             ])
             .apply(([
                 secrets,
@@ -217,7 +227,8 @@ export class ApiService extends pulumi.ComponentResource {
                 metadataBucket,
                 samlPrivateKey,
                 samlPublicKey,
-                logOutputs]) => {
+                logOutputs,
+                optionalNames]) => {
 
                 const ecrAccountId = this.baseArgs.ecrRepoAccountId && this.baseArgs.ecrRepoAccountId !== "" ? this.baseArgs.ecrRepoAccountId : this.baseArgs.accountId;
 
@@ -240,6 +251,7 @@ export class ApiService extends pulumi.ComponentResource {
                         checkpointBucket: checkpointBucket,
                         policyPackBucket: policyBucket,
                         metadataBucket: metadataBucket,
+                        optionalBlobStorage: optionalBuckets.map((b, i) => ({ name: b.variable, value: `s3://${optionalNames[i]}` })),
                         samlSsoPrivateCert: samlPrivateKey,
                         samlSsoPublicCert: samlPublicKey,
                         openSearchEndpoint: this.baseArgs.opensearch?.endpoint,
@@ -258,8 +270,8 @@ export class ApiService extends pulumi.ComponentResource {
 
         // IAM policy doc will be given to ECS service to allow Pulumi API (service) to interact with S3 buckets
         const s3AccessPolicyDoc = pulumi
-            .all([this.baseArgs.policyPacksBucket.bucket, this.baseArgs.checkPointbucket.bucket, this.baseArgs.metadataBucket.bucket])
-            .apply(([policyBucket, checkpointBucket, metadataBucket]) => {
+            .all([this.baseArgs.policyPacksBucket.bucket, this.baseArgs.checkPointbucket.bucket, this.baseArgs.metadataBucket.bucket, optionalBucketNames])
+            .apply(([policyBucket, checkpointBucket, metadataBucket, optionalNames]) => {
 
                 const policyBucketArn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${policyBucket}`);
                 pulumi.log.debug(`construct policy bucket arn: ${policyBucketArn}`);
@@ -281,7 +293,11 @@ export class ApiService extends pulumi.ComponentResource {
                             checkpointBucketArn,
                             `${checkpointBucketArn}/*`,
                             metadataBucketArn,
-                            `${metadataBucketArn}/*`
+                            `${metadataBucketArn}/*`,
+                            ...([] as string[]).concat(...optionalNames.map(name => {
+                                const arn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${name}`);
+                                return [arn, `${arn}/*`];
+                            })),
                         ]
                     }]
                 })
@@ -423,6 +439,7 @@ export class ApiService extends pulumi.ComponentResource {
                 name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
                 value: `s3://${args.metadataBucket}`,
             },
+            ...(args.optionalBlobStorage ?? []),
             {
                 name: "PULUMI_KMS_KEY",
                 value: kmsServiceKeyId,

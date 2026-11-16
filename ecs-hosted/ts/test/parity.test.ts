@@ -80,6 +80,8 @@ const explicitlyOff: Record<string, Record<string, unknown>> = {
         enablePrivateLoadBalancerAndLimitEgress: false,
         imagePrefix: "",
         ecrPullThroughCacheImport: false,
+        enableEngineEventsBucket: false,
+        enableRegistryBuckets: false,
         httpsProxy: "",
         noProxy: [],
     },

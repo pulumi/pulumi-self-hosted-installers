@@ -23,6 +23,19 @@ export = async () => {
     const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true });
     const metadataBucket= new aws.s3.Bucket(`pulumi-service-metadata`, {}, { protect: true });
 
+    // Opt-in buckets, created the same way; recommended for new installs
+    // engine events: large engine events go to S3 instead of MySQL (PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT)
+    const engineEventsBucket = config.enableEngineEventsBucket ?
+        new aws.s3.Bucket(`pulumi-engine-events`, {}, { protect: true }) :
+        undefined;
+    // registry: public and private registry artifacts (PULUMI_REGISTRY_{PUBLIC,PRIVATE}_BLOB_STORAGE_ENDPOINT)
+    const registryPublicBucket = config.enableRegistryBuckets ?
+        new aws.s3.Bucket(`pulumi-registry-public`, {}, { protect: true }) :
+        undefined;
+    const registryPrivateBucket = config.enableRegistryBuckets ?
+        new aws.s3.Bucket(`pulumi-registry-private`, {}, { protect: true }) :
+        undefined;
+
     // Private mode: VPC CIDR blocks and the S3 prefix list for the internal ALBs and the restricted task egress
     const privateNetwork = config.enablePrivateLoadBalancerAndLimitEgress ?
         await lookupPrivateNetwork(config.vpcId, config.region, config.s3EndpointPrefixId) :
@@ -76,6 +89,9 @@ export = async () => {
         accountId: config.accountId,
         containerCpu: config.api.apiContainerCpu,
         checkPointbucket: checkpointsBucket,
+        engineEventsBucket: engineEventsBucket,
+        registryPublicBucket: registryPublicBucket,
+        registryPrivateBucket: registryPrivateBucket,
         containerMemoryReservation: config.api.apiContainerMemoryReservation,
         database: config.database,
         disableEmailLogin: config.api.apiDisableEmailLogin,
@@ -162,6 +178,10 @@ export = async () => {
         checkpointsS3BucketName: checkpointsBucket.id,
         policyPacksS3BucketName: policyPacksBucket.id,
         metadataS3BucketName: metadataBucket.id,
+        // opt-in buckets; the outputs only exist when the buckets do
+        ...(engineEventsBucket ? { engineEventsS3BucketName: engineEventsBucket.id } : {}),
+        ...(registryPublicBucket ? { registryPublicS3BucketName: registryPublicBucket.id } : {}),
+        ...(registryPrivateBucket ? { registryPrivateS3BucketName: registryPrivateBucket.id } : {}),
 
         // the DNS project will use all these outputs to create A records
         // in private mode these are the internal ALBs
