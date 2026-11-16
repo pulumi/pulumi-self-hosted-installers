@@ -30,8 +30,11 @@ export = async () => {
     let endpointSgId: pulumi.Output<string> | undefined;
     let s3PrefixListId: pulumi.Output<string> | undefined;
     if (config.enableVpcEndpoints) {
+        // the S3 gateway endpoint only takes effect for subnets whose route tables it is associated with
+        const routeTableIds = await lookupRouteTableIds(config.vpcId, [...config.privateSubnetIds, ...config.isolatedSubnetIds]);
+
         // retrieve the prefix id and export for downstream SGs to use
-        const endpoints = createVpcEndpoints(config, providers.aws);
+        const endpoints = createVpcEndpoints(config, routeTableIds, providers.aws);
         endpointSgId = endpoints.endpointSecurityGroup.id;
         s3PrefixListId = endpoints.s3PrivatePrefixList.id;
     }
@@ -71,12 +74,13 @@ export = async () => {
 }
 
 function createEndpoint(args: EndpointArgs): ec2.VpcEndpoint {
-    const { name, serviceName, vpcId, securityGroupId, subnetIds, endpointType, options } = args;
+    const { name, serviceName, vpcId, securityGroupId, subnetIds, routeTableIds, endpointType, options } = args;
 
     const endpoinArgs = endpointType == "Gateway" ? {
         vpcId: vpcId,
         serviceName: serviceName,
         vpcEndpointType: endpointType,
+        routeTableIds: routeTableIds,
     } : {
         vpcId: vpcId,
         serviceName: serviceName,
@@ -99,7 +103,29 @@ function createProviders(region: string) {
     };
 }
 
-function createVpcEndpoints(config: any, awsProvider: AwsProvider) {
+// Returns the route tables of the given subnets. A subnet without an explicit route table association uses the VPC's main
+// route table. Sorted so that the endpoint's routeTableIds does not show a diff when the lookup order changes.
+async function lookupRouteTableIds(vpcId: string, subnetIds: string[]): Promise<string[]> {
+    const ids = new Set<string>();
+
+    for (const subnetId of subnetIds) {
+        const explicit = await ec2.getRouteTables({
+            vpcId: vpcId,
+            filters: [{ name: "association.subnet-id", values: [subnetId] }],
+        });
+
+        const routeTables = explicit.ids.length > 0 ? explicit : await ec2.getRouteTables({
+            vpcId: vpcId,
+            filters: [{ name: "association.main", values: ["true"] }],
+        });
+
+        routeTables.ids.forEach(id => ids.add(id));
+    }
+
+    return [...ids].sort();
+}
+
+function createVpcEndpoints(config: any, routeTableIds: string[], awsProvider: AwsProvider) {
     // if needed, ingress can be narrowed down to ECS services, although all traffic should originate from within our VPC
     const endpointSecurityGroup = new ec2.SecurityGroup(`${config.commonName}-endpoint-sg`, {
         vpcId: config.vpcId,
@@ -118,6 +144,7 @@ function createVpcEndpoints(config: any, awsProvider: AwsProvider) {
         serviceName: `com.amazonaws.${config.region}.s3`,
         endpointType: "Gateway",
         vpcId: config.vpcId,
+        routeTableIds: routeTableIds,
         options: {
             provider: awsProvider
         }
@@ -174,6 +201,7 @@ interface EndpointArgs {
     vpcId: string;
     securityGroupId?: pulumi.Output<string>;
     subnetIds?: string[];
+    routeTableIds?: string[];
     endpointType?: string;
     options: pulumi.ResourceOptions
 }
