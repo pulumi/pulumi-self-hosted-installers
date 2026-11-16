@@ -23,9 +23,16 @@ export async function hydrateConfig() {
     // This pattern pairs very nicely with PulumI ESC and the use of stackConfig (environments).
     // If ESC is ommitted, once can still set the configuration values as needed prior to executing the `application` program.
 
+    // Private mode: both load balancers are internal and live in the private subnets, ALB ingress defaults to the VPC
+    // CIDR blocks, and the ECS tasks get no 0.0.0.0/0 egress. See "Private (internal-only) deployment" in the README.
+    const enablePrivateLoadBalancerAndLimitEgress = stackConfig.getBoolean("enablePrivateLoadBalancerAndLimitEgress") ?? false;
+
     const vpcId = stackConfig.require("vpcId");
     const privateSubnetIds: string[] = stackConfig.requireObject("privateSubnetIds");
-    const publicSubnetIds: string[] = stackConfig.requireObject("publicSubnetIds");
+    // only internet-facing load balancers use the public subnets
+    const publicSubnetIds: string[] | undefined = enablePrivateLoadBalancerAndLimitEgress ?
+        stackConfig.getObject("publicSubnetIds") :
+        stackConfig.requireObject("publicSubnetIds");
     const isolatedSubnetIds: string[] | undefined = stackConfig.getObject("isolatedSubnetIds");
 
     const dbClusterEndpoint = stackConfig.require("dbClusterEndpoint");
@@ -35,8 +42,12 @@ export async function hydrateConfig() {
     const dbUsername = stackConfig.require("dbUsername");
     const dbPassword = stackConfig.require("dbPassword");
 
-    // vpc endpoint security group
-    const endpointSecurityGroupId = stackConfig.require("endpointSecurityGroupId");
+    // vpc endpoint security group; not set when the infrastructure stage runs with enableVpcEndpoints=false
+    const endpointSecurityGroupId = stackConfig.get("endpointSecurityGroupId");
+
+    // S3 gateway endpoint prefix list (infrastructure output s3EndpointPrefixId). Only used in private mode; looked up
+    // by name (com.amazonaws.<region>.s3) when not set.
+    const s3EndpointPrefixId = stackConfig.get("s3EndpointPrefixId");
 
     // Pulumi Insights (Resource Search)
     const openSearchUser = stackConfig.get("opensearchUser");
@@ -60,7 +71,7 @@ export async function hydrateConfig() {
 
     // Load balancer
     // provide a list of valid cidr blocks will restrict LB access on both API and UI to those specific CIDRS
-    // conversely, absence of this config value will allow all CIDRs aka 0.0.0.0/0
+    // conversely, absence of this config value will allow all CIDRs aka 0.0.0.0/0, or the VPC CIDR blocks in private mode
     const whiteListCidrBlocks: string[] | undefined = stackConfig.getObject("whiteListCidrBlocks");
 
     // Pulumi Api
@@ -114,11 +125,13 @@ export async function hydrateConfig() {
     return {
         region,
         accountId: account.accountId,
+        enablePrivateLoadBalancerAndLimitEgress,
         vpcId,
         privateSubnetIds,
         publicSubnetIds,
         isolatedSubnetIds,
         endpointSecurityGroupId,
+        s3EndpointPrefixId,
         recaptchaSecretKey: recaptchaSecretKey,
         recaptchaSiteKey: recaptchaSiteKey,
         kmsServiceKeyId,

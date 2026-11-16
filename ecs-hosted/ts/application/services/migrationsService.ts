@@ -9,6 +9,7 @@ import { buildECRImageTag, generateSecretsManagerPolicy } from "../utils";
 import { Secrets } from "./secrets";
 import { MigrationsArgs } from "./types";
 import { getIamPolicyArn } from "../../common/utils";
+import { privateEgressRules } from "../networking/privateNetwork";
 
 const namespace = "pulumi:dbMigrations";
 const launchType = "FARGATE";
@@ -51,14 +52,18 @@ export class MigrationService extends pulumi.ComponentResource {
             policy: doc
         }, this.baseOptions);
 
+        // in private mode the task reaches ECR, Secrets Manager and CloudWatch Logs through interface endpoints in the VPC,
+        // image layers through the S3 gateway endpoint, and Aurora through its security group
         this.securityGroup = new ec2.SecurityGroup(`${name}-sg`, {
             vpcId: args.vpcId,
-            egress: [{
-                fromPort: 0,
-                toPort: 0,
-                protocol: "-1",
-                cidrBlocks: ["0.0.0.0/0"]
-            }],
+            egress: args.privateNetwork ?
+                privateEgressRules(args.privateNetwork, { dbSecurityGroupId: args.database.dbSecurityGroupId }) :
+                [{
+                    fromPort: 0,
+                    toPort: 0,
+                    protocol: "-1",
+                    cidrBlocks: ["0.0.0.0/0"]
+                }],
         }, this.baseOptions);
 
         const cluster = new ecs.Cluster(`${name}-cluster`, {}, this.baseOptions);

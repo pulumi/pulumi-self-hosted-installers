@@ -47,9 +47,10 @@ export class ContainerService extends pulumi.ComponentResource {
         }
 
         // security group by default will allow all traffic out and ingress from ELB is only allowed
+        // in private mode the caller restricts egress to the VPC and S3
         this.securityGroup = new ec2.SecurityGroup(`${name}-service-sg`, {
             vpcId: args.vpcId,
-            egress: [{
+            egress: args.securityGroupEgress ?? [{
                 fromPort: 0,
                 toPort: 0,
                 protocol: "-1",

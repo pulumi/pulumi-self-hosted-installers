@@ -7,6 +7,7 @@ import { LogDriver, LogType } from "../logs/types";
 import { OidcKeySets } from "../oidcKeys";
 import { TrafficManager } from "../networking/trafficManager";
 import { PulumiLoadBalancer } from "../networking/pulumiLoadBalanacer";
+import { PrivateNetwork } from "../networking/privateNetwork";
 
 export interface ContainerDefinitionArgs {
     name: string,
@@ -40,6 +41,8 @@ export interface ServiceBaseArgs {
     accountId: string,
     cluster?: ecs.Cluster,
     kmsServiceKeyId?: string,
+    // set in private mode (enablePrivateLoadBalancerAndLimitEgress); restricts task egress to the VPC and S3
+    privateNetwork?: PrivateNetwork,
     privateSubnetIds: string[],
     region: string,
     secretsManagerPrefix?: string,
@@ -51,6 +54,8 @@ export interface ServiceArgs extends ServiceBaseArgs {
     listenerConditions: input.lb.ListenerRuleCondition[],
     listenerPriority: number,
     pulumiLoadBalancer: PulumiLoadBalancer,
+    // egress rules of the service security group; undefined allows all egress (0.0.0.0/0)
+    securityGroupEgress?: input.ec2.SecurityGroupEgress[],
     targetPort: number
     taskDefinitionArgs: TaskDefinitionArgs,
 }
@@ -59,7 +64,7 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     containerMemoryReservation?: number,
     containerCpu?: number,
     ecrRepoAccountId?: string | undefined,
-    endpointSecurityGroupId: string,
+    endpointSecurityGroupId?: string,
     imageTag: string,
     licenseKey: string,
     logType?: LogType,
@@ -111,7 +116,7 @@ export interface ConsoleServiceArgs extends ServiceBaseArgs {
     containerMemoryReservation?: number,
     containerCpu?: number,
     ecrRepoAccountId?: string | undefined,
-    endpointSecurityGroupId: string,
+    endpointSecurityGroupId?: string,
     imageTag: string,
     logType?: LogType,
     logArgs?: any,

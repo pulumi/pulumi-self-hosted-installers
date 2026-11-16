@@ -11,6 +11,7 @@ import { LogFactory } from "../logs/logFactory";
 import { LogDriver, LogType } from "../logs/types";
 import { Secrets } from "./secrets";
 import { getIamPolicyArn } from "../../common/utils";
+import { privateEgressRules } from "../networking/privateNetwork";
 
 const namespace = "pulumi:apiService";
 const apiPort = 8080;
@@ -121,6 +122,9 @@ export class ApiService extends pulumi.ComponentResource {
             listenerPriority: 1,
             listenerConditions: listenerConditions,
             pulumiLoadBalancer: trafficManager.api,
+            securityGroupEgress: args.privateNetwork && privateEgressRules(args.privateNetwork, {
+                dbSecurityGroupId: args.database.dbSecurityGroupId,
+            }),
             targetPort: apiPort,
             taskDefinitionArgs: taskArgs,
         }, pulumi.mergeOptions(this.options, { dependsOn: [migrationService]}));

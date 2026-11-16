@@ -49,7 +49,7 @@ export class PulumiLoadBalancer extends pulumi.ComponentResource {
             loadBalancerType: "application",
             internal: internalLb,
             securityGroups: [this.securityGroup.id],
-            subnets: args.publicSubnetIds,
+            subnets: args.subnetIds,
             idleTimeout: idleTimeout,
             accessLogs: args.accessLogsBucket && {
                 enabled: true,

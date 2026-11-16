@@ -7,6 +7,7 @@ import { TaskDefinitionArgs, ConsoleServiceArgs } from "./types";
 import { buildECRImageTag } from "../utils";
 import { LogType, LogDriver } from "../logs/types";
 import { LogFactory } from "../logs/logFactory";
+import { privateEgressRules } from "../networking/privateNetwork";
 
 const namespace = "pulumi:consoleService";
 const consolePort = 3000;
@@ -63,7 +64,8 @@ export class ConsoleService extends pulumi.ComponentResource {
             }
         ];
 
-        // Pulumi Console should never communicate directly with Pulumi API. Traffic should always route through ALB (public)
+        // Pulumi Console should never communicate directly with Pulumi API. Traffic should always route through the API ALB
+        // (internet facing, or internal in private mode, where api.<domain> must resolve to the internal ALB in the VPC)
         const taskArgs = this.constructTaskArgs();
         this.consoleService = new ContainerService(`${name}`, {
             region: args.region,
@@ -74,6 +76,7 @@ export class ConsoleService extends pulumi.ComponentResource {
             listenerPriority: 1,
             privateSubnetIds: args.privateSubnetIds,
             pulumiLoadBalancer: trafficManager.console,
+            securityGroupEgress: args.privateNetwork && privateEgressRules(args.privateNetwork),
             targetPort: consolePort,
             taskDefinitionArgs: taskArgs,
             vpcId: args.vpcId,

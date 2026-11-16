@@ -6,6 +6,7 @@ import { ApiService } from "./services/apiService";
 import { ConsoleService } from "./services/consoleService";
 import { TrafficManager } from "./networking/trafficManager";
 import { createOidcKeySets } from "./oidcKeys";
+import { lookupPrivateNetwork } from "./networking/privateNetwork";
 
 /*
 Entry point to creating all application related infrastructure.
@@ -21,15 +22,22 @@ export = async () => {
     const policyPacksBucket = new aws.s3.Bucket(`pulumi-policypacks`, {}, { protect: true });
     const metadataBucket= new aws.s3.Bucket(`pulumi-service-metadata`, {}, { protect: true });
 
+    // Private mode: VPC CIDR blocks and the S3 prefix list for the internal ALBs and the restricted task egress
+    const privateNetwork = config.enablePrivateLoadBalancerAndLimitEgress ?
+        await lookupPrivateNetwork(config.vpcId, config.region, config.s3EndpointPrefixId) :
+        undefined;
+
     // Create infra related to handling traffic
     // ALB, HTTP & HTTPS listeners, empty target group, and ALB access logs if configuration says so
+    // In private mode both ALBs are internal, sit in the private subnets and only accept the VPC CIDR blocks by default
     const trafficManager = new TrafficManager("pulumi-tm", {
         accountId: config.accountId,
         certificateArn: config.dns.acmCertificateArn,
-        publicSubnetIds: config.publicSubnetIds,
+        internalLb: privateNetwork !== undefined,
+        subnetIds: privateNetwork ? config.privateSubnetIds : config.publicSubnetIds!,
         region: config.region,
         vpcId: config.vpcId,
-        whiteListCidrBlocks: config.dns.whiteListCidrBlocks
+        whiteListCidrBlocks: config.dns.whiteListCidrBlocks ?? privateNetwork?.vpcCidrBlocks
     });
 
     let apiUrl = `api.${config.dns.route53Subdomain}.${config.dns.route53ZoneName}`;
@@ -83,6 +91,7 @@ export = async () => {
         numberDesiredTasks: config.api.apiDesiredNumberTasks,
         oidcKeySets: oidcKeySets,
         policyPacksBucket: policyPacksBucket,
+        privateNetwork: privateNetwork,
         privateSubnetIds: config.privateSubnetIds,
         recaptchaSecretKey: config.recaptchaSecretKey,
         region: config.region,
@@ -117,6 +126,7 @@ export = async () => {
         logArgs: config.logs.logArgs,
         logType: config.logs.logType,
         numberDesiredTasks: config.console.consoleDesiredNumberTasks,
+        privateNetwork: privateNetwork,
         privateSubnetIds: config.privateSubnetIds,
         recaptchaSiteKey: config.recaptchaSiteKey,
         agGridLicenseKey: config.console.agGridLicenseKey,
@@ -135,6 +145,7 @@ export = async () => {
         metadataS3BucketName: metadataBucket.id,
 
         // the DNS project will use all these outputs to create A records
+        // in private mode these are the internal ALBs
         apiLoadBalancerDnsName: trafficManager.api.loadBalancer.dnsName,
         apiLoadBalancerZoneId: trafficManager.api.loadBalancer.zoneId,
         consoleLoadBalancerDnsName: trafficManager.console.loadBalancer.dnsName,
