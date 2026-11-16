@@ -10,6 +10,10 @@ import * as mocks from "./mocks";
 Flag-off parity: with enablePrivateLoadBalancerAndLimitEgress unset, every stage must register exactly the resources
 (including component args), make exactly the invokes and return exactly the outputs that origin/master 27127eef does.
 
+Allowlisted differences from master, each a deliberate fix that applies to every install (see allowlistedFixes):
+- the OpenSearch master password (infrastructure) now sets minUpper/minLower/minNumeric/minSpecial = 1, because
+  OpenSearch rejects a password without every character class. ignoreChanges keeps existing installs from replacing it.
+
 fixtures/flag-off-parity.json holds a sha256 of each stage's canonical recording. It was produced by compiling this file
 against the origin/master sources and running it with PARITY_FIXTURE_UPDATE=<path to the fixture>. On a mismatch the
 current recording is written to test/bin/test/parity-<stage>.actual.json; diff it against one produced on master.
@@ -80,6 +84,19 @@ const explicitlyOff: Record<string, Record<string, unknown>> = {
     dns: { enablePrivateLoadBalancerAndLimitEgress: false, skipDnsRecords: false },
 };
 
+// Removes exactly the allowlisted fix inputs (with exactly the expected values) before hashing, so the rest of the
+// recording is still compared with master. Unit tests in infrastructure.test.ts assert the fix itself.
+function allowlistedFixes(resources: mocks.Recorded[]): mocks.Recorded[] {
+    const passwordFix: Record<string, unknown> = { minUpper: 1, minLower: 1, minNumeric: 1, minSpecial: 1 };
+    return resources.map(r => {
+        if (r.type !== "random:index/randomPassword:RandomPassword" || r.name !== "pulumiselfhosted-ressearch-pw") {
+            return r;
+        }
+        const inputs = Object.fromEntries(Object.entries(r.inputs).filter(([k, v]) => passwordFix[k] !== v));
+        return { ...r, inputs };
+    });
+}
+
 // JSON with sorted object keys, so key order (irrelevant to Pulumi) does not change the hash
 function canonical(value: unknown): string {
     return JSON.stringify(value, (_key, v) => v && typeof v === "object" && !Array.isArray(v) ?
@@ -112,7 +129,7 @@ async function record(stage: string, config: Record<string, unknown>) {
     const values = await Promise.all(keys.map(k => resolveOutput(outputs[k])));
 
     const recording = canonical({
-        resources: [...harness.resources]
+        resources: allowlistedFixes(harness.resources)
             .map(r => ({ type: r.type, name: r.name, inputs: r.inputs }))
             .sort((a, b) => `${a.type}::${a.name}`.localeCompare(`${b.type}::${b.name}`)),
         invokes: harness.calls.map(c => canonical(c)).sort(),

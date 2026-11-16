@@ -73,6 +73,30 @@ describe("infrastructure, default (flag off)", () => {
     });
 });
 
+describe("infrastructure, OpenSearch master password", () => {
+    const passwordType = "random:index/randomPassword:RandomPassword";
+    const passwordName = "pulumiselfhosted-ressearch-pw";
+    let harness: mocks.Harness;
+
+    before(async () => {
+        ({ harness } = await run({ ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, enableOpenSearch: true }));
+    });
+
+    it("requires every character class OpenSearch checks for", () => {
+        const inputs = harness.named(passwordType, passwordName).inputs;
+        assert.equal(inputs.length, 16);
+        assert.equal(inputs.minUpper, 1);
+        assert.equal(inputs.minLower, 1);
+        assert.equal(inputs.minNumeric, 1);
+        assert.equal(inputs.minSpecial, 1);
+        assert.equal(inputs.overrideSpecial, undefined);
+    });
+
+    it("ignores changes to the min* args so existing passwords are not replaced", () => {
+        assert.deepEqual(harness.ignoreChangesOf(passwordType, passwordName), ["minUpper", "minLower", "minNumeric", "minSpecial"]);
+    });
+});
+
 describe("infrastructure, private mode with enableVpcEndpoints=false", () => {
     let harness: mocks.Harness;
 

@@ -44,9 +44,19 @@ export class ResourceSearch extends pulumi.ComponentResource {
         });
 
         const un = "admin";
+        // OpenSearch rejects a master user password that lacks an uppercase letter, a lowercase letter, a number or a
+        // special character, which `length` alone does not guarantee; the min* args do. The default special character set
+        // is fine: the API accepts any character (pattern .*). The min* args were added after the first release and are
+        // replace-on-change, so ignoreChanges keeps existing installs from replacing (rotating) their password on upgrade.
         const pw = new random.RandomPassword(`${name}-pw`, {
             length: 16,
-        }, options);
+            minUpper: 1,
+            minLower: 1,
+            minNumeric: 1,
+            minSpecial: 1,
+        }, pulumi.mergeOptions(options, {
+            ignoreChanges: ["minUpper", "minLower", "minNumeric", "minSpecial"],
+        }));
 
         const offset = new time.Offset(`${name}-maintenancealert`, {
             offsetDays: 7
