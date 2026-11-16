@@ -18,7 +18,7 @@ Version ID | Date | Note
 6 | 10/15/2024 | Add ESC deployment to the installer.
 7 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 8 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
-9 | 11/16/2026 | Opt-in private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress` in all three projects, see [Private (internal-only) deployment](#private-internal-only-deployment). Off by default; existing installs are unchanged. The application project now also reads the documented `consoleDesiredNumberTasks` key (the misspelled `consoleDesirecNumberTasks` still works).
+9 | 11/16/2026 | Opt-in private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress` in all three projects, see [Private (internal-only) deployment](#private-internal-only-deployment). Off by default; existing installs are unchanged. The application project now also reads the documented `consoleDesiredNumberTasks` key (the misspelled `consoleDesirecNumberTasks` still works) and supports an optional `imagePrefix` for ECR pull-through caches.
 
 ## User Guides
 
@@ -215,6 +215,10 @@ licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obta
 subDomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com. Default is none.
 isolatedSubnetIds - Isolated subnet IDs. Not used by this project.
 ecrRepoAccountId - AWS account that holds the ECR repos, if not the current account.
+imagePrefix - Repository prefix in front of pulumi/<image>, eg- docker-hub for an ECR pull-through cache rule with that
+    prefix. A trailing "/" is added if missing. Default is none. See "ECR pull-through cache".
+ecrPullThroughCacheImport - Grant the task execution roles the permissions to import images through the pull-through
+    cache on first pull. Requires imagePrefix. Default is false.
 
 apiDesiredNumberTasks - Desired number of ECS tasks for the API. Default is 1.
 apiTaskMemory - ECS Task level Memory. Default is 1024 MiB.
@@ -294,6 +298,32 @@ pulumi config set smtpGenericSender email@email.com
 pulumi config set smtpPassword {some-password} --secret
 pulumi config set smtpServer email-smtp.us-west-2.amazonaws.com:587
 ```
+
+### ECR pull-through cache
+
+By default the images are `<account>.dkr.ecr.<region>.amazonaws.com/pulumi/{service,console,migrations}:<imageTag>`,
+where `<account>` is `ecrRepoAccountId` or the current account. An ECR pull-through cache rule serves upstream images
+under its prefix instead, for example `docker-hub/pulumi/service:<tag>` for a rule with prefix `docker-hub` and Docker
+Hub as upstream. Set the prefix with:
+
+```bash
+pulumi config set imagePrefix docker-hub
+# images: <account>.dkr.ecr.<region>.amazonaws.com/docker-hub/pulumi/service:<imageTag>, .../docker-hub/pulumi/console:...
+```
+
+`docker-hub`, `docker-hub/` and `/docker-hub/` are equivalent. (The Go installer prepends `imagePrefix` verbatim, so
+there it needs the trailing `/`; with `docker-hub/` both installers build the same URIs.)
+
+The first pull of an image through the cache imports it and creates its repository, which needs
+`ecr:BatchImportUpstreamImage` and `ecr:CreateRepository`. The task execution roles this installer creates do not have
+them (only `AmazonECSTaskExecutionRolePolicy`). Either pull each image once beforehand with a principal that has these
+permissions, for example `docker pull <account>.dkr.ecr.<region>.amazonaws.com/docker-hub/pulumi/service:<imageTag>`
+after `aws ecr get-login-password`, or set `ecrPullThroughCacheImport` to `true`. That grants the two permissions to the
+API, console and migrations execution roles, scoped to `repository/<imagePrefix>pulumi/*` in the registry account.
+With `ecrRepoAccountId` pointing at another account, that registry must also allow this account.
+
+ECR fetches from the upstream registry itself, so the cache also works in [private mode](#private-internal-only-deployment)
+without internet egress from the VPC.
 
 ### Deploy
 
