@@ -195,6 +195,19 @@ describe("application, private mode with httpsProxy", () => {
     });
 });
 
+describe("application, consoleDesiredNumberTasks", () => {
+    const flagOff = { ...baseConfig, publicSubnetIds: mocks.publicSubnetIds, endpointSecurityGroupId: "sg-endpoints" };
+    const desiredCount = async (config: Record<string, unknown>) =>
+        (await run(config)).named("aws:ecs/service:Service", "pulumi-console-service").inputs.desiredCount;
+
+    it("reads the correct key, then the historical misspelled one", async () => {
+        assert.equal(await desiredCount({ ...flagOff, consoleDesiredNumberTasks: 4 }), 4);
+        assert.equal(await desiredCount({ ...flagOff, consoleDesirecNumberTasks: 2 }), 2);
+        assert.equal(await desiredCount({ ...flagOff, consoleDesiredNumberTasks: 4, consoleDesirecNumberTasks: 2 }), 4);
+        assert.equal(await desiredCount(flagOff), 1);
+    });
+});
+
 describe("application, default (flag off)", () => {
     let harness: mocks.Harness;
 

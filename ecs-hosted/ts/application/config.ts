@@ -90,7 +90,10 @@ export async function hydrateConfig() {
     const apiEngineEventsLegacyWrite = stackConfig.getBoolean("apiEngineEventsLegacyWrite") ?? false;
 
     // Pulumi Console
-    const consoleDesiredNumberTasks = stackConfig.getNumber("consoleDesirecNumberTasks") || 1;
+    // consoleDesirecNumberTasks is the historical misspelled key, still read so existing stacks keep working.
+    // `||` as before, so 0 still means the default.
+    const consoleDesiredNumberTasks = stackConfig.getNumber("consoleDesiredNumberTasks") ||
+        stackConfig.getNumber("consoleDesirecNumberTasks") || 1;
     const consoleTaskMemory = stackConfig.getNumber("consoleTaskMemory");
     const consoleTaskCpu = stackConfig.getNumber("consoleTaskCpu");
     const consoleContainerCpu = stackConfig.getNumber("consoleContainerCpu");
