@@ -11,8 +11,8 @@ the table and `ts/README.md` "Divergence from Go").
 | --- | --- | --- |
 | Module system | `package.json` per stage | `go.mod` at `go/` root; `dns/` has its own `go.mod` |
 | Stages | `infrastructure/`, `application/`, `dns/` | same |
-| Private mode | Fully internal: both ALBs internal, no public subnets | Partial: public ALB stays, internal NLB for the API |
-| Unit tests | `ts/test/` (`pulumi.runtime.setMocks`, `npm test`) | `common/utils_test.go` (ARN partition logic) |
+| Private mode | Opt-in in all 3 stages; fully internal ALBs, no public subnets | Partial: public ALB stays, internal NLB for the API |
+| Unit tests | `ts/test/` (`setMocks`, `npm test`, flag-off parity with master) | `common/utils_test.go` (ARN partition logic) |
 
 ## Deployment sequence (both implementations)
 

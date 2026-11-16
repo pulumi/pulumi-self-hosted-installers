@@ -18,7 +18,7 @@ Version ID | Date | Note
 6 | 10/15/2024 | Add ESC deployment to the installer.
 7 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 8 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
-9 | 11/16/2026 | Private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress`, see [Private (internal-only) deployment](#private-internal-only-deployment). The infrastructure stage now also creates KMS and CloudWatch Logs endpoints and routes the S3 gateway endpoint through the private and isolated route tables; review its `pulumi preview` when upgrading.
+9 | 11/16/2026 | Opt-in private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress` in all three projects, see [Private (internal-only) deployment](#private-internal-only-deployment). Off by default; existing installs are unchanged. The application project now also reads the documented `consoleDesiredNumberTasks` key (the misspelled `consoleDesirecNumberTasks` still works).
 
 ## User Guides
 
@@ -113,8 +113,9 @@ pulumi stack init # follow prompt
 ### Required Configuration
 
 ```bash
-region - AWS Region
+aws:region - AWS Region
 vpcId - Valid, pre-existing AWS VPC 
+publicSubnetIds - At least two subnet ID. Optional when enablePrivateLoadBalancerAndLimitEgress is true.
 privateSubnetIds - At least two private subnet ID
 isolatedSubnetIds - At least two isolated subnet ID
 ```
@@ -122,14 +123,17 @@ isolatedSubnetIds - At least two isolated subnet ID
 ### Optional Configuration
 
 ```bash
-publicSubnetIds - At least two subnet ID. Only passed through to the application stage; leave unset in private mode.
-enableVpcEndpoints - Create the VPC endpoints listed below (default is true)
-dbInstanceType - RDS Database Instance Type (default is db.t3.small)
+commonName - Prefix for resource names (default is pulumiselfhosted)
+numberDbReplicas - Number of Aurora read replicas, 0 to 2 (default is 0)
+dbInstanceType - RDS Database Instance Type (default is db.t3.medium)
 enableOpenSearch - Deploys an AWS OpenSearch Domain as part of the project
 openSearchInstanceType - AWS OpenSearch Instance Type (default is t3.medium.search)
-openSearchInstanceCount - AWS OpenSearch Instance Count (default is 2 && value cannot be less than 2)
+openSearchInstanceCount - AWS OpenSearch Instance Count (default is 2; must be at least the number of privateSubnetIds)
 openSearchDomainName - AWS OpenSearch Domain Name (default is pulumi)
 openSearchDedicatedMasterCount - AWS OpenSearch Dedicated Master Count (default is no dedicated master nodes)
+enableVpcEndpoints - Create the VPC endpoints listed below (default is true)
+enablePrivateLoadBalancerAndLimitEgress - Private (internal-only) mode, default is false. See "VPC Endpoints" below and
+    "Private (internal-only) deployment".
 ```
 
 **Note: below configuration values are examples. Provide your own.**
@@ -148,12 +152,14 @@ Optionally, configure the DB Instance Type of your choice.
 
 ### VPC Endpoints
 
-With `enableVpcEndpoints` (the default) this stage creates:
+With `enableVpcEndpoints` (the default) this stage creates an S3 gateway endpoint and interface endpoints with private
+DNS in the private subnets for `ecr.api`, `ecr.dkr`, `secretsmanager` and `ssm`.
 
-- an S3 gateway endpoint, associated with the route tables of the private and isolated subnets (the VPC main route
+With `enablePrivateLoadBalancerAndLimitEgress` also set, it additionally:
+
+- associates the S3 gateway endpoint with the route tables of the private and isolated subnets (the VPC main route
   table for subnets without an explicit association)
-- interface endpoints with private DNS in the private subnets for `ecr.api`, `ecr.dkr`, `secretsmanager`, `ssm`, `kms`
-  and `logs`
+- creates `kms` and `logs` interface endpoints
 
 If the VPC already has any of these endpoints, or already resolves these service names privately (for example through
 centrally shared endpoints), creating them fails on the private DNS conflict. Set `enableVpcEndpoints` to `false` in
@@ -163,8 +169,7 @@ that case and make sure the VPC provides, for the private subnets:
   service has to assume AWS roles (for example ESC `aws-login`), with security groups that allow 443 from the VPC
 - an S3 gateway endpoint associated with the route tables of the private subnets (and the isolated subnets)
 
-On an existing install, `pulumi preview` shows the new `kms` and `logs` endpoints and an update of the S3 endpoint's
-route tables. Switching an existing install to `enableVpcEndpoints=false` deletes the endpoints this stage created.
+Switching an existing install to `enableVpcEndpoints=false` deletes the endpoints this stage created.
 
 ### Deploy
 
@@ -185,24 +190,20 @@ pulumi stack init # follow prompt
 ### Required Configuration
 
 ```bash
-region - AWS Region
+aws:region - AWS Region
 vpcId - Valid, pre-existing AWS VPC 
 publicSubnetIds - At least two subnet ID. Not required when enablePrivateLoadBalancerAndLimitEgress is true.
 privateSubnetIds - At least two private subnet ID
-isolatedSubnetIds - At least two isolated subnet ID
-dbClusterEndpoint - RDS Cluster Enpoint
+dbClusterEndpoint - RDS Cluster Endpoint hostname (infrastructure output dbClusterEndpoint)
 dbPort - MySQL Port
 dbName - Database Name
 dbSecurityGroupId - Database Security Group ID
 dbUsername - Database Username for Pulumi Cloud
 dbPassword - Database Password for Pulumi Cloud
-openSearchUser - AWS OpenSearch User for Pulumi Cloud
-openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
-openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
-openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
+endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints (infrastructure output). Not read by the program;
+    not required when enablePrivateLoadBalancerAndLimitEgress is true.
 imageTag - Specific Pulumi docker container image tag to be used for deployment. Note: Existing ECR repo w/ Pulumi images (api, ui, migrations) is required.
-route53ZoneName - Route 53 Hosted Zone Name of zone to be used for DNS records.
-route53Subdomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com.
+domainName - Route 53 Hosted Zone Name of zone to be used for DNS records.
 acmCertificateArn - ACM Certificate ARN that covers the Route 53 Hosted Domain.
 kmsServiceKeyId - KMS Key Id of KMS Key that will be used to secure secrets. Note: AWS user performing update will require access to modify key's IAM policy.
 licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obtain).
@@ -211,40 +212,53 @@ licenseKey - Valid license key to host Pulumi Self-Hosted (Contact Sales to obta
 ### Optional Configuration
 
 ```bash
+subDomain - Subdomain to be used for DNS records Eg- sub-domain.hosted-zone-domain.com. Default is none.
+isolatedSubnetIds - Isolated subnet IDs. Not used by this project.
+ecrRepoAccountId - AWS account that holds the ECR repos, if not the current account.
+
 apiDesiredNumberTasks - Desired number of ECS tasks for the API. Default is 1.
-apiTaskMemory - ECS Task level Memory. Default is 1024mb.
-apiTaskCpu - ECS Task level CPU. Default is 512mb.
+apiTaskMemory - ECS Task level Memory. Default is 1024 MiB.
+apiTaskCpu - ECS Task level CPU. Default is 512 CPU units.
 apiContainerCpu - CPU alloted to the Pulumi API Container. Defaults to Task CPU amount.
-apiContainerMemoryReservation - Memory reserved for the Pulumi API Container. Defaults to Task memory amount.
-apiDisabledEmailLogin - See DISABLE_EMAIL_LOGIN api env variable.
-apiDisabledEmailSignup - See DISABLE_EMAIL_SIGNUP api env variable.
+apiContainerMemoryReservation - Memory reserved for the Pulumi API Container. Default is 384 MiB.
+apiDisableEmailLogin - See PULUMI_DISABLE_EMAIL_LOGIN api env variable.
+apiDisableEmailSignUp - See PULUMI_DISABLE_EMAIL_SIGNUP api env variable.
+apiEngineEventsSchemaV2 - See PULUMI_ENGINE_EVENTS_SCHEMA_V2 api env variable. Default is true.
+apiEngineEventsLegacyWrite - See PULUMI_ENGINE_EVENTS_LEGACY_WRITE api env variable. Default is false.
 
-openSearchUser - AWS OpenSearch User for Pulumi Cloud
-openSearchPassword - AWS OpenSearch Password for Pulumi Cloud
-openSearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud
-openSearchDomain - AWS OpenSearch Domain for Pulumi Cloud
+opensearchUser - AWS OpenSearch User for Pulumi Cloud (infrastructure output opensearchUser)
+opensearchPassword - AWS OpenSearch Password for Pulumi Cloud (infrastructure output opensearchPassword)
+opensearchEndpoint - AWS OpenSearch Endpoint for Pulumi Cloud (infrastructure output opensearchEndpoint)
+opensearchDomainName - AWS OpenSearch Domain for Pulumi Cloud (infrastructure output opensearchDomainName)
 
-consoleDesiredNumberTasks - Desired number of ECS tasks for the UI. Default is 1.
-consoleTaskMemory - ECS Task level Memory. Default is 512mb.
-consoleTaskCpu - ECS Task level CPU. Default is 256mb.
+consoleDesiredNumberTasks - Desired number of ECS tasks for the UI. Default is 1. The older misspelled key
+    consoleDesirecNumberTasks is still read when this one is not set.
+consoleTaskMemory - ECS Task level Memory. Default is 512 MiB.
+consoleTaskCpu - ECS Task level CPU. Default is 256 CPU units.
 consoleContainerCpu - CPU alloted to the Pulumi UI Container. Defaults to Task CPU amount.
-consoleContainerMemoryReservation - Memory reserved for the Pulumi UI Container. Defaults to Task memory amount.
-consoleHideEmailLogin - See HIDE_EMAIL_LOGIN UI env variable.
-consoleHideEmailSignup - See HIDE_EMAIL_SIGNUP UI env variable.
+consoleContainerMemoryReservation - Memory reserved for the Pulumi UI Container. Default is 128 MiB.
+consoleHideEmailLogin - See PULUMI_HIDE_EMAIL_LOGIN UI env variable.
+consoleHideEmailSignup - See PULUMI_HIDE_EMAIL_SIGNUP UI env variable.
+agGridLicenseKey - AG Grid license key for the UI (secret).
 
-smtpServer - Fully qualified address of SMTP server.
+recaptchaSiteKey - reCAPTCHA site key for the UI.
+recaptchaSecretKey - reCAPTCHA secret key for the API (secret).
+samlCertPublicKey - SAML SSO certificate public key (secret).
+samlCertPrivateKey - SAML SSO certificate private key (secret). Setting it enables SAML SSO in the UI.
+
+smtpServer - Address of SMTP server as host:port.
 smtpUsername - SMTP username.
 smtpPassword - SMTP password.
 smtpGenericSender - Email to be used for sending emails from Pulumi API.
 
-logType - Type of logs to be used. Default is no logging.
-logArgs - Arguments provided to log configuration. See Logging section below.
+logType - Type of logs to be used. Default is awslogs. See Logging section below.
+logArgs - Arguments provided to log configuration. Only read when logType is set. See Logging section below.
 
-endpointSecurityGroupId - Endpoint Security Group ID for VPC Endpoints (infrastructure output; not used by the program).
 whiteListCidrBlocks - List of CIDRs allowed to reach both load balancers on 80/443. Default is 0.0.0.0/0, or the VPC
     CIDR blocks in private mode.
 
-enablePrivateLoadBalancerAndLimitEgress - Private (internal-only) mode. See "Private (internal-only) deployment".
+enablePrivateLoadBalancerAndLimitEgress - Private (internal-only) mode, default is false. See "Private (internal-only)
+    deployment".
 s3EndpointPrefixId - S3 gateway endpoint prefix list (infrastructure output). Private mode only; looked up by name
     (com.amazonaws.<region>.s3) when unset.
 httpsProxy - HTTP proxy URL for the API's outbound internet calls, eg- http://proxy.internal:3128. Sets HTTPS_PROXY and
@@ -258,28 +272,27 @@ noProxy - List of extra NO_PROXY entries for the API container. See "Outbound pr
 ```bash
 pulumi config set aws:region us-west-2
 pulumi config set imageTag 20220105-189-signed
-pulumi config set imageTag 20220105-189-signed
 pulumi config set acmCertificateArn arn:aws:acm:us-west-2:052848974346:certificate/ee6d246c-dd3a-4667-b58a-4568a0f72dd6
 pulumi config set kmsServiceKeyId f7f56e09-f568-447c-8540-cef8ba122a79
 pulumi config set licenseKey {value} --secret
 pulumi config set agGridLicenseKey {agGridLicenseKey} --secret
 pulumi config set logType awslogs
 pulumi config set logArgs '{"name": "pulumi-selfhosted", "retentionInDays": 3}'
+pulumi config set vpcId vpc-12345789
 pulumi config set privateSubnetIds '[ "subnet-03fd1ba00d1ff893c","subnet-09a443b2aece32800","subnet-0f89dff186bdd1f56"]'
 pulumi config set publicSubnetIds '["subnet-0323d9d5445d31651","subnet-0e82d2298e8742481","subnet-07ffe683886112c56"]'
-pulumi config set dbClusterEndpoint https://somedb.rds.endpoint.com
-pulumi config set dbPort - 3306
-pulumi config set dbName - Pulumi
-pulumi config set dbSecurityGroupId - SG_12345
-pulumi config set dbUsername - User
-pulumi config set dbPassword - Pass
-pulumi config set endpointSecurityGroupId - SG_1234
-pulumi config set route53Subdomain my-sub-domain
-pulumi config set route53ZoneName hosted-zone.com
+pulumi config set dbClusterEndpoint pulumiselfhosted.cluster-abc123.us-west-2.rds.amazonaws.com
+pulumi config set dbPort 3306
+pulumi config set dbName pulumi
+pulumi config set dbSecurityGroupId sg-12345
+pulumi config set dbUsername pulumi
+pulumi config set dbPassword {db-password} --secret
+pulumi config set endpointSecurityGroupId sg-1234
+pulumi config set subDomain my-sub-domain
+pulumi config set domainName hosted-zone.com
 pulumi config set smtpGenericSender email@email.com
 pulumi config set smtpPassword {some-password} --secret
 pulumi config set smtpServer email-smtp.us-west-2.amazonaws.com:587
-pulumi config set region us-west-2
 ```
 
 ### Deploy
@@ -307,19 +320,20 @@ pulumi stack init # follow prompt
 ### Required Configuration
 
 ```bash
-region - AWS region
-route53ZoneName - Route 53 Zone Name 
-route53Subdomain - Subdomain
-apiLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
-apiLoadBalancerZoneId - Application Load balancer Zone Id - API Load Balancer
-consoleLoadBalancerDnsName - Application Load balancer Name - API Load Balancer
-consoleLoadBalancerZoneId - Application Load balancer Id - API Load Balancer
+aws:region - AWS region
+route53ZoneName - Route 53 Zone Name (application output route53ZoneName)
+route53Subdomain - Subdomain (application output route53Subdomain); may be set to an empty string
+apiLoadBalancerDnsName - DNS name of the API load balancer (application output apiLoadBalancerDnsName)
+apiLoadBalancerZoneId - Hosted zone ID of the API load balancer (application output apiLoadBalancerZoneId)
+consoleLoadBalancerDnsName - DNS name of the Console load balancer (application output consoleLoadBalancerDnsName)
+consoleLoadBalancerZoneId - Hosted zone ID of the Console load balancer (application output consoleLoadBalancerZoneId)
 ```
 
 ### Optional Configuration
 
 ```bash
-enablePrivateLoadBalancerAndLimitEgress - Create the records in a Route 53 private hosted zone (privateZone lookup).
+enablePrivateLoadBalancerAndLimitEgress - Private mode, default is false: create the records in a Route 53 private
+    hosted zone (privateZone lookup).
 vpcId - Private mode only: the VPC the private hosted zone is associated with, to pick one of several same-named zones.
 skipDnsRecords - Create no records, for DNS managed outside Route 53. The stack then outputs apiLoadBalancerDnsName and
     consoleLoadBalancerDnsName; point CNAME records for api.<domain> and app.<domain> at them.
@@ -330,7 +344,9 @@ skipDnsRecords - Create no records, for DNS managed outside Route 53. The stack 
 ### Set Configuration Values
 
 ```bash
-pulumi config set aws-region us-west-2
+pulumi config set aws:region us-west-2
+pulumi config set route53ZoneName hosted-zone.com
+pulumi config set route53Subdomain my-sub-domain
 pulumi config set apiLoadBalancerDnsName some.aws.lb.com
 pulumi config set apiLoadBalancerZoneId zoneIdHere
 pulumi config set consoleLoadBalancerDnsName some.aws.lb.com
@@ -349,7 +365,10 @@ Review the resources to be created, if necessary, and select YES or NO. Upon com
 
 For VPCs without an internet gateway or NAT, where the UI and API are only reachable from inside the network (for
 example through an identity-aware access proxy, a VPN or a peered network). Set `enablePrivateLoadBalancerAndLimitEgress` to `true` in the
-`application` and `dns` stages. Then:
+`infrastructure`, `application` and `dns` stages. It is off by default; with it off nothing changes. Then:
+
+- the `infrastructure` stage makes `publicSubnetIds` optional and, with `enableVpcEndpoints`, associates the S3 gateway
+  endpoint with the private and isolated route tables and adds `kms` and `logs` interface endpoints
 
 - both load balancers (console and API) are internal and placed in `privateSubnetIds`; `publicSubnetIds` is not needed
   in any stage
@@ -403,19 +422,21 @@ migrations task egress, looks up a private hosted zone in the `dns` stage, and l
 
 ## Logging
 
-To enable logging configurations for your ECS services, you must specify at least one of the following logging configurations in the `application` stack configuration. NOTE: if no configuration is specified, application logging will not be enabled.
+Logging is configured in the `application` stack configuration. If `logType` is not set, the API and Console log to
+CloudWatch (awslogs) in log groups named after `<project>-<stack>` with 7 days retention, and `logArgs` is ignored.
+To choose the log group name or retention, set both keys:
 - Cloudwatch (awslogs)
 
   ```bash
   pulumi config set logType awslogs
-  pulumi config set logArgs '{"name": "your_log_base_name", "retentionDays": 3}' # NOTE: retentionDays defaults to 7 (days)
+  pulumi config set logArgs '{"name": "your_log_base_name", "retentionInDays": 3}' # NOTE: retentionInDays defaults to 7 (days)
   ```
 
 ## Use Self-hosted Pulumi
 
 ### Organization Setup
 
-1. Open `consoleEndpoint` in your browser.
+1. Open `consoleUrl` (output of the `dns` project) in your browser.
 1. Sign up for a new user.
 1. Add an Organization.
 1. Optionally, complete SSO setup under your organization settings page.
