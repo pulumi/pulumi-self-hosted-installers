@@ -43,8 +43,11 @@ export async function hydrateConfig() {
     const dbUsername = stackConfig.require("dbUsername");
     const dbPassword = stackConfig.require("dbPassword");
 
-    // vpc endpoint security group; not set when the infrastructure stage runs with enableVpcEndpoints=false
-    const endpointSecurityGroupId = stackConfig.get("endpointSecurityGroupId");
+    // vpc endpoint security group; not read by the program. Optional in private mode, where the infrastructure stage may run
+    // with enableVpcEndpoints=false and export none.
+    const endpointSecurityGroupId: string | undefined = enablePrivateLoadBalancerAndLimitEgress ?
+        stackConfig.get("endpointSecurityGroupId") :
+        stackConfig.require("endpointSecurityGroupId");
 
     // S3 gateway endpoint prefix list (infrastructure output s3EndpointPrefixId). Only used in private mode; looked up
     // by name (com.amazonaws.<region>.s3) when not set.

@@ -234,7 +234,8 @@ describe("application, default (flag off)", () => {
         }
     });
 
-    it("still requires publicSubnetIds", async () => {
-        await assert.rejects(run(baseConfig), /publicSubnetIds/);
+    it("still requires publicSubnetIds and endpointSecurityGroupId", async () => {
+        await assert.rejects(run({ ...baseConfig, endpointSecurityGroupId: "sg-endpoints" }), /publicSubnetIds/);
+        await assert.rejects(run({ ...baseConfig, publicSubnetIds: mocks.publicSubnetIds }), /endpointSecurityGroupId/);
     });
 });
