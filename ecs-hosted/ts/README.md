@@ -18,7 +18,7 @@ Version ID | Date | Note
 6 | 10/15/2024 | Add ESC deployment to the installer.
 7 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 8 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
-9 | 11/16/2026 | Opt-in private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress` in all three projects, see [Private (internal-only) deployment](#private-internal-only-deployment). Off by default; existing installs are unchanged. The application project now also reads the documented `consoleDesiredNumberTasks` key (the misspelled `consoleDesirecNumberTasks` still works) and supports an optional `imagePrefix` for ECR pull-through caches. Fix: the OpenSearch master password now always contains an uppercase letter, a lowercase letter, a number and a special character (new installs could fail `CreateDomain`); existing passwords are kept.
+9 | 11/16/2026 | Opt-in private (internal-only) mode via `enablePrivateLoadBalancerAndLimitEgress` in all three projects, see [Private (internal-only) deployment](#private-internal-only-deployment). Off by default; existing installs are unchanged. The application project now also reads the documented `consoleDesiredNumberTasks` key (the misspelled `consoleDesirecNumberTasks` still works) and supports an optional `imagePrefix` for ECR pull-through caches. Fix: the OpenSearch master password now always contains an uppercase letter, a lowercase letter, a number and a special character (new installs could fail `CreateDomain`); existing passwords are kept. Fix: the API task role now has all four KMS actions the self-hosting docs require (ESC `pulumi env init` failed without `kms:Encrypt` and `kms:GenerateDataKey`). Opt-in `enableEngineEventsBucket` and `enableRegistryBuckets`, recommended for new installs.
 
 ## User Guides
 
@@ -229,6 +229,11 @@ apiDisableEmailLogin - See PULUMI_DISABLE_EMAIL_LOGIN api env variable.
 apiDisableEmailSignUp - See PULUMI_DISABLE_EMAIL_SIGNUP api env variable.
 apiEngineEventsSchemaV2 - See PULUMI_ENGINE_EVENTS_SCHEMA_V2 api env variable. Default is true.
 apiEngineEventsLegacyWrite - See PULUMI_ENGINE_EVENTS_LEGACY_WRITE api env variable. Default is false.
+enableEngineEventsBucket - Create an S3 bucket for large engine events (PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT).
+    Default is false; recommended for new installs. See "Optional S3 buckets".
+enableRegistryBuckets - Create S3 buckets for public and private registry artifacts
+    (PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT, PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT). Default is false;
+    recommended for new installs. See "Optional S3 buckets".
 
 opensearchUser - AWS OpenSearch User for Pulumi Cloud (infrastructure output opensearchUser)
 opensearchPassword - AWS OpenSearch Password for Pulumi Cloud (infrastructure output opensearchPassword)
@@ -324,6 +329,30 @@ With `ecrRepoAccountId` pointing at another account, that registry must also all
 
 ECR fetches from the upstream registry itself, so the cache also works in [private mode](#private-internal-only-deployment)
 without internet egress from the VPC.
+
+### Optional S3 buckets
+
+Two opt-ins add S3 buckets for data the service otherwise keeps elsewhere. Both are recommended for new installs:
+
+```bash
+pulumi config set enableEngineEventsBucket true  # large engine events go to S3 instead of the MySQL database
+pulumi config set enableRegistryBuckets true     # public and private registry artifacts
+```
+
+The buckets are created like the checkpoint, policy pack and metadata buckets (protected, so
+`pulumi state unprotect` is needed before destroying them), added to the API task role's S3 policy and exported as
+`engineEventsS3BucketName`, `registryPublicS3BucketName` and `registryPrivateS3BucketName`. The API gets
+`PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT`, `PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT` and
+`PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT` as `s3://<bucket>`. For an existing install, check with Pulumi support
+before turning them on, since data written so far stays where it is.
+
+### KMS permissions
+
+The API task role gets `kms:Encrypt`, `kms:Decrypt`, `kms:GenerateDataKey` and `kms:GenerateDataKeyWithoutPlaintext`
+on `kmsServiceKeyId`, as the self-hosting docs require. Earlier versions only granted `kms:Decrypt` and
+`kms:GenerateDataKeyWithoutPlaintext`, so creating an ESC environment (`pulumi env init`) failed with
+"error generating environment key". If the key policy itself restricts usage, it must allow these actions for the task
+role too.
 
 ### Deploy
 
