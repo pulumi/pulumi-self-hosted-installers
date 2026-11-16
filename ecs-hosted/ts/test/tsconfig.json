@@ -18,6 +18,7 @@
         "../dns/index.ts",
         "infrastructure.test.ts",
         "application.test.ts",
-        "dns.test.ts"
+        "dns.test.ts",
+        "parity.test.ts"
     ]
 }

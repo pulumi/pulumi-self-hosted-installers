@@ -1,0 +1,20 @@
+{
+    "source": "origin/master 27127eef",
+    "stages": {
+        "infrastructure": {
+            "resources": 26,
+            "invokes": 2,
+            "sha256": "87a728b9751949cbd96494dbf04205e2d6df1ece209a41ff635dde962f00b266"
+        },
+        "application": {
+            "resources": 94,
+            "invokes": 5,
+            "sha256": "f5915068cee0542ff1959b4f19e64ddcfd3f0b4125bec93fd4cb60190dd6a3c4"
+        },
+        "dns": {
+            "resources": 3,
+            "invokes": 1,
+            "sha256": "e2238a0e9ebdfb6b67e509ff88a72b8f0f34f5390a6d8e50ed64590cc5df83ee"
+        }
+    }
+}
