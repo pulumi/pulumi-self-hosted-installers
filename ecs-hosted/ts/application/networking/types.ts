@@ -8,9 +8,12 @@ export interface LoadBalancerArgs {
     certificateArn: string,
     enableAccessLogs?: boolean,
     idleTimeout?: number,
+    // true creates internal (VPC-only) load balancers in privateSubnetIds instead of publicSubnetIds
     internalLb?: boolean,
-    publicSubnetIds: string[],
+    privateSubnetIds?: string[],
+    publicSubnetIds?: string[],
     region: string,
     vpcId: string,
+    // ingress CIDRs for ports 80 and 443; undefined allows 0.0.0.0/0
     whiteListCidrBlocks: string[] | undefined
 }

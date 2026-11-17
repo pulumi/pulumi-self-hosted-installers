@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "rootDir": "..",
+        "outDir": "bin",
+        "target": "es2016",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "forceConsistentCasingInFileNames": true,
+        "types": ["node"]
+    },
+    "files": [
+        "../infrastructure/index.ts",
+        "../application/index.ts",
+        "../dns/index.ts",
+        "infrastructure.test.ts",
+        "application.test.ts",
+        "dns.test.ts",
+        "parity.test.ts"
+    ]
+}

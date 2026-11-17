@@ -7,6 +7,8 @@ import { LogDriver, LogType } from "../logs/types";
 import { OidcKeySets } from "../oidcKeys";
 import { TrafficManager } from "../networking/trafficManager";
 import { PulumiLoadBalancer } from "../networking/pulumiLoadBalanacer";
+import { PrivateNetwork } from "../networking/privateNetwork";
+import { ProxySettings } from "../networking/proxy";
 
 export interface ContainerDefinitionArgs {
     name: string,
@@ -39,7 +41,13 @@ export interface TaskDefinitionArgs {
 export interface ServiceBaseArgs {
     accountId: string,
     cluster?: ecs.Cluster,
+    // ECR pull-through cache: repository prefix in front of pulumi/<image> (normalized, ends with "/"), and whether the
+    // execution roles may import images through the cache
+    ecrPullThroughCacheImport?: boolean,
+    imagePrefix?: string,
     kmsServiceKeyId?: string,
+    // set in private mode (enablePrivateLoadBalancerAndLimitEgress); restricts task egress to the VPC and S3
+    privateNetwork?: PrivateNetwork,
     privateSubnetIds: string[],
     region: string,
     secretsManagerPrefix?: string,
@@ -51,6 +59,8 @@ export interface ServiceArgs extends ServiceBaseArgs {
     listenerConditions: input.lb.ListenerRuleCondition[],
     listenerPriority: number,
     pulumiLoadBalancer: PulumiLoadBalancer,
+    // egress rules of the service security group; undefined allows all egress (0.0.0.0/0)
+    securityGroupEgress?: input.ec2.SecurityGroupEgress[],
     targetPort: number
     taskDefinitionArgs: TaskDefinitionArgs,
 }
@@ -59,13 +69,15 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     containerMemoryReservation?: number,
     containerCpu?: number,
     ecrRepoAccountId?: string | undefined,
-    endpointSecurityGroupId: string,
+    endpointSecurityGroupId?: string,
     imageTag: string,
     licenseKey: string,
     logType?: LogType,
     logArgs?: any,
     numberDesiredTasks?: number,
     oidcKeySets: OidcKeySets,
+    // optional outbound HTTP proxy (HTTPS_PROXY, HTTP_PROXY, NO_PROXY)
+    proxy?: ProxySettings,
     recaptchaSecretKey: pulumi.Output<string> | undefined,
     samlCertPublicKey?: pulumi.Output<string>,
     samlCertPrivateKey?: pulumi.Output<string>,
@@ -104,14 +116,18 @@ export interface ApiServiceArgs extends ServiceBaseArgs {
     }
     checkPointbucket: s3.Bucket,
     policyPacksBucket: s3.Bucket,
-    metadataBucket: s3.Bucket
+    metadataBucket: s3.Bucket,
+    // opt-in buckets (enableEngineEventsBucket, enableRegistryBuckets)
+    engineEventsBucket?: s3.Bucket,
+    registryPublicBucket?: s3.Bucket,
+    registryPrivateBucket?: s3.Bucket,
 }
 
 export interface ConsoleServiceArgs extends ServiceBaseArgs {
     containerMemoryReservation?: number,
     containerCpu?: number,
     ecrRepoAccountId?: string | undefined,
-    endpointSecurityGroupId: string,
+    endpointSecurityGroupId?: string,
     imageTag: string,
     logType?: LogType,
     logArgs?: any,
@@ -139,6 +155,8 @@ export interface ApiServiceEnvironmentArgs {
     checkpointBucket: string,
     policyPackBucket: string,
     metadataBucket: string,
+    // *_BLOB_STORAGE_ENDPOINT variables of the opt-in buckets
+    optionalBlobStorage?: { name: string, value: string }[],
     samlSsoPublicCert?: string | undefined,
     samlSsoPrivateCert?: string | undefined,
     openSearchUser?: string | undefined,

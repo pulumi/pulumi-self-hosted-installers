@@ -1,0 +1,49 @@
+---
+config:
+  look: neo
+  theme: base
+---
+graph TD
+    classDef client fill:#6B7280,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef network fill:#E31837,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef pulumi fill:#4d5bd9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef aws fill:#FF9900,stroke:#f7bf2a,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef storage fill:#3F8624,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+    classDef dns fill:#00A1C9,stroke:#FFFFFF,stroke-width:4px,color:#FFFFFF,font-weight:bold
+
+    USERS[Browsers and Pulumi CLI<br/>Access proxy, VPN or peered network<br/>allowed by whiteListCidrBlocks]:::client
+
+    PHZ[Route 53 Private Hosted Zone<br/>associated with the VPC<br/>app.domain and api.domain<br/>alias records to the internal ALBs]:::dns
+
+    subgraph VPC["VPC: no IGW, no NAT"]
+        subgraph PRIVATE["Private Subnets"]
+            ALB_APP[Internal ALB - Console<br/>ingress 80/443 from VPC CIDR<br/>or whiteListCidrBlocks]:::network
+            ALB_API[Internal ALB - API<br/>ingress 80/443 from VPC CIDR<br/>or whiteListCidrBlocks]:::network
+            CONSOLE[Pulumi Console<br/>ECS Fargate<br/>egress: VPC 80/443, S3]:::pulumi
+            API[Pulumi API<br/>ECS Fargate<br/>egress: VPC 80/443, S3, Aurora]:::pulumi
+            MIGRATIONS[Migrations Task<br/>ECS Fargate<br/>egress: VPC 80/443, S3, Aurora]:::pulumi
+            ENDPOINTS[Interface Endpoints<br/>ecr.api, ecr.dkr, logs<br/>secretsmanager, kms]:::aws
+            PROXY[HTTP Proxy<br/>optional httpsProxy<br/>internet egress for the API]:::network
+        end
+
+        subgraph ISOLATED["Isolated Subnets"]
+            AURORA[Amazon Aurora MySQL]:::storage
+        end
+
+        S3GW[S3 Gateway Endpoint<br/>private and isolated route tables]:::aws
+    end
+
+    USERS -->|HTTPS| ALB_APP
+    USERS -->|HTTPS| ALB_API
+    PHZ -.-> ALB_APP
+    PHZ -.-> ALB_API
+    ALB_APP --> CONSOLE
+    ALB_API --> API
+    CONSOLE -->|api.domain| ALB_API
+    API --> ENDPOINTS
+    CONSOLE --> ENDPOINTS
+    MIGRATIONS --> ENDPOINTS
+    API --> S3GW
+    API -->|3306| AURORA
+    MIGRATIONS -->|3306| AURORA
+    API -.-> PROXY

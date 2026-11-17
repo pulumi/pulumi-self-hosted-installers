@@ -14,9 +14,12 @@ const domain = config.route53Subdomain && config.route53Subdomain != "" ?
 //             zone;
 //     });
 
-const appDns = new ApplicationDns("pulumi-dns", {
+// skipDnsRecords: DNS is managed outside Route 53; no zone lookup, no records
+const appDns = config.skipDnsRecords ? undefined : new ApplicationDns("pulumi-dns", {
     region: config.region,
     zoneName: config.route53ZoneName,
+    // only set in private mode, so the component inputs are unchanged otherwise
+    ...(config.enablePrivateLoadBalancerAndLimitEgress ? { privateZone: true, vpcId: config.vpcId } : {}),
     domain: domain,
     apiLoadBalancerDnsName: config.apiLoadBalancerDnsName,
     apiLoadBalancerZoneId: config.apiLoadBalancerZoneId,
@@ -24,5 +27,14 @@ const appDns = new ApplicationDns("pulumi-dns", {
     consoleLoadBalancerZoneId: config.consoleLoadBalancerZoneId
 });
 
-export const apiUrl = pulumi.interpolate`https://${appDns.apiFqdn}`;
-export const consoleUrl = pulumi.interpolate`https://${appDns.consoleFqdn}`;
+// Stack outputs. Built as an object so the skipDnsRecords-only outputs are absent, not undefined, otherwise.
+export = appDns ? {
+    apiUrl: pulumi.interpolate`https://${appDns.apiFqdn}`,
+    consoleUrl: pulumi.interpolate`https://${appDns.consoleFqdn}`,
+} : {
+    apiUrl: `https://api.${domain}`,
+    consoleUrl: `https://app.${domain}`,
+    // point CNAME records for api.<domain> and app.<domain> at these load balancer DNS names
+    apiLoadBalancerDnsName: config.apiLoadBalancerDnsName,
+    consoleLoadBalancerDnsName: config.consoleLoadBalancerDnsName,
+};

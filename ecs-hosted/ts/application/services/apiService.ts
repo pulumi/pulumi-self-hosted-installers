@@ -6,11 +6,13 @@ import { kms } from "@pulumi/aws";
 import { ContainerService } from "./containerService";
 import { MigrationService } from "./migrationsService";
 import { TaskDefinitionArgs, ApiServiceArgs, ApiServiceEnvironmentArgs, Secret } from "./types";
-import { buildECRImageTag } from "../utils";
+import { buildECRImageTag, generatePullThroughCachePolicy } from "../utils";
 import { LogFactory } from "../logs/logFactory";
 import { LogDriver, LogType } from "../logs/types";
 import { Secrets } from "./secrets";
 import { getIamPolicyArn } from "../../common/utils";
+import { privateEgressRules } from "../networking/privateNetwork";
+import { proxyPort } from "../networking/proxy";
 
 const namespace = "pulumi:apiService";
 const apiPort = 8080;
@@ -121,6 +123,13 @@ export class ApiService extends pulumi.ComponentResource {
             listenerPriority: 1,
             listenerConditions: listenerConditions,
             pulumiLoadBalancer: trafficManager.api,
+            securityGroupEgress: args.privateNetwork && privateEgressRules(args.privateNetwork, {
+                dbSecurityGroupId: args.database.dbSecurityGroupId,
+                extraVpcPorts: [
+                    ...(args.proxy ? [proxyPort(args.proxy.url)] : []),
+                    ...smtpPort(args.smtp?.smtpServer),
+                ],
+            }),
             targetPort: apiPort,
             taskDefinitionArgs: taskArgs,
         }, pulumi.mergeOptions(this.options, { dependsOn: [migrationService]}));
@@ -189,6 +198,15 @@ export class ApiService extends pulumi.ComponentResource {
             ecrRepoAccountId: this.baseArgs.ecrRepoAccountId
         };
 
+        // opt-in buckets (enableEngineEventsBucket, enableRegistryBuckets) and the variables that point the API at them;
+        // empty when unset, so the container definition and the S3 policy are unchanged
+        const optionalBuckets = [
+            { variable: "PULUMI_ENGINE_EVENTS_BLOB_STORAGE_ENDPOINT", bucket: this.baseArgs.engineEventsBucket },
+            { variable: "PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT", bucket: this.baseArgs.registryPublicBucket },
+            { variable: "PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT", bucket: this.baseArgs.registryPrivateBucket },
+        ].filter(b => b.bucket !== undefined);
+        const optionalBucketNames = pulumi.all(optionalBuckets.map(b => b.bucket!.bucket));
+
         // JSON will be definition provided to ECS for API (service) containers
         // Fully qualified ECR tag will be built for `image` property below
         const containerDefinitions = pulumi
@@ -200,6 +218,7 @@ export class ApiService extends pulumi.ComponentResource {
                 this.baseArgs.samlCertPrivateKey,
                 this.baseArgs.samlCertPublicKey,
                 logDriver?.outputs,
+                optionalBucketNames,
             ])
             .apply(([
                 secrets,
@@ -208,13 +227,14 @@ export class ApiService extends pulumi.ComponentResource {
                 metadataBucket,
                 samlPrivateKey,
                 samlPublicKey,
-                logOutputs]) => {
+                logOutputs,
+                optionalNames]) => {
 
                 const ecrAccountId = this.baseArgs.ecrRepoAccountId && this.baseArgs.ecrRepoAccountId !== "" ? this.baseArgs.ecrRepoAccountId : this.baseArgs.accountId;
 
                 const def = JSON.stringify([{
                     name: apiContainerName,
-                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.apiImage),
+                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.apiImage, this.baseArgs.imagePrefix),
                     cpu: containerCpu,
                     memoryReservation: containerMemoryReservation,
                     ulimits: [{
@@ -231,6 +251,7 @@ export class ApiService extends pulumi.ComponentResource {
                         checkpointBucket: checkpointBucket,
                         policyPackBucket: policyBucket,
                         metadataBucket: metadataBucket,
+                        optionalBlobStorage: optionalBuckets.map((b, i) => ({ name: b.variable, value: `s3://${optionalNames[i]}` })),
                         samlSsoPrivateCert: samlPrivateKey,
                         samlSsoPublicCert: samlPublicKey,
                         openSearchEndpoint: this.baseArgs.opensearch?.endpoint,
@@ -249,8 +270,8 @@ export class ApiService extends pulumi.ComponentResource {
 
         // IAM policy doc will be given to ECS service to allow Pulumi API (service) to interact with S3 buckets
         const s3AccessPolicyDoc = pulumi
-            .all([this.baseArgs.policyPacksBucket.bucket, this.baseArgs.checkPointbucket.bucket, this.baseArgs.metadataBucket.bucket])
-            .apply(([policyBucket, checkpointBucket, metadataBucket]) => {
+            .all([this.baseArgs.policyPacksBucket.bucket, this.baseArgs.checkPointbucket.bucket, this.baseArgs.metadataBucket.bucket, optionalBucketNames])
+            .apply(([policyBucket, checkpointBucket, metadataBucket, optionalNames]) => {
 
                 const policyBucketArn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${policyBucket}`);
                 pulumi.log.debug(`construct policy bucket arn: ${policyBucketArn}`);
@@ -272,7 +293,11 @@ export class ApiService extends pulumi.ComponentResource {
                             checkpointBucketArn,
                             `${checkpointBucketArn}/*`,
                             metadataBucketArn,
-                            `${metadataBucketArn}/*`
+                            `${metadataBucketArn}/*`,
+                            ...([] as string[]).concat(...optionalNames.map(name => {
+                                const arn = getIamPolicyArn(this.baseArgs.region, `arn:aws:s3:::${name}`);
+                                return [arn, `${arn}/*`];
+                            })),
                         ]
                     }]
                 })
@@ -282,6 +307,9 @@ export class ApiService extends pulumi.ComponentResource {
             keyId: this.baseArgs.kmsServiceKeyId!
         });
 
+        // The four actions the self-hosting docs list for AWS KMS (components/api.md, "Encryption services"). The service
+        // calls GenerateDataKey and Encrypt when it creates an ESC environment key; without them `pulumi env init` fails
+        // with "error generating environment key".
         const kmsKeyPolicyDoc = pulumi
             .all([kmsKey])
             .apply(([kmsKey]) => {
@@ -290,7 +318,9 @@ export class ApiService extends pulumi.ComponentResource {
                     Statement: [{
                         Effect: "Allow",
                         Action: [
+                            "kms:Encrypt",
                             "kms:Decrypt",
+                            "kms:GenerateDataKey",
                             "kms:GenerateDataKeyWithoutPlaintext"
                         ],
                         Resource: [
@@ -321,6 +351,7 @@ export class ApiService extends pulumi.ComponentResource {
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
+            executionRolePolicyDocs: this.pullThroughCachePolicyDocs(),
             taskRolePolicyDocs,
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
@@ -330,6 +361,16 @@ export class ApiService extends pulumi.ComponentResource {
         };
 
         return taskArgs;
+    }
+
+    // opt-in (ecrPullThroughCacheImport): lets the execution role import the image through the ECR pull-through cache
+    pullThroughCachePolicyDocs(): pulumi.Output<string>[] | undefined {
+        const { ecrPullThroughCacheImport, imagePrefix, ecrRepoAccountId, accountId, region } = this.baseArgs;
+        if (!ecrPullThroughCacheImport || !imagePrefix) {
+            return undefined;
+        }
+        const ecrAccountId = ecrRepoAccountId && ecrRepoAccountId !== "" ? ecrRepoAccountId : accountId;
+        return [pulumi.output(generatePullThroughCachePolicy(region, ecrAccountId, imagePrefix))];
     }
 
     // Complete list of environment variables that each ECS task of Pulumi API (service) will inherit
@@ -349,6 +390,13 @@ export class ApiService extends pulumi.ComponentResource {
 
         // NOTE: the below use of property ?? "" is essential. As of 7/25/24 pulumi-aws will continuously show a diff if a property is undefined
         // cant find a pulumi-aws issue, yet...
+
+        // only added when httpsProxy is configured
+        const proxyVariables = this.baseArgs.proxy ? [
+            { name: "HTTPS_PROXY", value: this.baseArgs.proxy.url },
+            { name: "HTTP_PROXY", value: this.baseArgs.proxy.url },
+            { name: "NO_PROXY", value: this.baseArgs.proxy.noProxy },
+        ] : [];
 
         return [
             {
@@ -391,6 +439,7 @@ export class ApiService extends pulumi.ComponentResource {
                 name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
                 value: `s3://${args.metadataBucket}`,
             },
+            ...(args.optionalBlobStorage ?? []),
             {
                 name: "PULUMI_KMS_KEY",
                 value: kmsServiceKeyId,
@@ -438,7 +487,15 @@ export class ApiService extends pulumi.ComponentResource {
             {
                 name: "PULUMI_ENGINE_EVENTS_LEGACY_WRITE",
                 value: String(engineEventsLegacyWrite),
-            }
+            },
+            ...proxyVariables,
         ];
     }
+}
+
+// port of an SMTP server given as host:port; in private mode it has to be reachable inside the VPC, eg- an SES
+// email-smtp interface endpoint or an internal relay
+function smtpPort(smtpServer: string | undefined): number[] {
+    const match = smtpServer?.match(/:(\d+)$/);
+    return match ? [Number(match[1])] : [];
 }

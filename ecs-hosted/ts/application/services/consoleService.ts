@@ -4,9 +4,10 @@ import { input } from "@pulumi/aws/types";
 
 import { ContainerService } from "./containerService";
 import { TaskDefinitionArgs, ConsoleServiceArgs } from "./types";
-import { buildECRImageTag } from "../utils";
+import { buildECRImageTag, generatePullThroughCachePolicy } from "../utils";
 import { LogType, LogDriver } from "../logs/types";
 import { LogFactory } from "../logs/logFactory";
+import { privateEgressRules } from "../networking/privateNetwork";
 
 const namespace = "pulumi:consoleService";
 const consolePort = 3000;
@@ -63,7 +64,8 @@ export class ConsoleService extends pulumi.ComponentResource {
             }
         ];
 
-        // Pulumi Console should never communicate directly with Pulumi API. Traffic should always route through ALB (public)
+        // Pulumi Console should never communicate directly with Pulumi API. Traffic should always route through the API ALB
+        // (internet facing, or internal in private mode, where api.<domain> must resolve to the internal ALB in the VPC)
         const taskArgs = this.constructTaskArgs();
         this.consoleService = new ContainerService(`${name}`, {
             region: args.region,
@@ -74,6 +76,7 @@ export class ConsoleService extends pulumi.ComponentResource {
             listenerPriority: 1,
             privateSubnetIds: args.privateSubnetIds,
             pulumiLoadBalancer: trafficManager.console,
+            securityGroupEgress: args.privateNetwork && privateEgressRules(args.privateNetwork),
             targetPort: consolePort,
             taskDefinitionArgs: taskArgs,
             vpcId: args.vpcId,
@@ -132,7 +135,7 @@ export class ConsoleService extends pulumi.ComponentResource {
 
                 return JSON.stringify([{
                     name: consoleContainerName,
-                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.consoleImage),
+                    image: buildECRImageTag(ecrAccountId, this.baseArgs.region, this.consoleImage, this.baseArgs.imagePrefix),
                     cpu: containerCpu,
                     memoryReservation: containerMemoryReservation,
                     portmappings: [{
@@ -149,8 +152,16 @@ export class ConsoleService extends pulumi.ComponentResource {
             });
 
         // args will be given to the base container service to detail how Pulumi API (service) tasks should be constructed
+        // opt-in (ecrPullThroughCacheImport): lets the execution role import the image through the ECR pull-through cache
+        const { ecrPullThroughCacheImport, imagePrefix, ecrRepoAccountId, accountId, region } = this.baseArgs;
+        const pullThroughCacheAccountId = ecrRepoAccountId && ecrRepoAccountId !== "" ? ecrRepoAccountId : accountId;
+        const executionRolePolicyDocs = ecrPullThroughCacheImport && imagePrefix ?
+            [pulumi.output(generatePullThroughCachePolicy(region, pullThroughCacheAccountId, imagePrefix))] :
+            undefined;
+
         const taskArgs: TaskDefinitionArgs = {
             containerDefinitionArgs: containerDefinitions,
+            executionRolePolicyDocs,
             numberDesiredTasks: desiredNumberTasks,
             cpu: taskCpu,
             memory: taskMemory,

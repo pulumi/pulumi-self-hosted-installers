@@ -5,10 +5,11 @@ import * as ecs from "@pulumi/aws/ecs";
 import * as ec2 from "@pulumi/aws/ec2";
 
 import { DatabaseMigrationTask } from "../databaseMigrationTask";
-import { buildECRImageTag, generateSecretsManagerPolicy } from "../utils";
+import { buildECRImageTag, generatePullThroughCachePolicy, generateSecretsManagerPolicy } from "../utils";
 import { Secrets } from "./secrets";
 import { MigrationsArgs } from "./types";
 import { getIamPolicyArn } from "../../common/utils";
+import { privateEgressRules } from "../networking/privateNetwork";
 
 const namespace = "pulumi:dbMigrations";
 const launchType = "FARGATE";
@@ -51,14 +52,27 @@ export class MigrationService extends pulumi.ComponentResource {
             policy: doc
         }, this.baseOptions);
 
+        // opt-in (ecrPullThroughCacheImport): lets the role import the image through the ECR pull-through cache
+        if (args.ecrPullThroughCacheImport && args.imagePrefix) {
+            const ecrAccountId = args.ecrRepoAccountId && args.ecrRepoAccountId !== "" ? args.ecrRepoAccountId : args.accountId;
+            new iam.RolePolicy(`${this.baseName}-migration-pull-through-cache-pol`, {
+                role: role,
+                policy: generatePullThroughCachePolicy(args.region, ecrAccountId, args.imagePrefix)
+            }, this.baseOptions);
+        }
+
+        // in private mode the task reaches ECR, Secrets Manager and CloudWatch Logs through interface endpoints in the VPC,
+        // image layers through the S3 gateway endpoint, and Aurora through its security group
         this.securityGroup = new ec2.SecurityGroup(`${name}-sg`, {
             vpcId: args.vpcId,
-            egress: [{
-                fromPort: 0,
-                toPort: 0,
-                protocol: "-1",
-                cidrBlocks: ["0.0.0.0/0"]
-            }],
+            egress: args.privateNetwork ?
+                privateEgressRules(args.privateNetwork, { dbSecurityGroupId: args.database.dbSecurityGroupId }) :
+                [{
+                    fromPort: 0,
+                    toPort: 0,
+                    protocol: "-1",
+                    cidrBlocks: ["0.0.0.0/0"]
+                }],
         }, this.baseOptions);
 
         const cluster = new ecs.Cluster(`${name}-cluster`, {}, this.baseOptions);
@@ -137,7 +151,7 @@ export class MigrationService extends pulumi.ComponentResource {
                 // TODO: follow log groups implementation
                 return JSON.stringify([{
                     name: "pulumi-migration",
-                    image: buildECRImageTag(ecrAccountId, args.region, image),
+                    image: buildECRImageTag(ecrAccountId, args.region, image, args.imagePrefix),
                     cpu: cpu,
                     memoryReservation: memoryReservation,
                     logConfiguration: {
