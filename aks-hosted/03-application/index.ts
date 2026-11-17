@@ -211,6 +211,15 @@ export = async () => {
                   name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
                   value: interpolate`azblob://${config.escBlobName}`
                 },
+                // opt-in registry containers (enableRegistryBuckets in 01-infrastructure); without them Registry does not work
+                ...(config.registryPublicBlobName ? [{
+                  name: "PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT",
+                  value: `azblob://${config.registryPublicBlobName}`
+                }] : []),
+                ...(config.registryPrivateBlobName ? [{
+                  name: "PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT",
+                  value: `azblob://${config.registryPrivateBlobName}`
+                }] : []),
                 {
                   name: "PULUMI_ENGINE_EVENTS_SCHEMA_V2",
                   value: config.engineEventsSchemaV2,

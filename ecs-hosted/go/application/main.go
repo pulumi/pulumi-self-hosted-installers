@@ -64,6 +64,20 @@ func main() {
 			return err
 		}
 
+		// Opt-in: Pulumi Registry needs its own public and private buckets. Without them the API logs
+		// "the registry service will not operate properly" at startup and Registry does not work.
+		var registryPublicBucket, registryPrivateBucket *s3.Bucket
+		if config.EnableRegistryBuckets {
+			registryPublicBucket, err = s3.NewBucket(ctx, "pulumi-registry-public", &s3.BucketArgs{}, pulumi.Protect(true))
+			if err != nil {
+				return err
+			}
+			registryPrivateBucket, err = s3.NewBucket(ctx, "pulumi-registry-private", &s3.BucketArgs{}, pulumi.Protect(true))
+			if err != nil {
+				return err
+			}
+		}
+
 		// retrieve "our" VPC to pull in our CIDR block which will be used for SG CIDR purpose
 		v := ec2.LookupVpcOutput(ctx, ec2.LookupVpcOutputArgs{Id: config.VpcId})
 
@@ -157,6 +171,8 @@ func main() {
 			MetadataBucket:             metadataBucket,
 			OidcKeySets:                oidcKeySets,
 			PolicyPacksBucket:          policypackBucket,
+			RegistryPublicBucket:       registryPublicBucket,
+			RegistryPrivateBucket:      registryPrivateBucket,
 			RecaptchaSecretKey:         config.RecaptchaSecretKey,
 			RootDomain:                 domain,
 			SamlArgs:                   config.SamlArgs,
@@ -210,6 +226,10 @@ func main() {
 		ctx.Export("checkpointsS3BucketName", checkpointsBucket.Bucket)
 		ctx.Export("policyPacksS3BucketName", policypackBucket.Bucket)
 		ctx.Export("metadataS3BucketName", metadataBucket.Bucket)
+		if config.EnableRegistryBuckets {
+			ctx.Export("registryPublicS3BucketName", registryPublicBucket.Bucket)
+			ctx.Export("registryPrivateS3BucketName", registryPrivateBucket.Bucket)
+		}
 		ctx.Export("publicLoadBalancerDnsName", trafficManager.Public.LoadBalancer.DnsName)
 		ctx.Export("publicLoadBalancerZoneId", trafficManager.Public.LoadBalancer.ZoneId)
 		ctx.Export("route53ZoneName", pulumi.String(config.Route53ZoneName))

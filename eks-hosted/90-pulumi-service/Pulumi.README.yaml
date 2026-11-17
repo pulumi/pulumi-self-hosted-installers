@@ -67,3 +67,9 @@ config:
   engineEventsSchemaV2: "true"
   # engineEventsLegacyWrite enables writing engine events in the legacy format alongside v2.
   engineEventsLegacyWrite: "false"
+
+  # Pulumi Registry (optional, off by default)
+  # Sets PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT and PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT on the API.
+  # Requires the registry buckets from 15-state-policies-mgmt (enableRegistryBuckets there, or existing bucket names).
+  # Without them Registry does not work (the API logs "the registry service will not operate properly").
+  enableRegistryBuckets: "false"

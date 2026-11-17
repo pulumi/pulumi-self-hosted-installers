@@ -94,6 +94,9 @@ services:
       # Policy pack object storage (configure one)
       PULUMI_POLICY_PACK_LOCAL_HTTP_OBJECTS:
       PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT:
+      # Pulumi Registry storage (optional); see service_vars.env
+      PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT:
+      PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT:
       # OIDC issuer signing key sets. scripts/run-ee.sh generates both when they are unset.
       OIDC_KEYS:
       OIDC_KEYS_V2:

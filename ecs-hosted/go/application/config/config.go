@@ -33,6 +33,9 @@ func NewConfig(ctx *pulumi.Context) (*ConfigArgs, error) {
 	// enabling private LB and limiting egress will enforce strict egress limits on ECS services as well as provide an additional internal LB for the API service
 	resource.EnablePrivateLoadBalancerAndLimitEgress = appConfig.GetBool("enablePrivateLoadBalancerAndLimitEgress")
 
+	// opt-in: S3 buckets for Pulumi Registry artifacts (PULUMI_REGISTRY_{PUBLIC,PRIVATE}_BLOB_STORAGE_ENDPOINT)
+	resource.EnableRegistryBuckets = appConfig.GetBool("enableRegistryBuckets")
+
 	// we require these values to be present in configuration (aka already created in AWS account)
 	resource.AcmCertificateArn = appConfig.Require("acmCertificateArn")
 	resource.KmsServiceKeyId = appConfig.Require("kmsServiceKeyId")
@@ -167,6 +170,7 @@ type ConfigArgs struct {
 	WhiteListCidrBlocks []string
 
 	EnablePrivateLoadBalancerAndLimitEgress bool
+	EnableRegistryBuckets                   bool
 
 	// API Related Values
 	ApiDesiredNumberTasks         int

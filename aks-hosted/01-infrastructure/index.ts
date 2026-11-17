@@ -36,6 +36,7 @@ export = async () => {
     });
 
     const storageDetails = new storage.Storage(config.resourceNamePrefix, {
+        enableRegistryContainers: config.enableRegistryBuckets,
         resourceGroupName: resourceGroup.name,
         tags: config.baseTags,
     });
@@ -82,6 +83,9 @@ export = async () => {
         checkpointBlobName: storageDetails.checkpointBlobName,
         policyBlobName: storageDetails.policyBlobName,
         escBlobName: storageDetails.escBlobName,
+        // only exported with enableRegistryBuckets; 03-application sets the registry variables when present
+        ...(storageDetails.registryPublicBlobName ? { registryPublicBlobName: storageDetails.registryPublicBlobName } : {}),
+        ...(storageDetails.registryPrivateBlobName ? { registryPrivateBlobName: storageDetails.registryPrivateBlobName } : {}),
         storageAccountName: storageDetails.storageAccountName,
         dbServerName: database.DatabaseServerName,
         dbLogin: database.DatabaseLogin,

@@ -15,6 +15,9 @@ const dbBackupRetentionDays = stackConfig.getNumber("dbBackupRetentionDays") || 
 const dbMaintenanceDay = stackConfig.getNumber("dbMaintenanceDay") || 1; // Sunday
 const dbMaintenanceHour = stackConfig.getNumber("dbMaintenanceHour") || 3; // 3 AM
 
+// opt-in: buckets for Pulumi Registry artifacts (PULUMI_REGISTRY_{PUBLIC,PRIVATE}_BLOB_STORAGE_ENDPOINT)
+const enableRegistryBuckets = stackConfig.getBoolean("enableRegistryBuckets") ?? false;
+
 export const config = {
   projectName,
   stackName,
@@ -25,6 +28,7 @@ export const config = {
   dbBackupRetentionDays,
   dbMaintenanceDay,
   dbMaintenanceHour,
+  enableRegistryBuckets,
   baseTags: {
     project: projectName,
     stack: stackName,

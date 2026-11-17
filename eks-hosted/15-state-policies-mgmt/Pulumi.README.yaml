@@ -14,4 +14,12 @@ config:
   # policyPacksS3BucketName:
   # eventsS3BucketName: 
 
+  ##### PULUMI REGISTRY (OPTIONAL) #####
+  # Registry needs its own public and private buckets. Off by default.
+  # Set this to create them (and set enableRegistryBuckets in 90-pulumi-service too),
+  # or set the two names below to use existing buckets instead.
+  # enableRegistryBuckets: true
+  # registryPublicS3BucketName:
+  # registryPrivateS3BucketName:
+
   

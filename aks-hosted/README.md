@@ -20,6 +20,7 @@ Version ID | Date | Note
 ---|---|---
 1.0 | --- | Initial version of the new aks installer.
 2.0 | March, 2026 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+2.1 | November, 2026 | Opt-in `enableRegistryBuckets` in 01-infrastructure: blob containers for Pulumi Registry, picked up by 03-application. Off by default; existing installs are unchanged.
 
 ## Prerequisites
 
@@ -84,6 +85,7 @@ To deploy entire stack, run the following in your terminal:
  provide the following:`pulumi config set virtualNetworkName someVnet && pulumi config set virtualNetworkResourceGroup vnetResourceGroup`
 * `pulumi config set subnetCidr 10.2.1.0/24` - this should be set to what you want your subnet cidr block to be
 * `pulumi config set dbSubnetCidr 10.2.2.0/24` - this should be set to what you want your DB subnet cidr block to be
+* Optional, recommended for new installs: `pulumi config set enableRegistryBuckets true` - creates blob containers for Pulumi Registry; 03-application then sets `PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT` and `PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT`. Without them Registry does not work (the API logs "the registry service will not operate properly"). Off by default.
 * `az login` - to avoid the following error: `Could not create service principal: graphrbac.ServicePrincipalsClient#Create:Failure`)
 * `pulumi up`
 

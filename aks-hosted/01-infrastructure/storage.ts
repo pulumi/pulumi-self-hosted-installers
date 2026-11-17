@@ -3,6 +3,8 @@ import { Input, Output, ComponentResource, ComponentResourceOptions, secret, all
 
 export interface StorageArgs {
     resourceGroupName: Output<string>,
+    // creates the two Pulumi Registry containers
+    enableRegistryContainers?: boolean,
     tags?: Input<{
         [key: string]: Input<string>;
     }>,
@@ -19,6 +21,8 @@ export class Storage extends ComponentResource {
     public readonly policyBlobName: Output<string>;
     public readonly escBlobId: Output<string>;
     public readonly escBlobName: Output<string>;
+    public readonly registryPublicBlobName?: Output<string>;
+    public readonly registryPrivateBlobName?: Output<string>;
     constructor(name: string, args: StorageArgs) {
         super("x:infrastructure:storage", name);
 
@@ -47,6 +51,21 @@ export class Storage extends ComponentResource {
             accountName: storageAccount.name,
         }, { parent: storageAccount, protect: true });
 
+        // Opt-in: Pulumi Registry needs its own public and private containers. Without them the API logs
+        // "the registry service will not operate properly" at startup and Registry does not work.
+        if (args.enableRegistryContainers) {
+            const registryPublicBlob = new storage.BlobContainer(`pulumiregistrypublic`, {
+                resourceGroupName: args.resourceGroupName,
+                accountName: storageAccount.name,
+            }, { parent: storageAccount, protect: true });
+            const registryPrivateBlob = new storage.BlobContainer(`pulumiregistryprivate`, {
+                resourceGroupName: args.resourceGroupName,
+                accountName: storageAccount.name,
+            }, { parent: storageAccount, protect: true });
+            this.registryPublicBlobName = registryPublicBlob.name;
+            this.registryPrivateBlobName = registryPrivateBlob.name;
+        }
+
         const storageAccountKeys = storage.listStorageAccountKeysOutput({
             resourceGroupName: args.resourceGroupName,
             accountName: storageAccount.name,
@@ -73,6 +92,8 @@ export class Storage extends ComponentResource {
             checkpointBlobName: this.checkpointBlobName,
             policyBlobName: this.policyBlobName,
             escBlobName: this.escBlobName,
+            registryPublicBlobName: this.registryPublicBlobName,
+            registryPrivateBlobName: this.registryPrivateBlobName,
             storageAccountName: this.storageAccountName
         });
     }

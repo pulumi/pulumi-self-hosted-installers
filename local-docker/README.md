@@ -70,6 +70,9 @@ The following are requirements of this deployment option:
     1. `pulumi config set storagePolicyPackBucket {storage policypack bucket}`
         - e.g. `s3://pulumi-policypacks?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
         - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
+    1. (optional, recommended for new installs) Pulumi Registry storage, two more buckets in the same format. Without them Registry does not work (the API logs "the registry service will not operate properly").
+        - `pulumi config set storageRegistryPublicBucket {storage registry public bucket}`, e.g. `s3://pulumi-registry-public?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
+        - `pulumi config set storageRegistryPrivateBucket {storage registry private bucket}`, e.g. `s3://pulumi-registry-private?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
 1. Domain configuration
     1. `pulumi config set apiDomain {domain for api}`
     1. `pulumi config set consoleDomain {domain for console}`

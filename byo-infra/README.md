@@ -11,6 +11,7 @@ Version ID | Date | K8s Version Supported | Note
 ---|---|---|--
 0.1 | September 12, 2022 | 1.24.1 | Initial version. This version is based on the GKE installer and keeps the different projects even though 01-infrastructure and 02-kubernetes are for the most part just passing through config values.
 1.0 | March, 2026 | 1.34.0 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER OR CHANGE OR SET THE ENGINE_EVENTS_* ENVIRONMENT VARIABLES FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
+1.1 | November, 2026 | 1.34.0 | Optional Pulumi Registry storage: `storageRegistryPublicBucket`/`storageRegistryPrivateBucket` in 01-infrastructure and `enableRegistryBuckets` in 03-application. Off by default; existing installs are unchanged.
 
 
 ## Prerequisites
@@ -83,6 +84,9 @@ To ensure that the Pulumi program can access variables between the three deploym
 1. `pulumi config set storagePolicyPackBucket {storage policypack bucket}`
     - e.g. `s3://pulumi-policypacks?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
     - Note: the `endpoint=IP:PORT` and `s3ForcePathStyle=true` query parameters are **required** if using an S3 compatible API for object storage.
+1. (optional, recommended for new installs) Pulumi Registry storage, two more buckets in the same format. Without them Registry does not work (the API logs "the registry service will not operate properly"). Also set `enableRegistryBuckets` in 03-application.
+    - `pulumi config set storageRegistryPublicBucket {storage registry public bucket}`, e.g. `s3://pulumi-registry-public?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
+    - `pulumi config set storageRegistryPrivateBucket {storage registry private bucket}`, e.g. `s3://pulumi-registry-private?endpoint=192.168.1.47:9000&s3ForcePathStyle=true`
 1. `pulumi config set dbHost {db host}`
 1. (optional) - if your database is listening on an alternative port
     - `pulumi config set dbPort 3306`
@@ -127,6 +131,7 @@ If not set, "forgot password" and email invites will not work but direct sign up
 1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret` (this must be a Cloudflare Turnstile widget Secret Key)
 Optional setting will use default value if not set.
 1. `pulumi config set samlSsoEnabled true` - set to false by default.
+1. `pulumi config set enableRegistryBuckets true` - sets `PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT` and `PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT` from the registry buckets configured in 01-infrastructure. Off by default.
 1. `pulumi up`
 
 ### Configure DNS
