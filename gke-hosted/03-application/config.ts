@@ -14,6 +14,18 @@ const stackName1 = stackConfig.require("stackName1");
 const stackName2 = stackConfig.require("stackName2");
 
 const infrastructureStack = new pulumi.StackReference(stackName1);
+
+// Opt-in Pulumi Registry storage (buckets from 01-infrastructure).
+const enableRegistryBuckets = stackConfig.getBoolean("enableRegistryBuckets") ?? false;
+function requireRegistryBucket(outputName: string): pulumi.Output<string> {
+    return infrastructureStack.requireOutput(outputName).apply(name => {
+        if (!name) {
+            throw new Error(`enableRegistryBuckets is set, but 01-infrastructure has no ${outputName}. ` +
+                "Set enableRegistryBuckets there and run it first.");
+        }
+        return name as string;
+    });
+}
 const clusterStack = new pulumi.StackReference(stackName2);
 
 export const config = {
@@ -47,6 +59,9 @@ export const config = {
     checkpointBlobId: infrastructureStack.requireOutput("checkpointBucketId"),
     checkpointBlobName: infrastructureStack.requireOutput("checkpointBucketName"),
     escBlobName: infrastructureStack.requireOutput("escBucketName"),
+    enableRegistryBuckets: enableRegistryBuckets,
+    registryPublicBlobName: enableRegistryBuckets ? requireRegistryBucket("registryPublicBucketName") : undefined,
+    registryPrivateBlobName: enableRegistryBuckets ? requireRegistryBucket("registryPrivateBucketName") : undefined,
     storageServiceAccountAccessKeyId: infrastructureStack.requireOutput("serviceAccountAccessKeyId"),
     storageServiceAccountSecretAccessKey: infrastructureStack.requireOutput("serviceAccountSecretAccessKey"),
     apiDomain: stackConfig.require("apiDomain"),

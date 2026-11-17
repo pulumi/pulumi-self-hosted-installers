@@ -109,6 +109,9 @@ const serviceContainer = new docker.Container("service", {
 
         pulumi.interpolate`PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT=${config.storageCheckpointBucket}`,
         pulumi.interpolate`PULUMI_POLICY_PACK_BLOB_STORAGE_ENDPOINT=${config.storagePolicyPackBucket}`,
+        // optional registry storage; without it Registry does not work
+        ...(config.storageRegistryPublicBucket ? [`PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT=${config.storageRegistryPublicBucket}`] : []),
+        ...(config.storageRegistryPrivateBucket ? [`PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT=${config.storageRegistryPrivateBucket}`] : []),
 
         pulumi.interpolate`PULUMI_LOCAL_KEYS=${localKeysDataPath}`,
 

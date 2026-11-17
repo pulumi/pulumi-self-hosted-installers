@@ -35,6 +35,10 @@ export const getConfig = async () => {
     const managedClientIdValue = await clusterStack.getOutputDetails("managedClientId");
     const managedClientId = getValue<string>(managedClientIdValue, "");
 
+    // opt-in registry containers (enableRegistryBuckets in 01-infrastructure); "" when not created
+    const registryPublicBlobName = getValue<string>(await infrastructureStack.getOutputDetails("registryPublicBlobName"), "");
+    const registryPrivateBlobName = getValue<string>(await infrastructureStack.getOutputDetails("registryPrivateBlobName"), "");
+
     // with the addition of cert-manager, we will treat the certs and keys from config as legacy and not required.
     let apiTlsCert: Output<string> | undefined;
     let apiTlsKey: Output<string> | undefined;
@@ -71,6 +75,8 @@ export const getConfig = async () => {
         checkpointBlobName: infrastructureStack.requireOutput("checkpointBlobName"),
         escBlobId: infrastructureStack.requireOutput("escBlobId"),
         escBlobName: infrastructureStack.requireOutput("escBlobName"),
+        registryPublicBlobName,
+        registryPrivateBlobName,
         storageAccountId: infrastructureStack.requireOutput("storageAccountId"),
         apiDomain: stackConfig.require("apiDomain"),
         consoleDomain: stackConfig.require("consoleDomain"),

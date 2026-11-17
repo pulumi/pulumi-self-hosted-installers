@@ -20,6 +20,7 @@ Version ID | Date       | Note
 8 | 05/23/2025 | Updated Go module.
 9 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 10 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
+12 | 11/17/2026 | Opt-in `enableRegistryBuckets` in the Application project: S3 buckets for Pulumi Registry and the two `PULUMI_REGISTRY_*_BLOB_STORAGE_ENDPOINT` variables, see Optional Configuration. Off by default; existing installs are unchanged.
 
 ## User Guides
 
@@ -209,6 +210,8 @@ The Pulumi services operate in AWS Elastic Container Service (ECS) with the foll
     logArgs - Arguments provided to log configuration. See Logging section below.
 
     imagePrefix - Prefix which will be prepended to the Pulumi images. Eg- pulumi/service:some-tag will become imagePrefixpulumi/Service:some-tag.
+
+    enableRegistryBuckets - boolean - if enabled, creates S3 buckets for public and private Pulumi Registry artifacts and sets PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT and PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT on the API. Without them Registry does not work (the API logs "the registry service will not operate properly" at startup). Default is false; recommended for new installs. The buckets are protected like the other buckets, added to the API task role's S3 policy and exported as registryPublicS3BucketName and registryPrivateS3BucketName. Turning it on for an existing install only adds the two buckets, the two variables and the policy entries; nothing is replaced.
     ```
 
     **Note: below configuration values are examples. Provide your own.**

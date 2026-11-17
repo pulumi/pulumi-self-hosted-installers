@@ -215,6 +215,17 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   name: "PULUMI_CHECKPOINT_BLOB_STORAGE_ENDPOINT",
                   value: config.checkpointBucketConnectionString 
                 },
+                // opt-in registry storage (enableRegistryBuckets); without it Registry does not work
+                ...(config.enableRegistryBuckets ? [
+                  {
+                    name: "PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT",
+                    value: config.registryPublicBucketConnectionString,
+                  },
+                  {
+                    name: "PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT",
+                    value: config.registryPrivateBucketConnectionString,
+                  },
+                ] : []),
                 {
                   name: "SMTP_SERVER",
                   valueFrom: createEnvValueFromSecret(secrets.SmtpSecret, "server"),

@@ -21,6 +21,7 @@ Version ID | Date | K8s Version Supported | Note
 3.1 | Feb, 2025 | 1.31.0 | Migrated off archived `@pulumi/kubernetesx` package to use core `@pulumi/kubernetes` resources. Minor cleanup related to move to Turnstile for recaptcha. 
 4.0 | March, 2026 | 1.34.0 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 4.1 | September, 2026 | 1.34.0 | Moves the 25-insights search cluster from OpenSearch 2.x to 3.7.0. Existing installs must follow the OpenSearch upgrade procedure below.
+4.2 | November, 2026 | 1.34.0 | Opt-in Pulumi Registry storage: set `enableRegistryBuckets` in 15-state-policies-mgmt (creates the public and private registry buckets, or set `registryPublicS3BucketName`/`registryPrivateS3BucketName` to use existing ones) and in 90-pulumi-service (sets the two `PULUMI_REGISTRY_*_BLOB_STORAGE_ENDPOINT` variables). Off by default; existing installs are unchanged.
 
 ## How to Use
 

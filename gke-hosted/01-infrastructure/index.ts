@@ -5,6 +5,7 @@ import * as db from "./database";
 import { config } from "./config";
 
 const storageDetails = new storage.Storage(config.resourceNamePrefix, {
+    enableRegistryBuckets: config.enableRegistryBuckets,
     tags: config.baseTags,
 });
 
@@ -13,6 +14,8 @@ const sa = new serviceaccount.ServiceAccount(config.resourceNamePrefix, {
     checkpointBucketName: storageDetails.checkpointBucketName,
     policyBucketName: storageDetails.policyBucketName,
     escBucketName: storageDetails.escBucketName,
+    registryPublicBucketName: storageDetails.registryPublicBucketName,
+    registryPrivateBucketName: storageDetails.registryPrivateBucketName,
 });
 
 const network = new networking.Network(config.resourceNamePrefix, {
@@ -35,6 +38,9 @@ export const policyBucketId = storageDetails.policyBucketId;
 export const checkpointBucketName = storageDetails.checkpointBucketName;
 export const policyBucketName = storageDetails.policyBucketName;
 export const escBucketName = storageDetails.escBucketName;
+// "" when enableRegistryBuckets is off, so existing stacks get no undefined-output warnings
+export const registryPublicBucketName = storageDetails.registryPublicBucketName ?? "";
+export const registryPrivateBucketName = storageDetails.registryPrivateBucketName ?? "";
 export const serviceAccountName = sa.serviceAccountName;
 export const serviceAccountAccessKeyId = sa.serviceAccountAccessKeyId;
 export const serviceAccountSecretAccessKey = sa.serviceAccountSecretAccessKey;

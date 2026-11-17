@@ -89,6 +89,9 @@ export const config = {
     storageSecretKey: stackConfig.requireSecret("storageSecretKey"),
     storageCheckpointBucket: stackConfig.require("storageCheckpointBucket"),
     storagePolicyPackBucket: stackConfig.require("storagePolicyPackBucket"),
+    // optional: Pulumi Registry storage (PULUMI_REGISTRY_{PUBLIC,PRIVATE}_BLOB_STORAGE_ENDPOINT)
+    storageRegistryPublicBucket: stackConfig.get("storageRegistryPublicBucket"),
+    storageRegistryPrivateBucket: stackConfig.get("storageRegistryPrivateBucket"),
 
     disableNginxProxy,
     exposeContainerPorts,

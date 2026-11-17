@@ -6,6 +6,9 @@ export interface ServiceAccountArgs {
     policyBucketName: pulumi.Output<string>;
     checkpointBucketName: pulumi.Output<string>;
     escBucketName: pulumi.Output<string>;
+    // optional registry buckets (enableRegistryBuckets)
+    registryPublicBucketName?: pulumi.Output<string>;
+    registryPrivateBucketName?: pulumi.Output<string>;
     tags?: pulumi.Input<{
         [key: string]: pulumi.Input<string>;
     }>,
@@ -44,6 +47,17 @@ export class ServiceAccount extends pulumi.ComponentResource {
             role: "roles/storage.objectAdmin",
             member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
         }, { parent: serviceAccount });
+
+        const registryBuckets = { public: args.registryPublicBucketName, private: args.registryPrivateBucketName };
+        for (const [kind, bucket] of Object.entries(registryBuckets)) {
+            if (bucket) {
+                new gcp.storage.BucketIAMMember(`${saName}-registry-${kind}-bucket-iam`, {
+                    bucket: bucket,
+                    role: "roles/storage.objectAdmin",
+                    member: pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
+                }, { parent: serviceAccount });
+            }
+        }
 
         const serviceAccountKey = new gcp.storage.HmacKey(`${saName}-hmac`, {
             serviceAccountEmail: serviceAccount.email,

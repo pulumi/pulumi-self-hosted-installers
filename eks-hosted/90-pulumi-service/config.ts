@@ -27,6 +27,18 @@ if (!awsKMSKeyArn && !encryptionKey)  {
     throw new Error("Either an AWS KMS key ARN or a hard-coded encryptionKey must be provided. See Pulumi.README.yaml.");
 }
 
+// Opt-in Pulumi Registry storage (buckets from 15-state-policies-mgmt).
+const enableRegistryBuckets = pulumiConfig.getBoolean("enableRegistryBuckets") ?? false;
+function requireRegistryBucket(outputName: string): pulumi.Output<string> {
+    return statePolicyStackRef.requireOutput(outputName).apply(name => {
+        if (!name) {
+            throw new Error(`enableRegistryBuckets is set, but 15-state-policies-mgmt has no ${outputName}. ` +
+                "Set enableRegistryBuckets (or the existing bucket names) there and run it first.");
+        }
+        return name as string;
+    });
+}
+
 export const config = {
     // Cluster
     kubeconfig: clusterStackRef.requireOutput("kubeconfig"),
@@ -40,6 +52,10 @@ export const config = {
     checkpointsS3BucketName: statePolicyStackRef.requireOutput("checkpointsS3BucketName"),
     policyPacksS3BucketName: statePolicyStackRef.requireOutput("policyPacksS3BucketName"),
     eventsS3BucketName: statePolicyStackRef.requireOutput("eventsS3BucketName"),
+    // opt-in registry buckets; requires enableRegistryBuckets (or existing bucket names) in 15-state-policies-mgmt
+    enableRegistryBuckets: enableRegistryBuckets,
+    registryPublicS3BucketName: enableRegistryBuckets ? requireRegistryBucket("registryPublicS3BucketName") : undefined,
+    registryPrivateS3BucketName: enableRegistryBuckets ? requireRegistryBucket("registryPrivateS3BucketName") : undefined,
     
     // Database stack outputs
     dbConn: dbStackRef.requireOutput("dbConn"),

@@ -12,6 +12,7 @@ Version ID | Date | K8s Version Supported | Note
 1.0 | -- | Initial versions of the new eks installer.
 2.0 | March, 2026 | Add support for new env vars to enable V2 DB schema. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 2.1 | September, 2026 | -- | Moves the 02-kubernetes search cluster from OpenSearch 2.x to 3.7.0. See the OpenSearch upgrade procedure below.
+2.2 | November, 2026 | Opt-in `enableRegistryBuckets` in 01-infrastructure (buckets for Pulumi Registry) and 03-application (sets the two `PULUMI_REGISTRY_*_BLOB_STORAGE_ENDPOINT` variables). Off by default; existing installs are unchanged.
 
 ## Prerequisites
 * Domain name and access to create two endpoints:
@@ -77,6 +78,7 @@ Optional settings (will use default values if not set)
    Note: See note above regarding the stackname.
 1. `pulumi config set dbInstanceType {GCP SQL DB instance type}` - uses "db-g1-small" if not set
 1. `pulumi config set dbUser {user name for SQL DB}` - uses "pulumiadmin" if not set
+1. `pulumi config set enableRegistryBuckets true` - creates buckets for Pulumi Registry (set it in 03-application too). Off by default; recommended for new installs. Without them Registry does not work (the API logs "the registry service will not operate properly").
 1. `pulumi up` - Wait to complete before proceeding.
 
 ### Deploy 02-kubernetes
@@ -119,6 +121,7 @@ If not set, "forgot password" and email invites will not work but direct sign up
 1. `pulumi config set recaptchaSecretKey {recaptchaSecretKey} --secret` (this must be a Cloudflare Turnstile widget Secret Key)
 Optional setting will use default value if not set.
 1. `pulumi config set samlSsoEnabled true` - set to false by default.
+1. `pulumi config set enableRegistryBuckets true` - sets `PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT` and `PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT` to the registry buckets from 01-infrastructure (requires `enableRegistryBuckets` there). Off by default.
 1. `pulumi config set ingressAllowList {cidr range list}` (allow list of IPv4 CIDR ranges to allow access to the self-hosted Pulumi Cloud. Not setting this will allow the service to be open to the any address that can route to it). Proper formatting can be seen [here](https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md#whitelist-source-range)
 1. `pulumi up`
 

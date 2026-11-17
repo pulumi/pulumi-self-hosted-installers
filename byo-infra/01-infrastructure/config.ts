@@ -12,6 +12,9 @@ const storageAccessKey = stackConfig.require("storageAccessKey");
 const storageSecretKey = stackConfig.requireSecret("storageSecretKey"); 
 const storageCheckpointBucket = stackConfig.require("storageCheckpointBucket");
 const storagePolicyPackBucket = stackConfig.require("storagePolicyPackBucket");
+// optional: Pulumi Registry storage (PULUMI_REGISTRY_{PUBLIC,PRIVATE}_BLOB_STORAGE_ENDPOINT)
+const storageRegistryPublicBucket = stackConfig.get("storageRegistryPublicBucket");
+const storageRegistryPrivateBucket = stackConfig.get("storageRegistryPrivateBucket");
 const dbHost = stackConfig.require("dbHost");
 const dbPort = stackConfig.getNumber("dbPort") || 3306;
 const dbUsername = stackConfig.require("dbUsername");
@@ -25,6 +28,8 @@ export const config = {
   storageSecretKey,
   storageCheckpointBucket,
   storagePolicyPackBucket,
+  storageRegistryPublicBucket,
+  storageRegistryPrivateBucket,
   dbHost,
   dbPort,
   dbUsername,

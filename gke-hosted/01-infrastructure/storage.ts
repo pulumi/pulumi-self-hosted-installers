@@ -2,6 +2,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
 
 export interface StorageArgs {
+    // creates the two Pulumi Registry buckets
+    enableRegistryBuckets?: boolean,
     tags?: pulumi.Input<{
         [key: string]: pulumi.Input<string>;
     }>,
@@ -13,6 +15,8 @@ export class Storage extends pulumi.ComponentResource {
     public readonly checkpointBucketName: pulumi.Output<string>;
     public readonly policyBucketName: pulumi.Output<string>;
     public readonly escBucketName: pulumi.Output<string>;
+    public readonly registryPublicBucketName?: pulumi.Output<string>;
+    public readonly registryPrivateBucketName?: pulumi.Output<string>;
     constructor(name: string, args: StorageArgs) {
         super("x:infrastructure:storage", name);
 
@@ -32,6 +36,21 @@ export class Storage extends pulumi.ComponentResource {
               labels: args.tags,
         }, { parent: this, protect: true });
 
+        // Opt-in: Pulumi Registry needs its own public and private buckets. Without them the API logs
+        // "the registry service will not operate properly" at startup and Registry does not work.
+        if (args.enableRegistryBuckets) {
+            const registryPublicBucket = new gcp.storage.Bucket(`${name}-registry-public`, {
+                location: "US",
+                labels: args.tags,
+            }, { parent: this, protect: true });
+            const registryPrivateBucket = new gcp.storage.Bucket(`${name}-registry-private`, {
+                location: "US",
+                labels: args.tags,
+            }, { parent: this, protect: true });
+            this.registryPublicBucketName = registryPublicBucket.name;
+            this.registryPrivateBucketName = registryPrivateBucket.name;
+        }
+
         this.checkpointBucketId = checkpointBucket.id;
         this.policyBucketId = policyBucket.id;
         this.checkpointBucketName = checkpointBucket.name;
@@ -44,6 +63,8 @@ export class Storage extends pulumi.ComponentResource {
             checkpointBucketName: this.checkpointBucketName,
             policyBucketName: this.policyBucketName,
             escBucketName: this.escBucketName,
+            registryPublicBucketName: this.registryPublicBucketName,
+            registryPrivateBucketName: this.registryPrivateBucketName,
         });
     }
 }

@@ -8,6 +8,10 @@ export const config = {
     checkpointsS3BucketName: pulumiConfig.get("checkpointsS3BucketName"),
     policyPacksS3BucketName: pulumiConfig.get("policyPacksS3BucketName"),
     eventsS3BucketName: pulumiConfig.get("eventsS3BucketName"),
+    // Opt-in: buckets for Pulumi Registry artifacts. Set the names to use existing buckets instead.
+    enableRegistryBuckets: pulumiConfig.getBoolean("enableRegistryBuckets") ?? false,
+    registryPublicS3BucketName: pulumiConfig.get("registryPublicS3BucketName"),
+    registryPrivateS3BucketName: pulumiConfig.get("registryPrivateS3BucketName"),
 };
 
 

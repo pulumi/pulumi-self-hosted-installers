@@ -8,6 +8,9 @@ const commonName = "pulumiselfhosted" || stackConfig.get("commonName");
 const resourceNamePrefix = `${commonName}-${stackName}`;
 const disableAutoNaming = stackConfig.getBoolean("disableAutoNaming");
 
+// opt-in: blob containers for Pulumi Registry artifacts (PULUMI_REGISTRY_{PUBLIC,PRIVATE}_BLOB_STORAGE_ENDPOINT)
+const enableRegistryBuckets = stackConfig.getBoolean("enableRegistryBuckets") ?? false;
+
 // subnet for AKS cluster
 const subnetCidr = stackConfig.require("subnetCidr");
 
@@ -32,6 +35,7 @@ export const config = {
   stackName,
   resourceNamePrefix,
   disableAutoNaming,
+  enableRegistryBuckets,
   networkCidr,
   subnetCidr,
   dbSubnetCidr,

@@ -238,6 +238,17 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                 name: "PULUMI_ENGINE_EVENTS_LEGACY_WRITE",
                 value: config.engineEventsLegacyWrite,
               },
+              // opt-in registry buckets; without them Registry does not work
+              ...(config.enableRegistryBuckets ? [
+                {
+                  name: "PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT",
+                  value: pulumi.interpolate`s3://${config.registryPublicS3BucketName}`,
+                },
+                {
+                  name: "PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT",
+                  value: pulumi.interpolate`s3://${config.registryPrivateS3BucketName}`,
+                },
+              ] : []),
             ],
           },
         ],

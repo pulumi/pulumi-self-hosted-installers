@@ -195,6 +195,17 @@ const apiDeployment = new k8s.apps.v1.Deployment(`${commonName}-${apiName}`, {
                   name: "PULUMI_SERVICE_METADATA_BLOB_STORAGE_ENDPOINT",
                   value: pulumi.interpolate`s3://${config.escBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
                 },
+                // opt-in registry buckets (enableRegistryBuckets in 01-infrastructure and here); without them Registry does not work
+                ...(config.enableRegistryBuckets ? [
+                  {
+                    name: "PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT",
+                    value: pulumi.interpolate`s3://${config.registryPublicBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
+                  },
+                  {
+                    name: "PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT",
+                    value: pulumi.interpolate`s3://${config.registryPrivateBlobName}?endpoint=storage.googleapis.com:443&s3ForcePathStyle=true`
+                  },
+                ] : []),
                 {
                   name: "PULUMI_ENGINE_EVENTS_SCHEMA_V2",
                   value: config.dbSchemaV2Enabled,

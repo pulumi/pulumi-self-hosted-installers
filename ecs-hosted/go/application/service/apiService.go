@@ -312,6 +312,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		args.LogDriver,
 		args.OpenSearchUser,
 		args.OpenSearchEndpoint,
+		optionalBucketName(args.RegistryPublicBucket),
+		optionalBucketName(args.RegistryPrivateBucket),
 	}
 
 	if args.SamlArgs.Enabled {
@@ -332,6 +334,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		logDriver := applyArgs[6].(log.LogDriver)
 		OpenSearchUser := applyArgs[7].(string)
 		OpenSearchEndpoint := applyArgs[8].(string)
+		registryPublicBucket := applyArgs[9].(string)
+		registryPrivateBucket := applyArgs[10].(string)
 
 		samlCertPublicKey := ""
 		if len(inputs) > 7 {
@@ -349,6 +353,8 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 			OpenSearchUser:     OpenSearchUser,
 			OpenSearchEndpoint: OpenSearchEndpoint,
 		}
+		envArgs.RegistryPublicBucket = registryPublicBucket
+		envArgs.RegistryPrivateBucket = registryPrivateBucket
 
 		containerJson, err := json.Marshal([]any{
 			map[string]any{
@@ -381,7 +387,13 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		return string(containerJson), nil
 	}).(pulumi.StringOutput)
 
-	s3AccessPolicyDoc := pulumi.All(args.CheckPointbucket.Bucket, args.PolicyPacksBucket.Bucket, args.MetadataBucket.Bucket).ApplyT(func(applyArgs []any) (string, error) {
+	s3AccessPolicyDoc := pulumi.All(
+		args.CheckPointbucket.Bucket,
+		args.PolicyPacksBucket.Bucket,
+		args.MetadataBucket.Bucket,
+		optionalBucketName(args.RegistryPublicBucket),
+		optionalBucketName(args.RegistryPrivateBucket),
+	).ApplyT(func(applyArgs []any) (string, error) {
 
 		checkpointBucket := applyArgs[0].(string)
 		policypackBucket := applyArgs[1].(string)
@@ -391,20 +403,29 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 		policypackBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", policypackBucket))
 		metadataBucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", metadataBucket))
 
+		resources := []string{
+			checkpointBucketArn,
+			fmt.Sprintf("%s/*", checkpointBucketArn),
+			policypackBucketArn,
+			fmt.Sprintf("%s/*", policypackBucketArn),
+			metadataBucketArn,
+			fmt.Sprintf("%s/*", metadataBucketArn),
+		}
+		// opt-in registry buckets; empty names when enableRegistryBuckets is off, so the policy is unchanged
+		for _, bucket := range []string{applyArgs[3].(string), applyArgs[4].(string)} {
+			if bucket != "" {
+				bucketArn := common.GetIamPolicyArn(args.Region, fmt.Sprintf("arn:aws:s3:::%s", bucket))
+				resources = append(resources, bucketArn, fmt.Sprintf("%s/*", bucketArn))
+			}
+		}
+
 		policyDoc, err := json.Marshal(map[string]any{
 			"Version": "2012-10-17",
 			"Statement": []map[string]any{
 				{
-					"Effect": "Allow",
-					"Action": []string{"s3:*"},
-					"Resource": []string{
-						checkpointBucketArn,
-						fmt.Sprintf("%s/*", checkpointBucketArn),
-						policypackBucketArn,
-						fmt.Sprintf("%s/*", policypackBucketArn),
-						metadataBucketArn,
-						fmt.Sprintf("%s/*", metadataBucketArn),
-					},
+					"Effect":   "Allow",
+					"Action":   []string{"s3:*"},
+					"Resource": resources,
 				},
 			},
 		})
@@ -481,6 +502,14 @@ func newApiEnvironmentVariables(environmentArgs ApiContainerEnvironment) []map[s
 		CreateEnvVar("PULUMI_ENGINE_EVENTS_LEGACY_WRITE", fmt.Sprintf("%v", args.EngineEventsLegacyWrite)),
 	}
 
+	// opt-in registry buckets (enableRegistryBuckets); unset otherwise, so existing task definitions are unchanged
+	if environmentArgs.RegistryPublicBucket != "" {
+		env = append(env, CreateEnvVar("PULUMI_REGISTRY_PUBLIC_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.RegistryPublicBucket))
+	}
+	if environmentArgs.RegistryPrivateBucket != "" {
+		env = append(env, CreateEnvVar("PULUMI_REGISTRY_PRIVATE_BLOB_STORAGE_ENDPOINT", "s3://"+environmentArgs.RegistryPrivateBucket))
+	}
+
 	if args.DisableEmailLogin {
 		env = append(env, CreateEnvVar("PULUMI_DISABLE_EMAIL_LOGIN", "true"))
 	}
@@ -545,6 +574,10 @@ type ApiContainerServiceArgs struct {
 	OpenSearchPassword         pulumi.StringOutput
 	OpenSearchDomainName       pulumi.StringOutput
 	OpenSearchEndpoint         pulumi.StringOutput
+
+	// optional, nil unless enableRegistryBuckets is set
+	RegistryPublicBucket  *s3.Bucket
+	RegistryPrivateBucket *s3.Bucket
 }
 
 type ApiContainerService struct {
@@ -563,4 +596,15 @@ type ApiContainerEnvironment struct {
 	SamlPublicKey      string
 	OpenSearchUser     string
 	OpenSearchEndpoint string
+	// empty unless enableRegistryBuckets is set
+	RegistryPublicBucket  string
+	RegistryPrivateBucket string
+}
+
+// optionalBucketName resolves to the bucket name, or to "" for a bucket that was not created.
+func optionalBucketName(bucket *s3.Bucket) pulumi.StringOutput {
+	if bucket == nil {
+		return pulumi.String("").ToStringOutput()
+	}
+	return bucket.Bucket
 }
