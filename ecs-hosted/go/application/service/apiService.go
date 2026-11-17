@@ -429,7 +429,9 @@ func newApiTaskArgs(ctx *pulumi.Context, args *ApiContainerServiceArgs, secrets 
 				{
 					"Effect": "Allow",
 					"Action": []string{
+						"kms:Encrypt",
 						"kms:Decrypt",
+						"kms:GenerateDataKey",
 						"kms:GenerateDataKeyWithoutPlaintext",
 					},
 					"Resource": []string{arn},
