@@ -20,6 +20,7 @@ Version ID | Date       | Note
 8 | 05/23/2025 | Updated Go module.
 9 | 03/09/2026 | Add support for new env vars to enable V2 DB schema, and additional changes to bring installer up to date. **DO NOT USE THIS VERSION OF THE INSTALLER FOR AN EXISTING INSTALL. CONTACT PULUMI SUPPORT TO MIGRATE THE DB FIRST.**
 10 | 09/14/2026 | OpenSearch domain moved from 2.13 to 3.7. Existing installs must step the domain up through 2.19 out of band before running this version - see the OpenSearch upgrade section below.
+11 | 11/17/2026 | Fix: the API task role now has all four KMS actions the self-hosting docs require (`kms:Encrypt`, `kms:Decrypt`, `kms:GenerateDataKey`, `kms:GenerateDataKeyWithoutPlaintext`). Earlier versions only granted `kms:Decrypt` and `kms:GenerateDataKeyWithoutPlaintext`, so creating an ESC environment (`pulumi env init`) failed with `[400] error generating environment key`. Updates the API task role policy in place; nothing is replaced.
 
 ## User Guides
 
